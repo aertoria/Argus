@@ -139,6 +139,7 @@ TOKEN : { < #NOT : "!" > }
 TOKEN : { < #TIME_UNIT : "s" | "m" | "h" | "d" > }
 
 TOKEN : { < IDENTITY : "IDENTITY" > }
+TOKEN : { < HEIMDALL_TOTALAVA : "HEIMDALL_TOTALAVA" > }
 TOKEN : { < SUM : "SUM" > }
 TOKEN : { < SUM_V : "SUM_V" > }
 TOKEN : { < DIVIDE : "DIVIDE" > }
@@ -180,6 +181,7 @@ TOKEN : { < LOG : "LOG" > }
 TOKEN : { < CULL_ABOVE : "CULL_ABOVE" > }
 TOKEN : { < CULL_BELOW : "CULL_BELOW" > }
 TOKEN : { < SORT : "SORT" > }
+TOKEN : { < P90 : "P90" > }
 TOKEN : { < SHIFT : "SHIFT" > }
 TOKEN : { < DOWNSAMPLE : "DOWNSAMPLE" > }
 TOKEN : { < DEVIATION : "DEVIATION" > }
@@ -294,6 +296,9 @@ private String functionName() :
 {
 	t = <IDENTITY>
 	{ return t.image; }			
+	|
+	t = <HEIMDALL_TOTALAVA>
+	{ return t.image; }
 	|
 	t = <MULTIPLY>
 	{ return t.image; }
@@ -416,6 +421,9 @@ private String functionName() :
 	{ return t.image; }
 	|	
 	t = <SORT>
+	{ return t.image; }
+	|	
+	t = <P90>
 	{ return t.image; }
 	|	
 	t = <SHIFT>

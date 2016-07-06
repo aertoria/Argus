@@ -417,7 +417,6 @@ public class DefaultTSDBService extends DefaultService implements TSDBService {
      */
     private String extractStringResponse(HttpResponse content) {
         requireArgument(content != null, "Response content is null.");
-
         String result;
         HttpEntity entity = null;
 

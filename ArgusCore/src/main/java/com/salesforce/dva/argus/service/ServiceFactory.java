@@ -40,7 +40,6 @@ import com.google.inject.Provider;
  * @author  Tom Valine (tvaline@salesforce.com), Bhinav Sura (bhinav.sura@salesforce.com)
  */
 public final class ServiceFactory {
-
     //~ Instance fields ******************************************************************************************************************************
 
     @Inject
@@ -72,7 +71,7 @@ public final class ServiceFactory {
     @Inject
     Provider<AuditService> _auditServiceProvider;
     @Inject
-    Provider<MailService> _mailServiceProvider;
+    Provider<MailService> _mailServiceProvider; 
     @Inject
     Provider<AuthService> _authServiceProvider;
     @Inject
@@ -85,9 +84,15 @@ public final class ServiceFactory {
     Provider<CacheService> _cacheServiceProvider;
     @Inject
     Provider<DiscoveryService> _discoveryServiceProvider;
-
+    
     //~ Methods **************************************************************************************************************************************
-
+//    @Inject
+//    Provider<EthanService> _ethanService;
+//    
+//    public synchronized EthanService getEthanService() {
+//        return _ethanService.get();
+//    }
+    
     /**
      * Returns an instance of the TSDB service.
      *

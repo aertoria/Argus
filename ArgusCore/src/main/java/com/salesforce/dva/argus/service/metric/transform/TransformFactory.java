@@ -174,6 +174,10 @@ public class TransformFactory {
                 return new MetricZipperTransform(new DivideValueZipper());
             case GROUPBY:
             	throw new UnsupportedOperationException(functionName);
+            case P90:
+                return new P90Transform();
+            case HEIMDALL_TOTALAVA:
+                return new HeimdallTotalAvaTransform();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -240,7 +244,9 @@ public class TransformFactory {
         CONSECUTIVE("CONSECUTIVE","Filter out all values that are non-consecutive"),
         HW_FORECAST("HW_FORECAST", "Performns HoltWinters Forecast."),
         HW_DEVIATION("HW_DEVIATION", "Performns HoltWinters Deviation."),
-        GROUPBY("GROUPBY", "Creates groups of metrics based on some matching criteria and then performs the given aggregation.");
+        GROUPBY("GROUPBY", "Creates groups of metrics based on some matching criteria and then performs the given aggregation."),
+        P90("P90", "Give P90 value of this metrics."),
+        HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics.");
 
         private final String _name;
         private final String _description;

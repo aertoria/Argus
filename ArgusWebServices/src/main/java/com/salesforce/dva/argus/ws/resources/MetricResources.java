@@ -84,7 +84,6 @@ public class MetricResources extends AbstractResource {
     public List<MetricDto> getMetricsJSON(@Context HttpServletRequest req,
         @QueryParam("expression") List<String> expressions) {
         List<Metric> metrics = _getMetrics(req, expressions);
-
         return MetricDto.transformToDto(metrics);
     }
 
@@ -132,7 +131,6 @@ public class MetricResources extends AbstractResource {
 
         for (String expression : expressions) {
             List<Metric> metricsForThisExpression = metricService.getMetrics(expression);
-
             metrics.addAll(metricsForThisExpression);
         }
         metricService.dispose();
