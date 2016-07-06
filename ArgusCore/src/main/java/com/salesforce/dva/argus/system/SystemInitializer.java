@@ -48,6 +48,7 @@ import com.salesforce.dva.argus.service.CacheService;
 import com.salesforce.dva.argus.service.CollectionService;
 import com.salesforce.dva.argus.service.DashboardService;
 import com.salesforce.dva.argus.service.DiscoveryService;
+import com.salesforce.dva.argus.service.DistributedSchedulingLockService;
 import com.salesforce.dva.argus.service.GlobalInterlockService;
 import com.salesforce.dva.argus.service.HistoryService;
 import com.salesforce.dva.argus.service.MQService;
@@ -65,20 +66,16 @@ import com.salesforce.dva.argus.service.UserService;
 import com.salesforce.dva.argus.service.WardenService;
 import com.salesforce.dva.argus.service.annotation.DefaultAnnotationService;
 import com.salesforce.dva.argus.service.audit.DefaultAuditService;
-import com.salesforce.dva.argus.service.broker.DefaultJSONService;
 import com.salesforce.dva.argus.service.collect.DefaultCollectionService;
 import com.salesforce.dva.argus.service.history.DefaultHistoryService;
 import com.salesforce.dva.argus.service.jpa.DefaultDashboardService;
+import com.salesforce.dva.argus.service.jpa.DefaultDistributedSchedulingLockService;
 import com.salesforce.dva.argus.service.jpa.DefaultGlobalInterlockService;
 import com.salesforce.dva.argus.service.jpa.DefaultNamespaceService;
 import com.salesforce.dva.argus.service.jpa.DefaultServiceManagementService;
 import com.salesforce.dva.argus.service.jpa.DefaultUserService;
 import com.salesforce.dva.argus.service.management.DefaultManagementService;
 import com.salesforce.dva.argus.service.metric.DefaultMetricService;
-import com.salesforce.dva.argus.service.metric.transform.kepler.Ethan;
-import com.salesforce.dva.argus.service.metric.transform.kepler.EthanService;
-import com.salesforce.dva.argus.service.metric.transform.kepler.Kepler;
-import com.salesforce.dva.argus.service.metric.transform.kepler.KeplerService;
 import com.salesforce.dva.argus.service.monitor.DefaultMonitorService;
 import com.salesforce.dva.argus.service.schema.DefaultDiscoveryService;
 import com.salesforce.dva.argus.service.tsdb.CachedTSDBService;
@@ -239,10 +236,10 @@ final class SystemInitializer extends AbstractModule {
         // Named annotation binding
         bindConcreteClassWithNamedAnnotation(Property.TSDB_SERVICE_IMPL_CLASS, TSDBService.class);
 
+
         // static binding
-        //bindConcreteClass(CachedTSDBService.class, TSDBService.class);//To use Argus as source
+        //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
         bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
-        
         
         
         bindConcreteClass(DefaultUserService.class, UserService.class);
@@ -259,11 +256,7 @@ final class SystemInitializer extends AbstractModule {
         bindConcreteClass(DefaultHistoryService.class, HistoryService.class);
         bindConcreteClass(DefaultNamespaceService.class, NamespaceService.class);
         bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
-        
-        //bindConcreteClass(Ethan.class, EthanService.class);
-        bind(KeplerService.class).to(Kepler.class);
-        bind(EthanService.class).to(Ethan.class);
-        
+        bindConcreteClass(DefaultDistributedSchedulingLockService.class, DistributedSchedulingLockService.class);
     }
 
     private <T> void bindConcreteClass(Property property, Class<T> type) {
