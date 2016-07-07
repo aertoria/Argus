@@ -238,8 +238,8 @@ final class SystemInitializer extends AbstractModule {
 
 
         // static binding
-        //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
-        bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
+        bindConcreteClass(CachedTSDBService.class, TSDBService.class);
+        //bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
         
         
         bindConcreteClass(DefaultUserService.class, UserService.class);
