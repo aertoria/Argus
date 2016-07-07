@@ -66,6 +66,7 @@ import com.salesforce.dva.argus.service.UserService;
 import com.salesforce.dva.argus.service.WardenService;
 import com.salesforce.dva.argus.service.annotation.DefaultAnnotationService;
 import com.salesforce.dva.argus.service.audit.DefaultAuditService;
+import com.salesforce.dva.argus.service.broker.DefaultJSONService;
 import com.salesforce.dva.argus.service.collect.DefaultCollectionService;
 import com.salesforce.dva.argus.service.history.DefaultHistoryService;
 import com.salesforce.dva.argus.service.jpa.DefaultDashboardService;
@@ -238,8 +239,8 @@ final class SystemInitializer extends AbstractModule {
 
 
         // static binding
-        bindConcreteClass(CachedTSDBService.class, TSDBService.class);
-        //bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
+        //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
+        bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
         
         
         bindConcreteClass(DefaultUserService.class, UserService.class);
