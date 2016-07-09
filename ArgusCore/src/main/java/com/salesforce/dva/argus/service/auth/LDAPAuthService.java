@@ -112,10 +112,9 @@ public class LDAPAuthService extends DefaultService implements AuthService {
     public PrincipalUser getUser(String username, String password) {
         requireNotDisposed();
         requireArgument(_isUsernameValid(username), MessageFormat.format("Invalid username: {0}", username));
-
+        
         PrincipalUser result = null;
         String userDn = _findDNForUser(username);
-
         if (userDn != null && password != null) {
             result = _findPrincipalUser(userDn, username, password);
         }

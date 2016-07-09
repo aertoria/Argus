@@ -83,7 +83,6 @@ public class AuthResources extends AbstractResource {
         try {
             PrincipalUserDto result = null;
             PrincipalUser user = authService.getUser(creds.getUsername(), creds.getPassword());
-
             if (user != null) {
                 result = PrincipalUserDto.transformToDto(user);
             } else {

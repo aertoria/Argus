@@ -84,6 +84,8 @@ public class TransformFactory {
             case SUM:
                 return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping());
             case MULTIPLY:
+            case SCALE_MATCH:
+                return new ScaleMatchTransform();
             case SCALE:
                 return new MetricReducerOrMappingTransform(new ScaleValueReducerOrMapping());
             case DIFF:
@@ -232,6 +234,7 @@ public class TransformFactory {
         LIMIT("LIMIT", "Returns a subset input metrics in stable order from the head of the list not to exceed the specified limit."),
         SUM_V("SUM_V", "Calculate sum in a vector style."),
         SCALE_V("SCALE_V", "Calculate multiplication in a vector style."),
+        SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         DIFF_V("DIFF_V", "Calculate subtraction in a vector style."),
         DIVIDE_V("DIVIDE_V", "Calculate quotient in a vector style."),
         NORMALIZE_V("NORMALIZE_V", "Perform normalization in a vector style."),

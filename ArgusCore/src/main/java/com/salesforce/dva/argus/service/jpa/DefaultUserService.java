@@ -80,7 +80,7 @@ public class DefaultUserService extends DefaultJPAService implements UserService
     @Override
     @Transactional
     public PrincipalUser findUserByUsername(String userName) {
-        requireNotDisposed();
+    	requireNotDisposed();
         requireArgument(userName != null && !userName.trim().isEmpty(), "User name cannot be null or empty.");
 
         PrincipalUser result = PrincipalUser.findByUserName(emf.get(), userName);

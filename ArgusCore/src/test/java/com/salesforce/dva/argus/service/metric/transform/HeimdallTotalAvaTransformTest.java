@@ -14,7 +14,7 @@ public class HeimdallTotalAvaTransformTest {
 	 private static final String TEST_METRIC = "test-metric";
 	 
 	 @Test
-	 public void P90_dev(){
+	 public void HeimdallTotalAvaTransform_dev(){
 		Transform transform = new HeimdallTotalAvaTransform();
 		
         Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
@@ -56,8 +56,8 @@ public class HeimdallTotalAvaTransformTest {
         metrics.add(metric_3);
         metrics.add(metric_4);
         
-//        List<String> constants = new ArrayList<String>();
-//        constants.add("500");
+//      List<String> constants = new ArrayList<String>();
+//      constants.add("500");
         
         List<Metric> result = transform.transform(metrics);
         System.out.println("\n\nINPUT>>>\n"+metrics);

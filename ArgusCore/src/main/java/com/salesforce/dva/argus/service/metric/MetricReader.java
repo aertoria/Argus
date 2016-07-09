@@ -134,6 +134,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case MULTIPLY:
     case SCALE:
     case SCALE_V:
+    case SCALE_MATCH:
     case AVERAGE:
     case INTEGRAL:
     case DERIVATIVE:
@@ -210,6 +211,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case MULTIPLY:
     case SCALE:
     case SCALE_V:
+    case SCALE_MATCH:
     case AVERAGE:
     case INTEGRAL:
     case DERIVATIVE:
@@ -291,6 +293,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       case MULTIPLY:
       case SCALE:
       case SCALE_V:
+      case SCALE_MATCH:
       case AVERAGE:
       case INTEGRAL:
       case DERIVATIVE:
@@ -428,6 +431,10 @@ public class MetricReader<T> implements MetricReaderConstants {
       break;
     case SCALE_V:
       t = jj_consume_token(SCALE_V);
+          {if (true) return t.image;}
+      break;
+    case SCALE_MATCH:
+      t = jj_consume_token(SCALE_MATCH);
           {if (true) return t.image;}
       break;
     case DIFF:
@@ -802,7 +809,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       jj_la1_1 = new int[] {0xffffffff,0xffffffff,0x0,0xffffffff,0xffffffff,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x203ff,0x8203ff,0x800,0x8203ff,0x3ff,0x20000,0x80000,0x1000,0x400,0x350000,};
+      jj_la1_2 = new int[] {0x407ff,0x10407ff,0x1000,0x10407ff,0x7ff,0x40000,0x100000,0x2000,0x800,0x6a0000,};
    }
 
   /** Constructor with InputStream. */
@@ -919,7 +926,7 @@ public class MetricReader<T> implements MetricReaderConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[88];
+    boolean[] la1tokens = new boolean[89];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -939,7 +946,7 @@ public class MetricReader<T> implements MetricReaderConstants {
         }
       }
     }
-    for (int i = 0; i < 88; i++) {
+    for (int i = 0; i < 89; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

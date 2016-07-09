@@ -159,7 +159,6 @@ public class PrincipalUser extends JPAEntity implements Serializable {
     public static PrincipalUser findByUserName(EntityManager em, String userName) {
         Class<PrincipalUser> type = PrincipalUser.class;
         TypedQuery<PrincipalUser> query = em.createNamedQuery("PrincipalUser.findByUserName", type);
-
         try {
             return query.setParameter("userName", userName).getSingleResult();
         } catch (NoResultException ex) {
