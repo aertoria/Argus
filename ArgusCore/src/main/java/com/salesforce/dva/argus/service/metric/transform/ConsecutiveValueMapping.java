@@ -68,14 +68,16 @@ public class ConsecutiveValueMapping implements ValueMapping {
         SystemAssert.requireArgument(constants.size() == 2, "This transform must provide exactly 2 constants.");    
         this.threshold = getOffsetInSeconds(constants.get(0)) * 1000;
         this.connectDistance = getOffsetInSeconds(constants.get(1)) * 1000;
-              
         Map<Long, String> resultMetric = new TreeMap<Long, String>();
         this.keyList=new ArrayList<Long>();
         this.resultKeyList=new ArrayList<Long>();
 		keyList.addAll(originalDatapoints.keySet());
 		Collections.sort(keyList);
 		
-		if (keyList.size()>0){
+		if (keyList.size()==1&&threshold==0){
+			resultMetric.put(keyList.get(0),originalDatapoints.get(keyList.get(0)));
+		}
+		if (keyList.size()>1){
 			connect(0,new ArrayList<>(Arrays.asList(keyList.get(0))));
 		}
 		for(Long resultKey:resultKeyList){
@@ -84,7 +86,7 @@ public class ConsecutiveValueMapping implements ValueMapping {
 		return resultMetric;
 	}
 	
-	private Object connect(int current,ArrayList<Long> carryList){		
+	private Object connect(int current,ArrayList<Long> carryList){	
 		if (current+2==keyList.size()){
 			if (keyList.get(current+1)-keyList.get(current)<=connectDistance){
 				carryList.add(keyList.get(current+1));

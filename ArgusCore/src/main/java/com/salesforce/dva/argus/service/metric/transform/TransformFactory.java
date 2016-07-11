@@ -32,6 +32,7 @@
 package com.salesforce.dva.argus.service.metric.transform;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.salesforce.dva.argus.service.TSDBService;
 
@@ -42,7 +43,11 @@ import com.salesforce.dva.argus.service.TSDBService;
  */
 @Singleton
 public class TransformFactory {
-
+	@Inject
+	Provider<HeimdallTotalAvaTransform> _heimdallTotalAvaTransform;
+	
+	@Inject
+	Provider<FilterReducerTransform> _filterReducerTransform;
     //~ Static fields/initializers *******************************************************************************************************************
 
     /** Default metric name. */
@@ -126,6 +131,8 @@ public class TransformFactory {
                 return new FillTransform();
             case FILL_CALCULATE:
                 return new FillCalculateTransform();
+            case FILTER:
+                return _filterReducerTransform.get();
             case ALIAS:
                 return new AliasTransform();
             case INCLUDE:
@@ -179,7 +186,7 @@ public class TransformFactory {
             case P90:
                 return new P90Transform();
             case HEIMDALL_TOTALAVA:
-                return new HeimdallTotalAvaTransform();
+            	return _heimdallTotalAvaTransform.get();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -242,6 +249,7 @@ public class TransformFactory {
             "Calculates the standard deviation per timestamp for more than one metric, or the standard deviation for all data points for a single metric."),
         FILL("FILL", "Creates additional data points to fill gaps."),
         FILL_CALCULATE("FILL_CALCULATE", "Creates a constant line based on the calculated value."),
+        FILTER("FILTER", "Filter based on matching tag value"),
         INCLUDE("INCLUDE", "Retains metrics based on the matching of a regular expression against the metric name."),
         EXCLUDE("EXCLUDE", "Culls metrics based on the matching of a regular expression against the metric name."),
         CONSECUTIVE("CONSECUTIVE","Filter out all values that are non-consecutive"),

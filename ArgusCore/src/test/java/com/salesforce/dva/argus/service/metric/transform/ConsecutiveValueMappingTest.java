@@ -273,5 +273,87 @@ public class ConsecutiveValueMappingTest {
         assertEquals("Result length should match",result.get(1).getDatapoints().size(), expected_2.size());
         assertEquals("Result value should match",expected_2, result.get(1).getDatapoints());
     }
+    
+    @Test
+    public void testconsecutiveValueMappingSingleFullEdgeCases() {
+        Transform transform = new MetricMappingTransform(new ConsecutiveValueMapping());
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        
+        datapoints_1.put(1000L, "1.0");
+        datapoints_1.put(4000L, "1.0");
+        datapoints_1.put(5000L, "1.0");
+        datapoints_1.put(6000L, "1.0");
+        datapoints_1.put(7000L, "1.0");
+        datapoints_1.put(9000L, "1.0");
+
+        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+        metric_1.setDatapoints(datapoints_1);
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        
+        List<String> constants = new ArrayList<String>();
+        constants.add("3s");
+        constants.add("1s");
+        
+        Map<Long, String> expected = new HashMap<Long, String>();
+        expected.put(4000L, "1.0");
+        expected.put(5000L, "1.0");
+        expected.put(6000L, "1.0");
+        expected.put(7000L, "1.0");
+        List<Metric> result = transform.transform(metrics,constants);
+        
+        
+        assertEquals("Result length should match",result.get(0).getDatapoints().size(), expected.size());
+        assertEquals("Result value should match",expected, result.get(0).getDatapoints());
+    }
+    
+    @Test
+    public void testconsecutiveValueMappingSinglePointNonHitEdgeCases() {
+    	Transform transform = new MetricMappingTransform(new ConsecutiveValueMapping());
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        
+        datapoints_1.put(1000L, "1.0");
+
+
+        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+        metric_1.setDatapoints(datapoints_1);
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        
+        List<String> constants = new ArrayList<String>();
+        constants.add("1s");
+        constants.add("1s");
+        Map<Long, String> expected = new HashMap<Long, String>();
+
+        List<Metric> result = transform.transform(metrics,constants);
+
+        assertEquals("Result length should match",result.get(0).getDatapoints().size(), expected.size());
+        assertEquals("Result value should match",expected, result.get(0).getDatapoints());
+    }
+    
+    @Test
+    public void testconsecutiveValueMappingSinglePointHitEdgeCases() {
+    	Transform transform = new MetricMappingTransform(new ConsecutiveValueMapping());
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        
+        datapoints_1.put(1000L, "1.0");
+
+
+        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+        metric_1.setDatapoints(datapoints_1);
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        
+        List<String> constants = new ArrayList<String>();
+        constants.add("0s");
+        constants.add("1s");
+        Map<Long, String> expected = new HashMap<Long, String>();
+        expected.put(1000L, "1.0");
+        List<Metric> result = transform.transform(metrics,constants);
+
+        assertEquals("Result length should match",result.get(0).getDatapoints().size(), expected.size());
+        assertEquals("Result value should match",expected, result.get(0).getDatapoints());
+    }
+    
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

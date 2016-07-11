@@ -163,6 +163,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case RANGE:
     case FILL:
     case FILL_CALCULATE:
+    case FILTER:
     case LOG:
     case CULL_ABOVE:
     case CULL_BELOW:
@@ -240,6 +241,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case RANGE:
     case FILL:
     case FILL_CALCULATE:
+    case FILTER:
     case LOG:
     case CULL_ABOVE:
     case CULL_BELOW:
@@ -322,6 +324,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       case RANGE:
       case FILL:
       case FILL_CALCULATE:
+      case FILTER:
       case LOG:
       case CULL_ABOVE:
       case CULL_BELOW:
@@ -517,6 +520,10 @@ public class MetricReader<T> implements MetricReaderConstants {
       t = jj_consume_token(FILL_CALCULATE);
           {if (true) return t.image;}
       break;
+    case FILTER:
+      t = jj_consume_token(FILTER);
+          {if (true) return t.image;}
+      break;
     case LOG:
       t = jj_consume_token(LOG);
           {if (true) return t.image;}
@@ -674,7 +681,7 @@ public class MetricReader<T> implements MetricReaderConstants {
                                 List<Metric> metrics = new ArrayList<Metric>();
                     Map<MetricQuery, List<Metric>> metricsMap = tsdbService.getMetrics(queries);
                     for(List<Metric> m : metricsMap.values()) {
-                                        metrics.addAll(m);
+                    	metrics.addAll(m);
                     }
                     {if (true) return (List<T>) metrics;}
                 }
@@ -809,7 +816,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       jj_la1_1 = new int[] {0xffffffff,0xffffffff,0x0,0xffffffff,0xffffffff,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x407ff,0x10407ff,0x1000,0x10407ff,0x7ff,0x40000,0x100000,0x2000,0x800,0x6a0000,};
+      jj_la1_2 = new int[] {0x80fff,0x2080fff,0x2000,0x2080fff,0xfff,0x80000,0x200000,0x4000,0x1000,0xd40000,};
    }
 
   /** Constructor with InputStream. */
@@ -926,7 +933,7 @@ public class MetricReader<T> implements MetricReaderConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[89];
+    boolean[] la1tokens = new boolean[90];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -946,7 +953,7 @@ public class MetricReader<T> implements MetricReaderConstants {
         }
       }
     }
-    for (int i = 0; i < 89; i++) {
+    for (int i = 0; i < 90; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

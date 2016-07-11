@@ -6,6 +6,9 @@ package com.salesforce.dva.argus.service.broker;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 import com.salesforce.dva.argus.entity.Annotation;
@@ -15,7 +18,6 @@ import com.salesforce.dva.argus.service.TSDBService;
 import com.salesforce.dva.argus.service.broker.HTTP.ArgusService;
 import com.salesforce.dva.argus.service.tsdb.AnnotationQuery;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
-import com.salesforce.dva.argus.service.tsdb.DefaultTSDBService.Property;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
@@ -36,32 +38,34 @@ public class DefaultJSONService extends DefaultService implements TSDBService {
 
 	@Override
 	public Map<MetricQuery, List<Metric>> getMetrics(List<MetricQuery> queries) {
-        service.login(username, password);
+		service.login(username, password);
         SystemAssert.requireArgument(queries.size()==1, "ArgusCore+ requires turn off discovery service!");
         String expression=getExpression(queries.get(0));
+        
+        
         System.out.println("\n\nArgusCore+ service...expression acknowledged+ "+expression);
-        Map<MetricQuery, List<Metric>> result=service.getMeticMap(queries.get(0), expression);
-        return result;
+        return service.getMeticMap(queries.get(0), expression);
 	}
 		
 	private String getExpression(MetricQuery query){
 		String namespace=query.getNamespace();
-		Map<String,String> tags=query.getTags();
 		String expression=query.getStartTimestamp()+":"+query.getEndTimestamp()+":";
 		if (namespace!=null&&namespace.length()!=0){
 			expression+=namespace+".";
 		}
+		Map<String,String> tags=query.getTags();
 		expression+=query.getScope()+":"+query.getMetric();
-		if (tags!=null&&tags.size()!=0){
-			expression+=tags.toString();
+		if (tags!=null&&tags.size()!=0){			
+			Set<String> resultset=tags.entrySet().stream().map(i->i.getKey()+"="+i.getValue()).collect(Collectors.toSet());
+			expression+="{"+String.join(",", resultset)+"}";
 		}
-		expression+=":avg";
+		expression+=":"+query.getAggregator().toString().toLowerCase();
 		return expression;
 	}
 	
 	public enum Property {
 	    JSON_ENDPOINT("service.property.json.endpoint","http://localhost"),
-	    JSON_USERNAME("service.property.json.username","ethan.wang"),
+	    JSON_USERNAME("service.property.json.username","defaultUser"),
 	    JSON_PASSWORD("service.property.json.password","password");
 		private final String _name;
         private final String _defaultValue;
@@ -91,8 +95,7 @@ public class DefaultJSONService extends DefaultService implements TSDBService {
 
 	@Override
 	public void putAnnotations(List<Annotation> annotations) {
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub	
 	}
 
 	@Override

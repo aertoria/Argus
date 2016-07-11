@@ -325,15 +325,22 @@ public class ArgusHttpClient{
     }
     
     //provided a string response,, return Metric template
-    private List<Metric> deSerializer(String response){    	
+    private List<Metric> deSerializer(String response){
     	List<Metric> metrics=new ArrayList<Metric>();
     	response="{\"object\": "+response+"}";
     	JSONObject obj = new JSONObject(response);
-    	JSONArray objectArray=obj.getJSONArray("object");
-    	for (int i = 0; i < objectArray.length(); i++){
-    		JSONObject current=objectArray.getJSONObject(i);
-    		Metric m=deSerializer(current);
-    		metrics.add(m);
+    	try{
+    		JSONArray objectArray=obj.getJSONArray("object");
+	    	for (int i = 0; i < objectArray.length(); i++){
+	    		JSONObject current=objectArray.getJSONObject(i);
+	    		Metric m=deSerializer(current);
+	    		metrics.add(m);
+	    	}
+    	}catch(Exception ex){
+        	if(obj.getJSONObject("object").has("message")){
+        		throw new OrchestraException("DefaultJSONService Exception+"+obj.getJSONObject("object").getString("message")+"\n"+ex);
+        	}
+        	throw new OrchestraException(ex);
     	}
     	return metrics;
     }

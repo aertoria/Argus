@@ -178,6 +178,7 @@ TOKEN : { < LIMIT : "LIMIT" > }
 TOKEN : { < RANGE : "RANGE" > }
 TOKEN : { < FILL : "FILL" > }
 TOKEN : { < FILL_CALCULATE : "FILL_CALCULATE" > }
+TOKEN : { < FILTER : "FILTER" > }
 TOKEN : { < LOG : "LOG" > }
 TOKEN : { < CULL_ABOVE : "CULL_ABOVE" > }
 TOKEN : { < CULL_BELOW : "CULL_BELOW" > }
@@ -414,7 +415,10 @@ private String functionName() :
 	|
 	t = <FILL_CALCULATE>
 	{ return t.image; }
-	|	
+	|
+	t = <FILTER>
+	{ return t.image; }
+	|
 	t = <LOG>
 	{ return t.image; }
 	|	

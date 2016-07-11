@@ -30,7 +30,7 @@
  */
 package com.salesforce.dva.argus.service.metric.transform;
 /**
- * Scales multiple time series.
+ * Scales multiple time series. "M X N is"+metricNameSet+" X "+tagSet
  *
  * @author  aertoria ethan.wang@salesforce.com
  */
@@ -64,7 +64,9 @@ public class ScaleMatchTransform implements Transform{
 		Set<String> metricNameSet=ms.getUniqueMetricName();
 		Set<String> tagSet=ms.getUniqueTagName(tagName);
 		
-		//System.out.println("M X N is"+metricNameSet+" X "+tagSet);
+		if (constants.size()==2){
+			matchingPattern=constants.get(1);
+		}
 		
 		List<Metric> toBeSumed=new ArrayList<Metric>();
 		//for the same device, it multiplies all matching metrics.
@@ -77,11 +79,10 @@ public class ScaleMatchTransform implements Transform{
 				}
 			}
 			if (toBeScaled.size()>1){
-				toBeSumed.addAll(local_scale(toBeScaled));
+				toBeSumed.addAll(scale(toBeScaled));
 			}
 		}
-
-		return local_sum(toBeSumed);
+		return sum(toBeSumed);
 	}
 
 	@Override
@@ -94,14 +95,12 @@ public class ScaleMatchTransform implements Transform{
 		return TransformFactory.Function.SCALE_MATCH.name();
 	}
 
-	private List<Metric> local_scale(List<Metric> metrics) {
-		Transform sumTransform = new MetricZipperTransform(new ScaleValueZipper());
-		return sumTransform.transform(metrics);
+	private List<Metric> scale(List<Metric> metrics) {
+		return new MetricZipperTransform(new ScaleValueZipper()).transform(metrics);
 	}
 	
-	private List<Metric> local_sum(List<Metric> metrics) {
-		Transform sum_vTransform = new MetricReducerOrMappingTransform(new SumValueReducerOrMapping());
-		return sum_vTransform.transform(metrics);
+	private List<Metric> sum(List<Metric> metrics) {
+		return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping()).transform(metrics);
 	}
 	
 	private class Metrics{

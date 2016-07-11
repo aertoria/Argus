@@ -273,7 +273,6 @@ public class MetricQuery extends AnnotationQuery {
      * @author  Tom Valine (tvaline@salesforce.com), Bhinav Sura (bhinav.sura@salesforce.com)
      */
     public enum Aggregator {
-
         MIN("min"),
         MAX("max"),
         SUM("sum"),

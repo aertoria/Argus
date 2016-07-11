@@ -28,8 +28,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-     
-
 package com.salesforce.dva.argus.service.metric.transform;
 
 import static org.junit.Assert.*;
@@ -38,14 +36,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.salesforce.dva.argus.entity.Metric;
+import com.salesforce.dva.argus.service.TSDBService;
+import com.salesforce.dva.argus.service.broker.DefaultJSONService;
+import com.salesforce.dva.argus.service.tsdb.MetricQuery;
+import com.salesforce.dva.argus.system.SystemConfiguration;
 
 public class ScaleMatchTransformTest {
-	 private static final String TEST_SCOPE = "test-scope";
-	 private static final String TEST_METRIC = "test-metric";
+	private static final String TEST_SCOPE = "test-scope";
+	private static final String TEST_METRIC = "test-metric";
 	 
 	 @Test(expected = UnsupportedOperationException.class)
 	 public void ScaleMatchTransformWithEmtpyConstant(){
@@ -257,6 +265,45 @@ public class ScaleMatchTransformTest {
         assertEquals(result.get(0).getDatapoints().size(), expected.size());
         assertEquals(expected, result.get(0).getDatapoints());
 	 }
+	 
+	 
+	 @Test
+	 public void ScaleMatchTransformWithNoMatching(){
+		Transform transform = new ScaleMatchTransform();
+		
+        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        datapoints_1.put(100L, "200.0");
+        datapoints_1.put(200L, "100.0");
+        metric_1.setDatapoints(datapoints_1);
+        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+        metric_1.setMetric("TrustTime");
+        
+        
+        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
+        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+        datapoints_2.put(100L, "2.0");
+        datapoints_2.put(200L, "3.0");
+        metric_2.setDatapoints(datapoints_2);
+        metric_2.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+        metric_2.setMetric("TrustCount");
+        
+      
+        
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        metrics.add(metric_2);
+        
+        List<String> constants = new ArrayList<String>();
+        constants.add("device");
+        constants.add("AAAA");
+        List<Metric> result = transform.transform(metrics,constants);
+        Map<Long, String> expected = new HashMap<Long, String>();
+        assertEquals(result.get(0).getDatapoints().size(), expected.size());
+        assertEquals(expected, result.get(0).getDatapoints());
+	 }
+	 
+	 
 	 
 	 
 	 @Test
