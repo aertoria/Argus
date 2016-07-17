@@ -220,7 +220,6 @@ public class LDAPAuthService extends DefaultService implements AuthService {
      * @author  Tom Valine (tvaline@salesforce.com)
      */
     public enum Property {
-
         /** The LDAP endpoint. */
         LDAP_ENDPOINT("service.property.auth.ldap.endpoint", "ldaps://ldaps.test.com:123"),
         /** The LDAP search base. */

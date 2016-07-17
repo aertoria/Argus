@@ -168,37 +168,39 @@ public interface MetricReaderConstants {
   /** RegularExpression Id. */
   int CONSECUTIVE = 73;
   /** RegularExpression Id. */
-  int HW_FORECAST = 74;
+  int foreach = 74;
   /** RegularExpression Id. */
-  int HW_DEVIATION = 75;
+  int HW_FORECAST = 75;
   /** RegularExpression Id. */
-  int COLON = 76;
+  int HW_DEVIATION = 76;
   /** RegularExpression Id. */
-  int COMMA = 77;
+  int COLON = 77;
   /** RegularExpression Id. */
-  int LEFT_CURLY = 78;
+  int COMMA = 78;
   /** RegularExpression Id. */
-  int RIGHT_CURLY = 79;
+  int LEFT_CURLY = 79;
   /** RegularExpression Id. */
-  int LEFT_PARENTHESIS = 80;
+  int RIGHT_CURLY = 80;
   /** RegularExpression Id. */
-  int RIGHT_PARENTHESIS = 81;
+  int LEFT_PARENTHESIS = 81;
   /** RegularExpression Id. */
-  int AGGREGATOR = 82;
+  int RIGHT_PARENTHESIS = 82;
   /** RegularExpression Id. */
-  int TIME = 83;
+  int AGGREGATOR = 83;
   /** RegularExpression Id. */
-  int DOWNSAMPLER = 84;
+  int TIME = 84;
   /** RegularExpression Id. */
-  int NAMESPACE = 85;
+  int DOWNSAMPLER = 85;
   /** RegularExpression Id. */
-  int SCOPE = 86;
+  int NAMESPACE = 86;
   /** RegularExpression Id. */
-  int METRIC = 87;
+  int SCOPE = 87;
   /** RegularExpression Id. */
-  int TAGS = 88;
+  int METRIC = 88;
   /** RegularExpression Id. */
-  int CONSTANT = 89;
+  int TAGS = 89;
+  /** RegularExpression Id. */
+  int CONSTANT = 90;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -279,6 +281,7 @@ public interface MetricReaderConstants {
     "\"DEVIATION\"",
     "\"JOIN\"",
     "\"CONSECUTIVE\"",
+    "\"foreach\"",
     "\"HW_FORECAST\"",
     "\"HW_DEVIATION\"",
     "\":\"",
