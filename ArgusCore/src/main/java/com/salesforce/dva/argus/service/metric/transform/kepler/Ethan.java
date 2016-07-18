@@ -16,6 +16,7 @@ public class Ethan extends DefaultService implements EthanService{
 		this.k=k;
 	}
 	
+	@aertoria(id = 140)
 	public String getK(){
 		return this.k.get().getName();
 	}
