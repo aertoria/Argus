@@ -36,6 +36,7 @@ package com.salesforce.dva.argus.service.metric.transform;
  */
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -100,7 +101,9 @@ public class ScaleMatchTransform implements Transform{
 	}
 	
 	private List<Metric> sum(List<Metric> metrics) {
-		return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping()).transform(metrics);
+		List<String> constants=new LinkedList<String>();
+		constants.add("union");
+		return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping()).transform(metrics,constants);
 	}
 	
 	private class Metrics{

@@ -1,4 +1,4 @@
-package com.salesforce.dva.argus.service.metric.transform;
+package com.salesforce.dva.argus.service.metric.transform.plus;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -18,6 +18,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.Inject;
 import com.salesforce.dva.argus.entity.Metric;
+import com.salesforce.dva.argus.service.metric.transform.Transform;
+import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 @RunWith(MockitoJUnitRunner.class)
 public class P90TransformTest {
 	 private static final String TEST_SCOPE = "test-scope";

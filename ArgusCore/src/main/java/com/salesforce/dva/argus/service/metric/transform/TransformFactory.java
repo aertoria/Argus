@@ -35,6 +35,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.salesforce.dva.argus.service.TSDBService;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
+import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 
 /**
  * Factory for metric transforms.
