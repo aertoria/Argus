@@ -24,7 +24,7 @@ import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTr
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
 public class HeimdallTotalAvaTransformTest {
-	private static final String TEST_SCOPE = "test-scope";
+	private static final String TEST_SCOPE = "core.CHI.SP1.na11";
 	private static final String TEST_METRIC = "test-metric";
 	private Injector injector;
 	private SystemConfiguration configuration;

@@ -41,8 +41,6 @@ public class DefaultJSONService extends DefaultService implements TSDBService {
 		service.login(username, password);
         SystemAssert.requireArgument(queries.size()==1, "ArgusCore+ requires turn off discovery service!");
         String expression=getExpression(queries.get(0));
-        
-        
         System.out.println("\n\nArgusCore+ service...expression acknowledged+ "+expression);
         return service.getMeticMap(queries.get(0), expression);
 	}

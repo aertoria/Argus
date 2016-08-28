@@ -9,7 +9,7 @@ public class Kepler implements KeplerService{
 	@Inject
 	public Kepler(Provider<A> a){
 		this.a=a;
-		System.out.println("Kepler class has been called"+a.getClass());
+		//System.out.println("Kepler class has been called"+a.getClass());
 	}
 	
 	@Override

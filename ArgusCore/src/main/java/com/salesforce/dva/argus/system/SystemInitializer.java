@@ -79,6 +79,7 @@ import com.salesforce.dva.argus.service.management.DefaultManagementService;
 import com.salesforce.dva.argus.service.metric.DefaultMetricService;
 import com.salesforce.dva.argus.service.monitor.DefaultMonitorService;
 import com.salesforce.dva.argus.service.schema.DefaultDiscoveryService;
+import com.salesforce.dva.argus.service.schema.DeferredDiscoveryService;
 import com.salesforce.dva.argus.service.tsdb.CachedTSDBService;
 import com.salesforce.dva.argus.service.warden.DefaultWardenService;
 import com.salesforce.dva.argus.system.SystemConfiguration.Property;
@@ -242,6 +243,9 @@ final class SystemInitializer extends AbstractModule {
         //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
         bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
         
+        //bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
+        bindConcreteClass(DeferredDiscoveryService.class, DiscoveryService.class);
+        
         
         bindConcreteClass(DefaultUserService.class, UserService.class);
         bindConcreteClass(DefaultDashboardService.class, DashboardService.class);
@@ -256,7 +260,9 @@ final class SystemInitializer extends AbstractModule {
         bindConcreteClass(DefaultAuditService.class, AuditService.class);
         bindConcreteClass(DefaultHistoryService.class, HistoryService.class);
         bindConcreteClass(DefaultNamespaceService.class, NamespaceService.class);
-        bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
+        
+
+        
         bindConcreteClass(DefaultDistributedSchedulingLockService.class, DistributedSchedulingLockService.class);
     }
 

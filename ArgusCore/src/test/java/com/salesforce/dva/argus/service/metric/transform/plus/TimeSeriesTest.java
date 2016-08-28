@@ -96,6 +96,23 @@ public class TimeSeriesTest {
 	}
 	
 	
+	@Test
+	public void dev(){
+		System.out.println("start");
+		
+		int a =-5;
+
+		System.out.println(Integer.toBinaryString(-33));
+		
+		System.out.println(-33/32);
+		System.out.println(-33>>5);
+		
+		
+		float b=-5.0f;
+		System.out.println((byte)Float.floatToIntBits(b));
+		
+	}
+	
 	
 //	@Test
 //	public void HeimdallTotalAvaTransform_dev(){

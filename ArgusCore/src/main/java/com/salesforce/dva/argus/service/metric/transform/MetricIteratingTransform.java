@@ -40,11 +40,6 @@ import com.salesforce.dva.argus.entity.Metric;
 import com.salesforce.dva.argus.system.SystemAssert;
 
 public class MetricIteratingTransform implements TransformIterator{
-
-	@Override
-	public List<List<Metric>> iterate(List<Metric> metrics) {
-		throw new UnsupportedOperationException("This transform requires at least one constant as tagName. e.g. $device");
-	}
 	
 	@Override
 	public List<List<Metric>> iterate(List<Metric> metrics, List<String> constants) {
@@ -73,6 +68,11 @@ public class MetricIteratingTransform implements TransformIterator{
 			}
 		}
 		return returnningResult;
+	}
+	
+	@Override
+	public List<List<Metric>> iterate(List<Metric> metrics) {
+		throw new UnsupportedOperationException("This transform requires at least one constant as tagName. e.g. $device");
 	}
 	
 	@Override

@@ -128,6 +128,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       break;
     case IDENTITY:
     case HEIMDALL_TOTALAVA:
+    case HEIMDALL:
     case SUM:
     case SUM_V:
     case DIVIDE:
@@ -207,6 +208,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       break;
     case IDENTITY:
     case HEIMDALL_TOTALAVA:
+    case HEIMDALL:
     case SUM:
     case SUM_V:
     case DIVIDE:
@@ -291,6 +293,7 @@ public class MetricReader<T> implements MetricReaderConstants {
         break;
       case IDENTITY:
       case HEIMDALL_TOTALAVA:
+      case HEIMDALL:
       case SUM:
       case SUM_V:
       case DIVIDE:
@@ -372,6 +375,10 @@ public class MetricReader<T> implements MetricReaderConstants {
       break;
     case HEIMDALL_TOTALAVA:
       t = jj_consume_token(HEIMDALL_TOTALAVA);
+          {if (true) return t.image;}
+      break;
+    case HEIMDALL:
+      t = jj_consume_token(HEIMDALL);
           {if (true) return t.image;}
       break;
     case MULTIPLY:
@@ -598,7 +605,6 @@ public class MetricReader<T> implements MetricReaderConstants {
                                 {if (true) return (List<T>) Arrays.asList( new Metric[] { new Metric("test","metric") });}
                         } else {
                                 Transform transform = factory.getTransform(functionName);
-
                                 if (functionName.equals("foreach")){
                         SystemAssert.requireArgument(constants!=null&&constants.size()>=2, "map function requires at least two constants. e.g., $device, $SCALE");
                         Transform _mapper = factory.getTransform(constants.get(1));
@@ -836,7 +842,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       jj_la1_1 = new int[] {0xffffffff,0xffffffff,0x0,0xffffffff,0xffffffff,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x101fff,0x4101fff,0x4000,0x4101fff,0x1fff,0x100000,0x400000,0x8000,0x2000,0x1a80000,};
+      jj_la1_2 = new int[] {0x203fff,0x8203fff,0x8000,0x8203fff,0x3fff,0x200000,0x800000,0x10000,0x4000,0x3500000,};
    }
 
   /** Constructor with InputStream. */
@@ -953,7 +959,7 @@ public class MetricReader<T> implements MetricReaderConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[91];
+    boolean[] la1tokens = new boolean[92];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -973,7 +979,7 @@ public class MetricReader<T> implements MetricReaderConstants {
         }
       }
     }
-    for (int i = 0; i < 91; i++) {
+    for (int i = 0; i < 92; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

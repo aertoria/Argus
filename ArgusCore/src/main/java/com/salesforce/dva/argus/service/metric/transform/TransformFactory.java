@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.salesforce.dva.argus.service.TSDBService;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallMetricReducer;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 
@@ -51,6 +52,8 @@ public class TransformFactory {
 	@Inject
 	Provider<FilterReducerTransform> _filterReducerTransform;
 	
+	@Inject
+	Provider<HeimdallMetricReducer> _heimdallMetricReducer;
     //~ Static fields/initializers *******************************************************************************************************************
 
     /** Default metric name. */
@@ -192,6 +195,8 @@ public class TransformFactory {
                 return new P90Transform();
             case HEIMDALL_TOTALAVA:
             	return _heimdallTotalAvaTransform.get();
+            case HEIMDALL:
+            	return _heimdallMetricReducer.get();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -263,8 +268,8 @@ public class TransformFactory {
         HW_DEVIATION("HW_DEVIATION", "Performns HoltWinters Deviation."),
         GROUPBY("GROUPBY", "Creates groups of metrics based on some matching criteria and then performs the given aggregation."),
         P90("P90", "Give P90 value of this metrics."),
-        HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics.");
-
+        HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
+    	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic");
         private final String _name;
         private final String _description;
 

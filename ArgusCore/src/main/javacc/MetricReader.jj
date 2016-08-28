@@ -143,6 +143,7 @@ TOKEN : { < #TIME_UNIT : "s" | "m" | "h" | "d" > }
 
 TOKEN : { < IDENTITY : "IDENTITY" > }
 TOKEN : { < HEIMDALL_TOTALAVA : "HEIMDALL_TOTALAVA" > }
+TOKEN : { < HEIMDALL : "HEIMDALL" > }
 TOKEN : { < SUM : "SUM" > }
 TOKEN : { < SUM_V : "SUM_V" > }
 TOKEN : { < DIVIDE : "DIVIDE" > }
@@ -304,6 +305,9 @@ private String functionName() :
 	{ return t.image; }			
 	|
 	t = <HEIMDALL_TOTALAVA>
+	{ return t.image; }
+	|
+	t = <HEIMDALL>
 	{ return t.image; }
 	|
 	t = <MULTIPLY>
