@@ -97,7 +97,6 @@ public class HeimdallTotalAvaTransform implements Transform {
 		return constructingReturn(ZEROMETRIC, averagedAPT.get(0).getDatapoints(), cpu.get(0).getDatapoints());
 	}
 
-
 	@Override
 	public List<Metric> transform(List<Metric> metrics) {
 		System.out.println("\n**PRIVATE TRANSFORM**Heimdall TotalAva");
@@ -160,6 +159,7 @@ public class HeimdallTotalAvaTransform implements Transform {
 		return averagedAPT;
 	}
 
+	/*given RacServerLevel metric, return impactedMinmetric*/
 	private final List<Metric> getImpactedMin(List<Metric> racLevelApt, List<Metric> racLevelCPU) {
 		assert (racLevelApt != null && racLevelApt.get(0).getDatapoints() != null) : "input not valid";
 		List<Metric> cull_below_filter = cull_below(racLevelApt, 500);
@@ -184,16 +184,6 @@ public class HeimdallTotalAvaTransform implements Transform {
 		List<Metric> impactedMin = fill("1h", downsample("1h-count", logicMerge));
 		return impactedMin;
 	}
-
-	// private final Map<Long, String> caculateTTM(Map<Long, String>
-	// racLevelCPU, Map<Long, String> racLevelAPT){
-	// assert(racLevelCPU.entrySet().size()>0&&racLevelAPT.entrySet().size()>0):"Input
-	// can not be null";
-	// Map<Long, String> tsCPU = new HashMap<Long,String>();
-	// //assert(racLevelCPU.keySet().equals(racLevelAPT.keySet())):"racLevelCPU
-	// and APT should filled up all zeros and align up";
-	// return null;
-	// }
 
 	private final List<Metric> constructingReturn(List<Metric> template, Map<Long, String> tsTotalAvaRate, Map<Long, String> tsImpactMins, Map<Long, String> tsCPU) {
 		// System.out.println("OUTPUTING...tsTotalAvaRate"+tsTotalAvaRate);
