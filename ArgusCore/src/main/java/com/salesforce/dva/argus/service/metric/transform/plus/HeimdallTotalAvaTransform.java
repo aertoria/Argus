@@ -39,7 +39,7 @@ public class HeimdallTotalAvaTransform implements Transform {
 	public enum KafkaPattern {
 		APT_TIME(".*SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode.*"), 
 		APT_COUNT(".*SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode.*"), 
-		ACT("??.*SFDC_type-Stats-name1-System-name2-trustActiveSessionCountRACNode.*"), 
+		ACT("NOTIMPLEMENTED YET!!!!.*SFDC_type-Stats-name1-System-name2-trustActiveSessionCountRACNode.*"), 
 		CPU(".*result.*");
 		private final String pattern;
 

@@ -3,7 +3,9 @@ package com.salesforce.dva.argus.service.metric.transform.plus;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,69 +52,96 @@ public class TimeSeriesTest {
 		injector=null;
 	}
 	
-	@Test
-	public void fillZero(){
-		Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
-        datapoints_1.put(100L, "900.0");
-        datapoints_1.put(200L, "1200.0");
-        datapoints_1.put(300L, "1000.0");
-        metric_1.setDatapoints(datapoints_1);
-        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        TimeSeries aptTimeSeries = TimeSeries.getTimeSeries(metric_1);
-        
-        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
-        datapoints_2.put(100L, "900.0");
-        datapoints_2.put(200L, "1200.0");
-        datapoints_2.put(300L, "1000.0");
-        datapoints_2.put(400L, "1000.0");
-        metric_2.setDatapoints(datapoints_2);
-        metric_2.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        TimeSeries template = TimeSeries.getTimeSeries(metric_2);
-        
-        TimeSeries result=aptTimeSeries.fillZero(template);
-        assertTrue(result.getTs().size()==4);
-        assertTrue(result.getTs().get(400L).equals(String.valueOf(0)));
-	}
-	
-	@Test
-	public void remoteZero(){
-		Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
-        datapoints_1.put(100L, "900.0");
-        datapoints_1.put(200L, "0.0");
-        datapoints_1.put(300L, "1000.0");
-        datapoints_1.put(400L, "0");
-        metric_1.setDatapoints(datapoints_1);
-        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        TimeSeries aptTimeSeries = TimeSeries.getTimeSeries(metric_1);
-        
-        TimeSeries result=aptTimeSeries.remoteZero();
-        assertTrue(result.getTs().size()==2);
-	}
-	
+//	@Test
+//	public void fillZero(){
+//		Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+//        datapoints_1.put(100L, "900.0");
+//        datapoints_1.put(200L, "1200.0");
+//        datapoints_1.put(300L, "1000.0");
+//        metric_1.setDatapoints(datapoints_1);
+//        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        TimeSeries aptTimeSeries = TimeSeries.getTimeSeries(metric_1);
+//        
+//        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+//        datapoints_2.put(100L, "900.0");
+//        datapoints_2.put(200L, "1200.0");
+//        datapoints_2.put(300L, "1000.0");
+//        datapoints_2.put(400L, "1000.0");
+//        metric_2.setDatapoints(datapoints_2);
+//        metric_2.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        TimeSeries template = TimeSeries.getTimeSeries(metric_2);
+//        
+//        TimeSeries result=aptTimeSeries.fillZero(template);
+//        assertTrue(result.getTs().size()==4);
+//        assertTrue(result.getTs().get(400L).equals(String.valueOf(0)));
+//	}
+//	
+//	@Test
+//	public void remoteZero(){
+//		Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+//        datapoints_1.put(100L, "900.0");
+//        datapoints_1.put(200L, "0.0");
+//        datapoints_1.put(300L, "1000.0");
+//        datapoints_1.put(400L, "0");
+//        metric_1.setDatapoints(datapoints_1);
+//        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        TimeSeries aptTimeSeries = TimeSeries.getTimeSeries(metric_1);
+//        
+//        TimeSeries result=aptTimeSeries.remoteZero();
+//        assertTrue(result.getTs().size()==2);
+//	}
+//	
 	
 	@Test
 	public void dev(){
-		System.out.println("start");
-		
-		int a =-5;
+//		System.out.println("start");
+//		
+//		int a =-5;
+//
+//		System.out.println(Integer.toBinaryString(-33));
+//		
+//		System.out.println(-33/32);
+//		System.out.println(-33>>5);
+//		
+//		
+//		float b=-5.0f;
+//		System.out.println((byte)Float.floatToIntBits(b));
+//		
+//		
+		//List<Integer> a=new ArrayList<Integer>(Arrays.asList(1,2,3));
 
-		System.out.println(Integer.toBinaryString(-33));
+		Integer a1=Integer.valueOf(1000);
+		Integer a2=Integer.valueOf(1000);
+		int b=1000;
+		System.out.println(System.identityHashCode(a1));
+		System.out.println(System.identityHashCode(a2));
+		System.out.println(System.identityHashCode(1000));
 		
-		System.out.println(-33/32);
-		System.out.println(-33>>5);
+		System.out.println(System.identityHashCode(b));
 		
 		
-		float b=-5.0f;
-		System.out.println((byte)Float.floatToIntBits(b));
+		Map a=new LinkedHashMap<>();
+//		b=b+1;
+//		System.out.println(System.identityHashCode(b));
+//		System.out.println(System.identityHashCode(11));
+		
+//		int a=0;
+//		System.out.println(System.identityHashCode(500));
+//		System.out.println(System.identityHashCode(500));
+//		System.out.println(System.identityHashCode(a));
+//		System.out.println(System.identityHashCode(a));
 		
 	}
-	
+//	List doA(List input){
+//		input=new ArrayList<String>(Arrays.asList("a","b"));
+//		return input;
+//	}
 	
 //	@Test
 //	public void HeimdallTotalAvaTransform_dev(){
