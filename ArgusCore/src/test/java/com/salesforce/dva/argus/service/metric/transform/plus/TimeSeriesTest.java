@@ -5,10 +5,13 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -116,17 +119,20 @@ public class TimeSeriesTest {
 //		
 		//List<Integer> a=new ArrayList<Integer>(Arrays.asList(1,2,3));
 
-		Integer a1=Integer.valueOf(1000);
-		Integer a2=Integer.valueOf(1000);
-		int b=1000;
-		System.out.println(System.identityHashCode(a1));
-		System.out.println(System.identityHashCode(a2));
-		System.out.println(System.identityHashCode(1000));
+//		Integer a1=Integer.valueOf(1000);
+//		Integer a2=Integer.valueOf(1000);
+//		int b=1000;
+//		System.out.println(System.identityHashCode(a1));
+//		System.out.println(System.identityHashCode(a2));
+//		System.out.println(System.identityHashCode(1000));
+//		
+//		System.out.println(System.identityHashCode(b));
+//		
+//		
+//		Map a=new LinkedHashMap<>();
 		
-		System.out.println(System.identityHashCode(b));
 		
 		
-		Map a=new LinkedHashMap<>();
 //		b=b+1;
 //		System.out.println(System.identityHashCode(b));
 //		System.out.println(System.identityHashCode(11));
@@ -136,8 +142,22 @@ public class TimeSeriesTest {
 //		System.out.println(System.identityHashCode(500));
 //		System.out.println(System.identityHashCode(a));
 //		System.out.println(System.identityHashCode(a));
+		LinkedHashMap<Integer,String> lm=new LinkedHashMap<Integer,String>();  
+		  
+		lm.put(100,"Amit");  
+		lm.put(101,"Vijay");  
+		lm.put(102,"Rahul");  
+		
+		System.out.println(lm);
+		
+		Set s=lm.keySet();
+		System.out.println(s.getClass());
+		
+		Map<Long,String> m=new TreeMap<Long,String>();
 		
 	}
+	
+	
 //	List doA(List input){
 //		input=new ArrayList<String>(Arrays.asList("a","b"));
 //		return input;

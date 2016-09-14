@@ -288,7 +288,7 @@ public class HeimdallTotalAvaTransform implements Transform {
 		m2.forEach(m -> returnMetric.add(new Metric(m)));
 		return returnMetric;
 	}
-
+ 
 	private final List<Metric> downsample(String distance, List<Metric> metrics) {
 		List<Metric> mutable = new ArrayList<Metric>();
 		metrics.forEach(m -> mutable.add(new Metric(m)));

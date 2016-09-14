@@ -1,5 +1,6 @@
 package com.salesforce.dva.argus.service.metric.transform.plus;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,11 +22,16 @@ import org.eclipse.persistence.internal.jpa.parsing.UnaryMinus;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.salesforce.dva.argus.entity.Metric;
+import com.salesforce.dva.argus.service.metric.transform.MetricDistiller;
 import com.salesforce.dva.argus.service.metric.transform.Transform;
 import com.salesforce.dva.argus.service.metric.transform.TransformFactory;
 import com.salesforce.dva.argus.service.metric.transform.TransformFactory.Function;
 
-
+/**
+ * Immutable system configuration information.
+ *
+ * @author  aertoria (ethan.wang@salesforce.com)
+ */
 public class HeimdallMetricReducer implements Transform{
 	@Inject
 	private Provider<ComputationUtil> _computationUtil;
@@ -42,17 +48,31 @@ public class HeimdallMetricReducer implements Transform{
 		final ReportRange reportRange=ReportRange.getReportRange(metricsLineupInHour.get(0));
 		
 		List<MetricConsumer> listConsumer=consumeMetrics(metricsLineup);
-
+		
+		//listConsumer.forEach(c->c.inspect());
 		Renderable pod=_pod.get().getPod(listConsumer,reportRange);
 		((SFDCPod) pod).inspect();
+		
+		switch(constants.get(0)){
+		case "POD":
+			return render(()->((Reportable) pod).reportPOD());
+		case "RAC":
+			return render(()->((Reportable) pod).reportRAC());
+		case "TOTAL":
+			return render(()->((Reportable) pod).reportTOTAL());
+		}
 		
 		switch(constants.get(0)){
 		case "APT":
 			return render(()->pod.renderAPT());
 		case "APTPOD":
 			return render(()->pod.renderAPTPOD());
+		case "TRAFFIC":
+			return render(()->pod.renderTRAFFIC());
 		case "ACT":
 			return render(()->pod.renderACT());
+		case "CPU":
+			return render(()->pod.renderCPU());
 		case "IMPACT":
 			return render(()->pod.renderIMPACT());
 		case "IMPACTPOD":
@@ -67,6 +87,8 @@ public class HeimdallMetricReducer implements Transform{
 			return render(()->pod.renderAVATOTAL());
 		case "TTMPOD":
 			return render(()->pod.renderTTMPOD());
+		case "TTMTOTAL":
+			return render(()->pod.renderTTMTOTAL());
 		}
 		throw new RuntimeException("unsupported");
 	}
@@ -100,7 +122,6 @@ public class HeimdallMetricReducer implements Transform{
 	public String getResultScopeName() {
 		return TransformFactory.Function.HEIMDALL.name();
 	}
-
 }
 
 /**Aspect Defined as Renderable by Transform**/
@@ -110,22 +131,32 @@ interface Renderable{
 	List<Metric> renderIMPACTTOTAL();
 	List<Metric> renderAPT();
 	List<Metric> renderAPTPOD();
+	List<Metric> renderTRAFFIC();
 	List<Metric> renderACT();
+	List<Metric> renderCPU();
 	List<Metric> renderAVA();
 	List<Metric> renderAVAPOD();
 	List<Metric> renderAVATOTAL();
 	List<Metric> renderTTMPOD();
+	List<Metric> renderTTMTOTAL();
 }
 
+/**Aspect Defined as Reported by Transform**/
+interface Reportable{
+	List<Metric> reportRAC();//REPORT IMPACT. APT. ACT, CPU, TRAFFIC
+	List<Metric> reportPOD();//REPORT PODLEVL APT. IMPACT. AVA. TTM
+	List<Metric> reportTOTAL();
+}
 /**Aspect Defined as SFDCPod**/
 interface SFDCPod{
 	String getPodAddress();
 	void inspect();
 	boolean hasACT();
+	boolean hasCPU();
 }
 
 /**Pod implementation**/
-final class Pod implements Renderable, SFDCPod{
+final class Pod implements Renderable, Reportable, SFDCPod{
 	private List<RacServer> racServers;
 	private String podAddress;
 	private List<Metric> podAPT;
@@ -150,7 +181,10 @@ final class Pod implements Renderable, SFDCPod{
 	
 	private Set<RacServer> CreatAndloadRacServer(List<MetricConsumer> consumers,ReportRange reportRange){
 		Set<String> racServerAddresses=new HashSet<String>();
-		consumers.forEach(c -> racServerAddresses.add(c.getRacServerAddress()));
+		consumers.stream()
+				 .filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TIME_APPLEVEL)||c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TRAFFIC_APPLEVEL))
+				 .forEach(c -> racServerAddresses.add(c.getRacServerAddress()));
+		//System.out.println("creatAndloadRacServer"+racServerAddresses);
 		Set<RacServer> racServers = racServerAddresses.stream()
 														.map(address -> _racServer.get().getRacServer(address,reportRange,consumers))
 														.collect(Collectors.toSet());
@@ -195,7 +229,7 @@ final class Pod implements Renderable, SFDCPod{
 		assert(constructedProduct.isPresent()):"accumulation result is not valid";
 		assert(this.podTraffic!=null&&this.podTraffic.size()==1):"podAPT requires podTraffic";
 		if(constructedProduct.isPresent()){
-			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),this.podTraffic.get(0));
+			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),_computationUtil.get().removeZeroMetric(this.podTraffic.get(0)));
 			List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
 			Metric m=dividedResult.get(0);
 			m.setMetric(podAddress);
@@ -216,7 +250,7 @@ final class Pod implements Renderable, SFDCPod{
 		assert(constructedProduct.isPresent()):"accumulation result is not valid";
 		assert(this.podTraffic!=null&&this.podTraffic.size()==1):"podAPT requires podTraffic";
 		if(constructedProduct.isPresent()){
-			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),this.podTraffic.get(0));
+			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),_computationUtil.get().removeZeroMetric(this.podTraffic.get(0)));
 			List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
 			Metric m=dividedResult.get(0);
 			m.setMetric(podAddress);
@@ -251,7 +285,7 @@ final class Pod implements Renderable, SFDCPod{
 		
 		assert(constructedProduct.isPresent()&&constructedDivisor.isPresent()):"accumulation result is not valid";
 		if(constructedProduct.isPresent()&&constructedDivisor.isPresent()){
-			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),constructedDivisor.get());			
+			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),_computationUtil.get().removeZeroMetric(constructedDivisor.get()));			
 			List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
 			Metric m=dividedResult.get(0);
 			m.setMetric(podAddress);
@@ -284,7 +318,7 @@ final class Pod implements Renderable, SFDCPod{
 	
 	@Override
 	public List<Metric> renderIMPACTTOTAL() {
-		List<Metric> IMPACTPOD=renderAVAPOD();
+		List<Metric> IMPACTPOD=renderIMPACTPOD();
 		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTPOD);
 		return IMPACTTOTAL;
 	}
@@ -303,10 +337,27 @@ final class Pod implements Renderable, SFDCPod{
 	}
 	
 	@Override
+	public List<Metric> renderTRAFFIC() {
+		List<Metric> constructedResult=this.racServers.stream()
+				  .map(r -> r.getWeightedTrafficMinutely().get(0))
+				  .collect(Collectors.toList());
+		return Collections.unmodifiableList(constructedResult);
+	}
+	
+	@Override
 	public List<Metric> renderACT() {
 		List<Metric> constructedResult=this.racServers.stream()
 										  .filter(r -> r.hasACT())
 										  .map(r -> r.getRawACTMinutely().get(0))
+										  .collect(Collectors.toList());
+		return Collections.unmodifiableList(constructedResult);
+	}
+	
+	@Override
+	public List<Metric> renderCPU() {
+		List<Metric> constructedResult=this.racServers.stream()
+										  .filter(r -> r.hasCPU())
+										  .map(r -> r.getRawCPUMinutely().get(0))
 										  .collect(Collectors.toList());
 		return Collections.unmodifiableList(constructedResult);
 	}
@@ -337,27 +388,100 @@ final class Pod implements Renderable, SFDCPod{
 		return Collections.unmodifiableList(avaDownsampled);
 	};
 	
+	/**Reportable**/
+	@Override
+	public List<Metric> reportPOD() {		
+		List<Metric> reportPod=reportPODLevel();
+		List<Metric> result=reportPod.stream()
+						.map(m -> _computationUtil.get().downsample("1h-avg", Arrays.asList(m)).get(0))
+						.collect(Collectors.toList());
+		return result;
+	}
+	
+	private List<Metric> reportPODLevel(){
+		List<Metric> renderAPTPOD=renderAPTPOD();
+		renderAPTPOD.get(0).setMetric("PodLevelAPT");
+		List<Metric> renderIMPACTPOD=renderIMPACTPOD();
+		renderIMPACTPOD.get(0).setMetric("ImpactedMin");
+		List<Metric> renderAVAPOD=renderAVAPOD();
+		renderAVAPOD.get(0).setMetric("Availability"); 
+		List<Metric> renderTTMPOD=renderTTMPOD();
+		renderTTMPOD.get(0).setMetric("TTM");
+		
+		List<Metric> reportPod=new ArrayList<Metric>();
+		reportPod.addAll(renderAPTPOD);
+		reportPod.addAll(renderIMPACTPOD);
+		reportPod.addAll(renderAVAPOD);
+		reportPod.addAll(renderTTMPOD);
+		return Collections.unmodifiableList(reportPod);
+	}
+	
+	@Override
+	public List<Metric> reportRAC() {
+		List<Metric> reportRAC=new ArrayList<Metric>();	
+		List<Metric> renderAPT=renderAPT();
+		reportRAC.addAll(_computationUtil.get().reNameScope(renderAPT, "APT"));
+		List<Metric> renderACT=renderACT();
+		reportRAC.addAll(_computationUtil.get().reNameScope(renderACT, "ACT"));
+		List<Metric> renderCPU=renderCPU();
+		reportRAC.addAll(_computationUtil.get().reNameScope(renderCPU, "CPU"));
+		List<Metric> renderTRAFFIC=renderTRAFFIC();
+		reportRAC.addAll(_computationUtil.get().reNameScope(renderTRAFFIC, "Traffic"));
+		
+		return Collections.unmodifiableList(reportRAC);
+	}
+	
+	@Override
+	public List<Metric> reportTOTAL() {
+		List<Metric> renderIMPACTTOTAL=renderIMPACTTOTAL();
+		renderIMPACTTOTAL.get(0).setMetric("ImpactedMin");
+		List<Metric> renderAVATOTAL=renderAVATOTAL();
+		renderAVATOTAL.get(0).setMetric("Availability");
+		List<Metric> renderTTMTOTAL=renderTTMTOTAL();
+		renderTTMTOTAL.get(0).setMetric("TTM");
+		List<Metric> reportTotal=new ArrayList<Metric>();
+		
+		reportTotal.addAll(renderIMPACTTOTAL);
+		reportTotal.addAll(renderAVATOTAL);
+		reportTotal.addAll(renderTTMTOTAL);
+		
+		return Collections.unmodifiableList(reportTotal);
+	}
+	
 	/** TTM FORMULAR Following...
 	 * 			Version: SFDC_HEIMDALL_SEP2.001239x09F
-	 * 			Author: Decide on Meeting Jul 7th 2016
-	 * F1:(UNIONED_RAC_LEVEL_APT or UNIONED_RAC_LEVEL_ACT)  AND  (RAC trigger1 OR RAC trigger2)
-	 * F2:(POD_LEVEL_APT or POD_LEVEL_ACT)
-	 * TTM counted iif:   F1 OR F2
+	 * 			Author: Decided on Meeting Sep 14th 2016
+	 * F1:(UNIONED_RAC_LEVEL_APT or UNIONED_RAC_LEVEL_ACT)
+	 * F2:(WEIGHTED POD_LEVEL_APT or POD_LEVEL_ACT)
+	 * F3:(RAC trigger1 OR RAC trigger2)
+	 * TTM counted iif:   F1 OR F2 OR (F1 AND F3)  therefore dropping f3
 	 * **/
 	@Override
 	public List<Metric> renderTTMPOD(){
-		//F1-APT or ACT
-		List<Metric> podLevelSLA=getPOD_LEVEL_SLA();
+		/*F1-UNIONED RAC LEVEL APT or ACT*/
+		List<Metric> f1SLA=getUNIONED_RACS_LEVEL_SLA();
 		
-		//F2-APT or ACT
-		List<Metric> listRacLevelSLA=getUNIONED_RACS_LEVEL_SLA();
+		/*F2-WEIGHTED POD LEVEL APT or ACT*/
+		List<Metric> f2SLA=getPOD_LEVEL_SLA();
 		
-		//F1 or F2 RELATIONSHIP
-		List<Metric> TTMSLA=_computationUtil.get().unionOR(podLevelSLA,listRacLevelSLA);
+//		/*F3-TRGGER1 CPU*/
+//		List<Metric> listRacLevelSLA_CPU=getUNIONED_RACS_LEVEL_SLA_CPU();
+//		List<Metric> f3SLA=_computationUtil.get().unionAND(f1SLA,listRacLevelSLA_CPU);
+//		
+		/*F1 or F2 RELATIONSHIP*/
+		List<Metric> TTMSLA=_computationUtil.get().unionOR(f1SLA,f2SLA);
+		
 		TTMSLA.get(0).setMetric(this.podAddress);
 		List<Metric> TTM=_computationUtil.get().downsample("1h-count", TTMSLA);
 		List<Metric> filledTTM=_computationUtil.get().mergeZero(RacServer.getReportRange(),60,TTM);
 		return Collections.unmodifiableList(Arrays.asList(new Metric(filledTTM.get(0))));
+	}
+	
+	@Override
+	public List<Metric> renderTTMTOTAL() {
+		List<Metric> TTMPOD=renderTTMPOD();
+		List<Metric> TTMPODTOTAL = _computationUtil.get().downsample("100d-sum", TTMPOD);
+		return TTMPODTOTAL;
 	}
 	
 	private List<Metric> getPOD_LEVEL_SLA(){
@@ -379,12 +503,19 @@ final class Pod implements Renderable, SFDCPod{
 		List<Metric> racLevelACT_SLAList=this.racServers.stream()
 				.filter(r -> r.hasACT())
 				.map(r -> _computationUtil.get().detectACT(r.getRawACTMinutely(), this.podAddress).get(0))
-				.collect(Collectors.toList());
-		
-//		System.out.println("racLevelAPT_SLAList"+racLevelAPT_SLAList);
-//		System.out.println("racLevelACT_SLAList"+racLevelACT_SLAList);		
+				.collect(Collectors.toList());	
 		List<Metric> listRacLevelSLA=_computationUtil.get().unionOR(racLevelAPT_SLAList,racLevelACT_SLAList);
 		return Collections.unmodifiableList(listRacLevelSLA);
+	}
+	
+	private List<Metric> getUNIONED_RACS_LEVEL_SLA_CPU(){
+		List<Metric> racLevelCPU_SLAList=this.racServers.stream()
+				.filter(r -> r.hasCPU())
+				.map(r -> _computationUtil.get().detectCPU(r.getRawCPUMinutely(), this.podAddress).get(0))
+				.collect(Collectors.toList());
+		
+		List<Metric> unioned_racLevelCPU_SLAList=_computationUtil.get().unionOR(racLevelCPU_SLAList);
+		return Collections.unmodifiableList(unioned_racLevelCPU_SLAList);
 	}
 	
 	/**getters**/
@@ -392,11 +523,15 @@ final class Pod implements Renderable, SFDCPod{
 	public String getPodAddress(){
 		return this.podAddress;
 	}
-
 	
 	@Override
 	public boolean hasACT() {
 		return this.racServers.stream().anyMatch(r -> r.hasACT());
+	}
+	
+	@Override
+	public boolean hasCPU() {
+		return this.racServers.stream().anyMatch(r -> r.hasCPU());
 	}
 
 }
@@ -406,20 +541,25 @@ final class Pod implements Renderable, SFDCPod{
 /**
  * Class RacServer
  **/
-final class RacServer{
+@SuppressWarnings("serial")
+final class RacServer implements Serializable{
 	@Inject
 	private Provider<ComputationUtil> _computationUtil;
 	
-	private static ReportRange reportRange;
+	private static transient ReportRange reportRange;
 
 	private String racServerAddress;
 	private List<MetricConsumer> listAPTTimeAppLevel;
 	private List<MetricConsumer> listAPTTrafficAppLevel;
 	private List<MetricConsumer> listACTRacLevel;
+	private List<MetricConsumer> listCPUSysRacLevel;
+	private List<MetricConsumer> listCPUUserRacLevel;
+	
 	private List<Metric> weightedAPT;
 	private List<Metric> weightedTraffic;
 	private List<Metric> weightedACT;
-		
+	private List<Metric> weightedCPU;
+	
 	@Inject
 	private RacServer(){
 	}
@@ -428,28 +568,20 @@ final class RacServer{
 		assert(racServerAddress!=null && racServerAddress.length()>10):"racServerAddress is not valid";
 		this.racServerAddress=racServerAddress;
 		RacServer.reportRange=reportRange;
-		try{
-			load(consumers);
-		}catch(RuntimeException e){
-			System.out.println("Error Durring lookup and loading metricConsumers for each rac server +"+e);
-			throw new RuntimeException("Error Durring lookup and loading metricConsumers for each rac server +"+e);
+		
+		/*Load apt,traffic,act,cpusys,cpuuser*/
+		load(consumers);
+		
+		/*Caculate weightedAPT, weightedTraffic,*/
+		caculatedWeightedAPT();
+		
+		if (this.listACTRacLevel!=null&&this.listACTRacLevel.size()==1){
+			caculateACT();
 		}
 		
-		try{
-			caculatedWeightedAPT();
-		}catch(Exception e){
-			System.out.println("Error Durring caculating weighted apt for each rac server +"+e);
-			throw new RuntimeException("Error Durring caculating weighted apt for each rac server +"+e);
-		}
-		
-		try{
-			//give the option that no ACT provided. after stream.filter, will have a empty list at least
-			if (this.listACTRacLevel!=null&&this.listACTRacLevel.size()==1){
-				caculateACT();
-			}
-		}catch(Exception e){
-			System.out.println("Error Durring caculating direct act for each rac server +"+e);
-			throw new RuntimeException("Error Durring caculating direct act for each rac server +"+e);
+		if ((this.listCPUSysRacLevel!=null&&this.listCPUSysRacLevel.size()==1)
+			||(this.listCPUUserRacLevel!=null&&this.listCPUUserRacLevel.size()==1)){
+			caculateCPU();
 		}
 		return this;
 	}
@@ -459,6 +591,8 @@ final class RacServer{
 		loadAPTTimeAppLevelFromConsumers(consumers);
 		loadAPTTrafficAppLevelFromConsumers(consumers);
 		loadACTRacLevelFromConsumers(consumers);
+		loadCPUSysRacLevelFromConsumers(consumers);
+		loadCPUUserRacLevelFromConsumers(consumers);
 	}
 			
 	/**getImpactedMinHourly return a timeseries with count of impact min for each hour**/
@@ -487,8 +621,6 @@ final class RacServer{
 	
 	/**getImpactedMin by detecting ACT**/
 	private List<Metric> getImapctedMinHourlyACT(){
-		System.out.println("ACT CACULATION...... Running per rac server");
-		
 		if (this.weightedACT==null || this.weightedACT.size()==0){
 			throw new RuntimeException("No ACT provided, not legal to call this method");
 		}
@@ -522,15 +654,7 @@ final class RacServer{
 		return negatedAvaRate;
 	}
 	
-	public void caculateACT(){
-		assert(this.listACTRacLevel!=null&&this.listACTRacLevel.size()==1):"have be one and only one act per racnode";
-		MetricConsumer c=this.listACTRacLevel.get(0);
-		this.weightedACT=new ArrayList<Metric>();
-		this.weightedACT.add(new Metric(this.listACTRacLevel.get(0).getSelfAsMetric()));
-		this.weightedACT.get(0).setMetric(this.racServerAddress);
-		this.weightedACT.get(0).setTags(null);
-	}
-	
+	/**Caculate pod level APT TRAFFICE**/
 	public void caculatedWeightedAPT(){
 		List<Metric> scaledResult=caculateProduct();
 		this.weightedAPT=loadProduct(scaledResult);
@@ -541,10 +665,48 @@ final class RacServer{
 		this.weightedTraffic.get(0).setTags(null);
 	}
 	
+	/**Caculate pod level ACT**/
+	public void caculateACT(){
+		assert(this.listACTRacLevel!=null&&this.listACTRacLevel.size()==1):"have be one and only one act per racnode";
+		this.weightedACT=new ArrayList<Metric>();
+		this.weightedACT.add(new Metric(this.listACTRacLevel.get(0).getSelfAsMetric()));
+		this.weightedACT.get(0).setMetric(this.racServerAddress);
+		this.weightedACT.get(0).setTags(null);
+	}
+	
+	/**Caculate pod level CPU**/
+	public void caculateCPU(){
+		assert((this.listCPUSysRacLevel!=null&&this.listCPUSysRacLevel.size()==1)
+				||(this.listCPUUserRacLevel!=null&&this.listCPUUserRacLevel.size()==1)):"have be one and only one CPU sys or user per racnode";
+		this.weightedCPU=new ArrayList<Metric>();
+		
+		Metric CPUSys=null;
+		if (this.listCPUSysRacLevel!=null&&this.listCPUSysRacLevel.size()==1){
+			CPUSys=this.listCPUSysRacLevel.get(0).getSelfAsMetric();
+		}
+		
+		Metric CPUUser=null;
+		if (this.listCPUUserRacLevel!=null&&this.listCPUUserRacLevel.size()==1){
+			CPUUser=this.listCPUUserRacLevel.get(0).getSelfAsMetric();
+		}
+		
+		List<Metric> toBeSummed=Arrays.asList(CPUSys,CPUUser).stream()
+															.filter(m -> m!=null&&m.getDatapoints().size()>0)
+															.collect(Collectors.toList());
+		this.weightedCPU=_computationUtil.get().sumWithUnion(toBeSummed);
+		this.weightedCPU.get(0).setMetric(this.racServerAddress);
+		this.weightedCPU.get(0).setTags(null);
+	}
+	
 	private List<Metric> caculateProduct(){
 		List<Metric> toBeMatchScaled = new ArrayList<Metric>();
 		listAPTTimeAppLevel.forEach(c -> toBeMatchScaled.add(c.getSelfAsMetric()));
 		listAPTTrafficAppLevel.forEach(c -> toBeMatchScaled.add(c.getSelfAsMetric()));
+		
+		if(toBeMatchScaled==null||toBeMatchScaled.size()==0){
+			System.out.println("rac server:"+this.racServerAddress+listAPTTimeAppLevel+listAPTTrafficAppLevel);
+			throw new RuntimeException("input of scale is empty!");
+		}
 		List<Metric> scaledResult=_computationUtil.get().scale_match(toBeMatchScaled);
 		return scaledResult;
 	}
@@ -578,11 +740,20 @@ final class RacServer{
 		System.out.println("APTTimeAppLevel:\t"+this.listAPTTimeAppLevel.size());
 		System.out.println("APTTrafficAppLevel:\t"+this.listAPTTrafficAppLevel.size());
 		System.out.println("weightedAPT:\t\t"+this.weightedAPT.get(0).getDatapoints().size());
-		if(this.weightedACT==null){
-			System.out.println("weightedACT:\t\tNo ACT provided");
-		}else{
+		
+		if(this.hasACT()){
 			System.out.println("weightedACT:\t\t"+this.weightedACT.get(0).getDatapoints().size());
+		}else{
+			System.out.println("weightedACT:\t\tNo ACT provided");
 		}
+		
+		if(this.hasCPU()){
+			System.out.println("weightedCPU:\t\t"+this.weightedCPU.get(0).getDatapoints().size());
+		}else{
+			System.out.println("weightedCPU:\t\tNo CPU provided");
+		}
+		
+		
 	}
 	
 	private void loadAPTTimeAppLevelFromConsumers(List<MetricConsumer> consumers){
@@ -606,6 +777,20 @@ final class RacServer{
 									.collect(Collectors.toList());
 	}
 	
+	private void loadCPUSysRacLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listCPUSysRacLevel=consumers.stream()
+									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_SYS_RACLEVEL))
+									.collect(Collectors.toList());
+	}
+	
+	private void loadCPUUserRacLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listCPUUserRacLevel=consumers.stream()
+									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_USER_RACLEVEL))
+									.collect(Collectors.toList());
+	}
+	
 	/**getters**/
 	public String getRacServerAddress(){
 		final String racServerAddressPass=this.racServerAddress;
@@ -623,16 +808,29 @@ final class RacServer{
 	}
 	
 	public List<Metric> getRawACTMinutely(){
-		if (this.weightedACT==null || this.weightedACT.size()==0){
+		if (!this.hasACT()){
 			throw new RuntimeException("No ACT provided, not legal to call this method");
 		}
-		assert(this.weightedACT!=null&&this.weightedACT.size()==1):"ACT has to be provided";
+		assert(this.hasACT()):"ACT has to be provided";
 		final Metric weightedACTPass=new Metric(this.weightedACT.get(0));
 		return Collections.unmodifiableList(Arrays.asList(weightedACTPass));
 	}
 	
+	public List<Metric> getRawCPUMinutely(){
+		if (!this.hasCPU()){
+			throw new RuntimeException("No CPU provided, not legal to call this method");
+		}
+		assert(this.hasCPU()):"ACT has to be provided";
+		final Metric weightedCPUPass=new Metric(this.weightedCPU.get(0));
+		return Collections.unmodifiableList(Arrays.asList(weightedCPUPass));
+	}
+	
 	public boolean hasACT(){
 		return (this.weightedACT==null || this.weightedACT.size()==0)?false:true;
+	}
+	
+	public boolean hasCPU(){
+		return (this.weightedCPU==null || this.weightedCPU.size()==0)?false:true;
 	}
 	
  	public List<Metric> getWeightedTrafficMinutely(){
@@ -656,10 +854,11 @@ final class RacServer{
 
 
 
-/*
+/**
  * Class MetricConsumer
- */
-final class MetricConsumer{
+ **/
+@SuppressWarnings("serial")
+final class MetricConsumer implements Serializable{
 	private String racServerAddress;
 	private String appServerAddress;
 	private ConsumerTypes consmuerType;
@@ -678,7 +877,11 @@ final class MetricConsumer{
 			//SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg
 			self.consmuerType=ConsumerTypes.APT_TIME_APPLEVEL;
 			
-			String racAddress=metricSource.substring(61, 62);
+			String[] racAddressSplit = metricSource.split("\\.");
+			ArrayList<String> racAddressSplitList=new ArrayList<String>(Arrays.asList(racAddressSplit));
+			assert(racAddressSplitList.size()==2):"should include one dot in the middle";
+			String racAddress=racAddressSplitList.get(0).substring(61);
+			
 			String podAddress=scopeSource.substring(5);
 			assert(racAddress!=null&&racAddress.length()>0&&podAddress!=null&&podAddress.length()>10):"Invalid pod or rac address+"+scopeSource+"."+metricSource;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
@@ -686,11 +889,16 @@ final class MetricConsumer{
 			String appAddress=tagSource.substring(5, 11);
 			assert(appAddress!=null&&appAddress.length()>4):"Invalid app address+"+appAddress;
 			self.appServerAddress=appAddress;
+			
 		}else if(Pattern.matches("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode.*.Last_1_Min_Avg",metricSource)){
 			//SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg
 			self.consmuerType=ConsumerTypes.APT_TRAFFIC_APPLEVEL;
 			
-			String racAddress=metricSource.substring(62, 63);
+			String[] racAddressSplit = metricSource.split("\\.");
+			ArrayList<String> racAddressSplitList=new ArrayList<String>(Arrays.asList(racAddressSplit));
+			assert(racAddressSplitList.size()==2):"should include one dot in the middle";
+			String racAddress=racAddressSplitList.get(0).substring(62);
+			
 			String podAddress=scopeSource.substring(5);
 			assert(racAddress!=null&&racAddress.length()>0&&podAddress!=null&&podAddress.length()>10):"Invalid pod or rac address+"+scopeSource+"."+metricSource;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
@@ -698,6 +906,7 @@ final class MetricConsumer{
 			String appAddress=tagSource.substring(5, 11);
 			assert(appAddress!=null&&appAddress.length()>4):"Invalid app address+"+appAddress;
 			self.appServerAddress=appAddress;
+			
 		}else if(Pattern.matches(".*.active__sessions",metricSource)){
 			//CSDB15.CSDB15-3.active__sessions
 			self.consmuerType=ConsumerTypes.ACT_RACLEVEL;
@@ -713,6 +922,32 @@ final class MetricConsumer{
 			assert(racAddress!=null&&racAddress.length()>0&&podAddress!=null&&podAddress.length()>10):"Invalid pod or rac address+"+scopeSource+"."+metricSource;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
 			self.appServerAddress="RACLEVEL";
+		}else if(Pattern.matches("CpuPerc.cpu.system",metricSource)){
+			//CpuPerc.cpu.system
+			self.consmuerType=ConsumerTypes.CPU_SYS_RACLEVEL;			
+			String device=m.getTag("device");
+			String[] racAddressSplit = device.split("-");
+			assert(racAddressSplit!=null && racAddressSplit.length>=4):"format should be cs15-db1-1-chi.ops.sfdc.net however get:"+device;
+			String racAddress=racAddressSplit[2];
+			
+			String podAddress=scopeSource.substring(7);
+			assert(podAddress!=null&&podAddress.length()>9&&podAddress.split("\\.").length==3):"podAddress should have format such as CHI.SP2.cs15, however is"+podAddress;
+			self.racServerAddress=podAddress+".Rac"+racAddress;
+			self.appServerAddress="RACLEVEL";
+			
+		}else if(Pattern.matches("CpuPerc.cpu.user",metricSource)){
+			//CpuPerc.cpu.system
+			self.consmuerType=ConsumerTypes.CPU_USER_RACLEVEL;			
+			String device=m.getTag("device");
+			String[] racAddressSplit = device.split("-");
+			assert(racAddressSplit!=null && racAddressSplit.length>=4):"format should be cs15-db1-1-chi.ops.sfdc.net however get:"+device;
+			String racAddress=racAddressSplit[2];
+			
+			String podAddress=scopeSource.substring(7);
+			assert(podAddress!=null&&podAddress.length()>9&&podAddress.split("\\.").length==3):"podAddress should have format such as CHI.SP2.cs15, however is"+podAddress;
+			self.racServerAddress=podAddress+".Rac"+racAddress;
+			self.appServerAddress="RACLEVEL";
+			
 		}else{
 			throw new RuntimeException("This type of input is not supported: metric name "+metricSource);
 		}
@@ -771,7 +1006,8 @@ final class MetricConsumer{
 
 
 /**ReportRange**/
-final class ReportRange{
+@SuppressWarnings("serial")
+final class ReportRange implements Serializable{
 	private final List<Long> range;
 	private final Map<Long, String> zeroDatapoints;
 	
@@ -819,10 +1055,14 @@ final class ComputationUtil{
 	private Provider<TransformFactory> _transformFactory;
 	
 	protected List<Metric> scale_match(List<Metric> metrics) {
-		List<String> constants = new ArrayList<String>();
-		constants.add("device");
-		constants.add(".*");
-		return _transformFactory.get().getTransform("SCALE_MATCH").transform(metrics, constants);
+		try{
+			List<String> constants = new ArrayList<String>();
+			constants.add("device");
+			constants.add(".*");
+			return _transformFactory.get().getTransform("SCALE_MATCH").transform(metrics, constants);
+		}catch(RuntimeException e){
+			throw new RuntimeException("Error During ComputationUtil.scale_match"+e+metrics);
+		}
 	}
 	
 	protected List<Metric> scale(List<Metric> metrics1,List<Metric> metrics2) {
@@ -837,11 +1077,18 @@ final class ComputationUtil{
 		return _transformFactory.get().getTransform("SCALE").transform(metrics);
 	}
 	
-	protected List<Metric> divide(List<Metric> metrics) {
+	protected List<Metric> divide(List<Metric> metrics) throws RuntimeException {
+		assert(metrics!=null && metrics.size()==2):"metrics should have two metric inside. No and divisor";
 		try{
+			Metric divisor=metrics.get(1);
+			divisor.getDatapoints().entrySet().forEach(e->{
+				if(Float.valueOf(e.getValue()).equals(0f)){
+					throw new RuntimeException(" A divisor is empty in this divisor metircs: "+divisor.getMetric());
+				}
+			});
 			return _transformFactory.get().getTransform("DIVIDE").transform(metrics);
 		}catch(RuntimeException e){
-			throw new RuntimeException("Error During ComputationUtil.Divide"+e);
+			throw new RuntimeException("Error During ComputationUtil.Divide"+e+metrics);
 		}	
 	}
 	
@@ -949,9 +1196,9 @@ final class ComputationUtil{
 	}
 
 	/**Givin a time series, return any datapoints that is above 500 unit for 5 consecutive timestamp, could be null**/
-	protected List<Metric> detectAPT(List<Metric> aptInput, String objectAddress){
-		assert(aptInput != null && aptInput.get(0).getDatapoints() != null) : "input not valid";
-		List<Metric> cull_below_filter = cull_below(aptInput, 500);
+	protected List<Metric> detectAPT(List<Metric> input, String objectAddress){
+		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
+		List<Metric> cull_below_filter = cull_below(input, 500);
 		if (cull_below_filter.get(0).getDatapoints().size() == 0) {
 			System.out.println("cull_below_filter return. No data has been found that is above 500 @"+objectAddress);
 			return cull_below_filter;
@@ -967,28 +1214,66 @@ final class ComputationUtil{
 	}
 	
 	/**Givin a time series, return any datapoints that is above 150, could be null**/
-	protected List<Metric> detectACT(List<Metric> actInput, String objectAddress){
-		assert(actInput != null && actInput.get(0).getDatapoints() != null) : "input not valid";
-		List<Metric> cull_below_filter = cull_below(actInput, 150);
+	protected List<Metric> detectACT(List<Metric> input, String objectAddress){
+		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
+		return detectAbove(input,150,objectAddress);
+	}
+	
+	/**Givin a time series, return any datapoints that is above 150, could be null**/
+	protected List<Metric> detectCPU(List<Metric> input, String objectAddress){
+		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
+		return detectAbove(input,65,objectAddress);
+	}
+	
+	/**Givin a time series, return any datapoints that is above a threshold, could be null**/
+	protected List<Metric> detectAbove(List<Metric> input, int threashold, String objectAddress){
+		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
+		List<Metric> cull_below_filter = cull_below(input, threashold);
 		if (cull_below_filter.get(0).getDatapoints().size() == 0) {
-			System.out.println("cull_below_filter return. No data has been found that is above 500 @"+objectAddress);
+			System.out.println("cull_below_filter return. No data has been found that is above "+threashold+" @"+ objectAddress);
 		}
 		return cull_below_filter;
 	}
 	
-	protected List<Metric> unionOR(List<Metric>... listMetrics){
+	private List<Metric> flattArray(List<Metric>... listMetrics){
 		assert(listMetrics!=null):"input metrics can not be null";
 		ArrayList<List<Metric>> arrayMetrics=new ArrayList<List<Metric>>();
 		arrayMetrics.addAll(Arrays.asList(listMetrics));
 		List<Metric> flatArrayMetrics=arrayMetrics.stream()
 												.flatMap(l -> l.stream())
 												.collect(Collectors.toList());
-		return unionOR(flatArrayMetrics);
+		return flatArrayMetrics;
+	}
+	
+	protected List<Metric> unionOR(List<Metric>... listMetrics){
+		return unionOR(flattArray(listMetrics));
 	}
 	
 	protected List<Metric> unionOR(List<Metric> metrics){
 		List<Metric> unionOR=sumWithUnion(metrics);
 		assert (unionOR!=null&&unionOR.size()==1):"result of unionOr should be one metric boxed object";
 		return Collections.unmodifiableList(Arrays.asList(new Metric(unionOR.get(0))));
+	}
+	
+	protected List<Metric> unionAND(List<Metric>... listMetrics){
+		return unionAND(flattArray(listMetrics));
+	}
+	
+	protected List<Metric> unionAND(List<Metric> metrics){
+		List<Metric> unionAND=sum(metrics);
+		assert (unionAND!=null&&unionAND.size()==1):"result of unionAnd should be one metric boxed object";
+		return Collections.unmodifiableList(Arrays.asList(new Metric(unionAND.get(0))));
+	}
+	
+	protected List<Metric> reNameScope(List<Metric> metrics, String scopeName){
+		List<Metric> resultMetrics=new ArrayList<Metric>();
+		metrics.forEach(m -> {
+			Metric newMetric = new Metric(scopeName, m.getMetric());
+			newMetric.setTags(m.getTags());
+			newMetric.setNamespace(m.getNamespace());
+			newMetric.setDatapoints(m.getDatapoints());
+			resultMetrics.add(newMetric);
+		});
+		return Collections.unmodifiableList(resultMetrics);
 	}
 }
