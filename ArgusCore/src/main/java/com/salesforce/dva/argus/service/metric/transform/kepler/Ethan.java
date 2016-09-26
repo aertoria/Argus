@@ -7,12 +7,12 @@ import com.google.inject.Provider;
 import com.salesforce.dva.argus.service.DefaultService;
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
-public class Ethan extends DefaultService implements EthanService{
+public class Ethan implements EthanService{
 	private final Provider<KeplerService> k;
 	
 	@Inject
 	Ethan(SystemConfiguration config,Provider<KeplerService> k){
-		super(config);
+		//super(config);
 		this.k=k;
 	}
 	
@@ -31,5 +31,11 @@ public class Ethan extends DefaultService implements EthanService{
 	public Properties getServiceProperties() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean isDisposed() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

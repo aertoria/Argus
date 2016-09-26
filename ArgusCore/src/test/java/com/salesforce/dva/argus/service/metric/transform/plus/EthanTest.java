@@ -1,4 +1,4 @@
-package com.salesforce.dva.argus.service.metric.transform;
+package com.salesforce.dva.argus.service.metric.transform.plus;
 
 import static org.junit.Assert.*;
 
