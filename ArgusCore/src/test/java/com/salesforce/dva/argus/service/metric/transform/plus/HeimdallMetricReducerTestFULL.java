@@ -2647,8 +2647,7 @@ public class HeimdallMetricReducerTestFULL {
         metrics.add(metric_act1);    
         
         List<Metric> result = transform.transform(metrics,Arrays.asList("TOTAL"));
-
-        
+     
         List<Metric> expected = new ArrayList<Metric>();        
         Metric expected_metric2 = new Metric("SUM", "ImpactedMin");
         Map<Long, String> expected_Datapoints2=new HashMap<Long, String>();
@@ -2662,12 +2661,18 @@ public class HeimdallMetricReducerTestFULL {
         expected_metric3.setDatapoints(expected_Datapoints3);
         expected.add(expected_metric3);
         
+        Metric expected_metric5 = new Metric("SUM", "AvailableMin");
+        Map<Long, String> expected_Datapoints5=new HashMap<Long, String>();
+        expected_Datapoints5.put(0L, "12.0");
+        expected_metric5.setDatapoints(expected_Datapoints5);
+        expected.add(expected_metric5);
+        
         Metric expected_metric4 = new Metric("SUM", "TTM");
         Map<Long, String> expected_Datapoints4=new HashMap<Long, String>();
         expected_Datapoints4.put(0L, "11.0");
         expected_metric4.setDatapoints(expected_Datapoints4);
         expected.add(expected_metric4);
-        
+
         System.out.println(result);
         assertEquals(expected,result); 
         assertEquals(result.get(0).getDatapoints(),expected.get(0).getDatapoints()); 

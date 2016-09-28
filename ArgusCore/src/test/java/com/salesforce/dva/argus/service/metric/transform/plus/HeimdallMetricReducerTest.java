@@ -55,7 +55,7 @@ public class HeimdallMetricReducerTest {
 
 	
 	@Test
-	public void HeimdallTotalAvaTransform_REPORT_RAC(){
+	public void HeimdallTotalAvaTransform_REPORT_RACHOUR(){
 		Transform transform=injector.getInstance(HeimdallMetricReducer.class);
 		int offset=1000*60;
 		long start=0L;
@@ -217,21 +217,25 @@ public class HeimdallMetricReducerTest {
         
         
         
-        List<Metric> result = transform.transform(metrics,Arrays.asList("RAC"));
+        List<Metric> result = transform.transform(metrics,Arrays.asList("RACHOUR"));
 
         
         List<Metric> expected = new ArrayList<Metric>();
-        Metric expected_metric1 = new Metric("APT", "CHI.SP2.cs15.Rac1");
+        Metric expected_metric1 = new Metric("AVA", "CHI.SP2.cs15.Rac1");
         Map<Long, String> expected_Datapoints1=new HashMap<Long, String>();
-        expected_Datapoints1.put(60000L, "2.0");
-        expected_Datapoints1.put(120000L, "95.0");
-        expected_Datapoints1.put(180000L, "67.0");
-        expected_Datapoints1.put(240000L, "56.0");
-        expected_Datapoints1.put(300000L, "5.0");
-        expected_Datapoints1.put(360000L, "5.0");
+        expected_Datapoints1.put(0L, "100.0");
+        expected_Datapoints1.put(360000L, "100.0");
         expected_metric1.setDatapoints(expected_Datapoints1);
         expected.add(expected_metric1);
-
+        
+        Metric expected_metric2 = new Metric("AVA", "CHI.SP2.cs15.Rac2");
+        Map<Long, String> expected_Datapoints2=new HashMap<Long, String>();
+        expected_Datapoints2.put(0L, "100.0");
+        expected_Datapoints2.put(360000L, "100.0");
+        expected_metric2.setDatapoints(expected_Datapoints2);
+        expected.add(expected_metric2);
+        
+        
 
         System.out.println(result);
         assertEquals(expected.get(0),result.get(0)); 

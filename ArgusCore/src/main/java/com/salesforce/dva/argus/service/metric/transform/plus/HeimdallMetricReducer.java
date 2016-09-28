@@ -58,6 +58,8 @@ public class HeimdallMetricReducer implements Transform{
 			return render(()->((Reportable) pod).reportPOD());
 		case "RAC":
 			return render(()->((Reportable) pod).reportRAC());
+		case "RACHOUR":
+			return render(()->((Reportable) pod).reportRACHOUR());
 		case "TOTAL":
 			return render(()->((Reportable) pod).reportTOTAL());
 		}
@@ -144,8 +146,9 @@ interface Renderable{
 /**Aspect Defined as Reported by Transform**/
 interface Reportable{
 	List<Metric> reportRAC();//REPORT IMPACT. APT. ACT, CPU, TRAFFIC
+	List<Metric> reportRACHOUR();
 	List<Metric> reportPOD();//REPORT PODLEVL APT. IMPACT. AVA. TTM
-	List<Metric> reportTOTAL();
+	List<Metric> reportTOTAL();//REPORT AVATOTAL, AvailbleMin,ImpactedMin, TTM
 }
 /**Aspect Defined as SFDCPod**/
 interface SFDCPod{
@@ -156,7 +159,8 @@ interface SFDCPod{
 }
 
 /**Pod implementation**/
-final class Pod implements Renderable, Reportable, SFDCPod{
+@SuppressWarnings("serial")
+final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	private List<RacServer> racServers;
 	private String podAddress;
 	private List<Metric> podAPT;
@@ -274,13 +278,13 @@ final class Pod implements Renderable, Reportable, SFDCPod{
 	
 	private List<Metric> caculateAVAPOD(){
 		Optional<Metric> constructedProduct=this.racServers.stream()
-				.map(r -> _computationUtil.get().scale(r.getAvaRateHourly(),r.getWeightedTrafficHourly())
+				.map(r -> _computationUtil.get().scale(r.getAvaRateHourly(),r.getWeightedTrafficCountHourly())
 												.get(0)
 					)
 				.reduce((m1,m2)-> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
 
 		Optional<Metric> constructedDivisor=this.racServers.stream()
-						.map(r -> r.getWeightedTrafficHourly().get(0))
+						.map(r -> r.getWeightedTrafficCountHourly().get(0))
 						.reduce((m1,m2) ->_computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
 		
 		assert(constructedProduct.isPresent()&&constructedDivisor.isPresent()):"accumulation result is not valid";
@@ -386,7 +390,15 @@ final class Pod implements Renderable, Reportable, SFDCPod{
 		assert(weightDownsampled.get(0).getDatapoints().size()==1):"downsampled to one result";
 		final List<Metric> avaDownsampled=_computationUtil.get().divide(Arrays.asList(productDownsampled.get(0),weightDownsampled.get(0)));
 		return Collections.unmodifiableList(avaDownsampled);
-	};
+	}
+	
+	private List<Metric> renderAvailableTOTAL(){
+		final List<Metric> dataRecievedCount=_computationUtil.get().downsample("1h-count", podTraffic);
+		final List<Metric> dataRecievedCountFilled=_computationUtil.get().mergeZero(RacServer.getReportRange(),60,dataRecievedCount);
+		final List<Metric> weightDownsampled=_computationUtil.get().downsample("100d-sum", dataRecievedCountFilled);
+		assert(weightDownsampled.get(0).getDatapoints().size()==1):"downsampled to one result";
+		return weightDownsampled;
+	}
 	
 	/**Reportable**/
 	@Override
@@ -432,17 +444,44 @@ final class Pod implements Renderable, Reportable, SFDCPod{
 	}
 	
 	@Override
+	public List<Metric> reportRACHOUR() {
+		List<Metric> reportRACHOUR=new ArrayList<Metric>();	
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getAvaRateHourly().get(0), r -> true, "AVA"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawAPTHourly().get(0), r -> true, "APT"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourly().get(0), r -> true, "ImpactedMin"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficCountHourly().get(0), r -> true, "CollectedMin"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficSumHourly().get(0), r -> true, "Traffic"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawACTHourly().get(0), r -> r.hasACT(), "ACT"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawCPUHourly().get(0), r -> r.hasCPU(), "CPU"));
+		return Collections.unmodifiableList(reportRACHOUR);
+	}
+	
+	private List<Metric> containRACHOUR(java.util.function.Function<RacServer, Metric> gettingMetric
+										,java.util.function.Predicate<RacServer> filteringMetric
+										,String metricName){
+		List<Metric> constructedMetrics=this.racServers.stream()
+									.filter(filteringMetric)
+									.map(gettingMetric)
+									.collect(Collectors.toList());
+		List<Metric> returningMetric=_computationUtil.get().reNameScope(constructedMetrics, metricName);
+		return Collections.unmodifiableList(returningMetric);
+	}
+	
+	@Override
 	public List<Metric> reportTOTAL() {
 		List<Metric> renderIMPACTTOTAL=renderIMPACTTOTAL();
 		renderIMPACTTOTAL.get(0).setMetric("ImpactedMin");
 		List<Metric> renderAVATOTAL=renderAVATOTAL();
 		renderAVATOTAL.get(0).setMetric("Availability");
+		List<Metric> renderAvailableTOTAL=renderAvailableTOTAL();
+		renderAvailableTOTAL.get(0).setMetric("AvailableMin");
 		List<Metric> renderTTMTOTAL=renderTTMTOTAL();
 		renderTTMTOTAL.get(0).setMetric("TTM");
 		List<Metric> reportTotal=new ArrayList<Metric>();
 		
 		reportTotal.addAll(renderIMPACTTOTAL);
 		reportTotal.addAll(renderAVATOTAL);
+		reportTotal.addAll(renderAvailableTOTAL);
 		reportTotal.addAll(renderTTMTOTAL);
 		
 		return Collections.unmodifiableList(reportTotal);
@@ -506,16 +545,6 @@ final class Pod implements Renderable, Reportable, SFDCPod{
 				.collect(Collectors.toList());	
 		List<Metric> listRacLevelSLA=_computationUtil.get().unionOR(racLevelAPT_SLAList,racLevelACT_SLAList);
 		return Collections.unmodifiableList(listRacLevelSLA);
-	}
-	
-	private List<Metric> getUNIONED_RACS_LEVEL_SLA_CPU(){
-		List<Metric> racLevelCPU_SLAList=this.racServers.stream()
-				.filter(r -> r.hasCPU())
-				.map(r -> _computationUtil.get().detectCPU(r.getRawCPUMinutely(), this.podAddress).get(0))
-				.collect(Collectors.toList());
-		
-		List<Metric> unioned_racLevelCPU_SLAList=_computationUtil.get().unionOR(racLevelCPU_SLAList);
-		return Collections.unmodifiableList(unioned_racLevelCPU_SLAList);
 	}
 	
 	/**getters**/
@@ -594,64 +623,40 @@ final class RacServer implements Serializable{
 		loadCPUSysRacLevelFromConsumers(consumers);
 		loadCPUUserRacLevelFromConsumers(consumers);
 	}
-			
-	/**getImpactedMinHourly return a timeseries with count of impact min for each hour**/
-	public List<Metric> getImpactedMinHourly(){
-		//APT
-		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
-		
-		//ACT
-		if (hasACT()){
-			List<Metric> impactedMinACT = getImapctedMinHourlyACT();
-			impactedMin=_computationUtil.get().unionOR(impactedMin,impactedMinACT);
-		}
-		
-		impactedMin.get(0).setMetric(this.racServerAddress);		
-		List<Metric> downsampledImpactedMin=_computationUtil.get().downsample("1h-count", impactedMin);
-		//System.out.println("a"+downsampledImpactedMin);
-		List<Metric> filledImpactedMin=_computationUtil.get().mergeZero(reportRange,60,downsampledImpactedMin);
-		//System.out.println("b"+filledImpactedMin);
-		return filledImpactedMin;
-	}
 	
-	/**given RacServerLevel metric, return impactedMinmetric**/
-	private List<Metric> getImpactedMinHourlyAPT(List<Metric> racLevelApt, List<Metric> racLevelCPU) {
-		return _computationUtil.get().detectAPT(racLevelApt, this.racServerAddress);
+	private void loadAPTTimeAppLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listAPTTimeAppLevel=consumers.stream()
+										.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+										.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TIME_APPLEVEL))
+										.collect(Collectors.toList());
 	}
-	
-	/**getImpactedMin by detecting ACT**/
-	private List<Metric> getImapctedMinHourlyACT(){
-		if (this.weightedACT==null || this.weightedACT.size()==0){
-			throw new RuntimeException("No ACT provided, not legal to call this method");
-		}
-		assert(this.weightedACT!=null&&this.weightedACT.size()==1):"ACT has to be provided";
-		List<Metric> ACT=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedACT.get(0))));
-		List<Metric> ACTSLA=_computationUtil.get().detectACT(ACT, this.racServerAddress);
-		return ACTSLA;
-	}
-	
-	/**getAvaRateHourly return a timeseries reporting avaRate each hour**/
-	public List<Metric> getAvaRateHourly(){
-		List<Metric> availability=_computationUtil.get().downsample("1h-count", weightedTraffic);
-		List<Metric> availability_zeroRemoved=availability.stream().map(m->_computationUtil.get().removeZeroMetric(m)).collect(Collectors.toList());
-		List<Metric> avaRateHourly=getImpactedMinHourly();
-		
-		List<Metric> toBeDivided = new ArrayList<Metric>();
-		avaRateHourly.forEach(m -> toBeDivided.add(m));
-		availability_zeroRemoved.forEach(m -> toBeDivided.add(m));
-		
-		//System.out.println("tobeDivided:"+toBeDivided);
-		List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
-		//System.out.println("dividedResult"+dividedResult);
-		
-		assert(dividedResult!=null):"dividedResult should be valid"; 
-		List<Metric> filleddividedResult=_computationUtil.get().mergeZero(reportRange,60,dividedResult);
 
-		
-		//System.out.println("filleddividedResult"+filleddividedResult);
-		List<Metric> negatedAvaRate=_computationUtil.get().negate(filleddividedResult);
-		
-		return negatedAvaRate;
+	private void loadAPTTrafficAppLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listAPTTrafficAppLevel=consumers.stream()
+										.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+										.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TRAFFIC_APPLEVEL))
+										.collect(Collectors.toList());
+	}
+
+	private void loadACTRacLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listACTRacLevel=consumers.stream()
+									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.ACT_RACLEVEL))
+									.collect(Collectors.toList());
+	}
+	
+	private void loadCPUSysRacLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listCPUSysRacLevel=consumers.stream()
+									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_SYS_RACLEVEL))
+									.collect(Collectors.toList());
+	}
+	
+	private void loadCPUUserRacLevelFromConsumers(List<MetricConsumer> consumers){
+		this.listCPUUserRacLevel=consumers.stream()
+									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
+									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_USER_RACLEVEL))
+									.collect(Collectors.toList());
 	}
 	
 	/**Caculate pod level APT TRAFFICE**/
@@ -755,42 +760,7 @@ final class RacServer implements Serializable{
 		
 		
 	}
-	
-	private void loadAPTTimeAppLevelFromConsumers(List<MetricConsumer> consumers){
-		this.listAPTTimeAppLevel=consumers.stream()
-										.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
-										.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TIME_APPLEVEL))
-										.collect(Collectors.toList());
-	}
 
-	private void loadAPTTrafficAppLevelFromConsumers(List<MetricConsumer> consumers){
-		this.listAPTTrafficAppLevel=consumers.stream()
-										.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
-										.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TRAFFIC_APPLEVEL))
-										.collect(Collectors.toList());
-	}
-
-	private void loadACTRacLevelFromConsumers(List<MetricConsumer> consumers){
-		this.listACTRacLevel=consumers.stream()
-									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
-									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.ACT_RACLEVEL))
-									.collect(Collectors.toList());
-	}
-	
-	private void loadCPUSysRacLevelFromConsumers(List<MetricConsumer> consumers){
-		this.listCPUSysRacLevel=consumers.stream()
-									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
-									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_SYS_RACLEVEL))
-									.collect(Collectors.toList());
-	}
-	
-	private void loadCPUUserRacLevelFromConsumers(List<MetricConsumer> consumers){
-		this.listCPUUserRacLevel=consumers.stream()
-									.filter(c -> c.getRacServerAddress().equals(this.racServerAddress))
-									.filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.CPU_USER_RACLEVEL))
-									.collect(Collectors.toList());
-	}
-	
 	/**getters**/
 	public String getRacServerAddress(){
 		final String racServerAddressPass=this.racServerAddress;
@@ -802,9 +772,72 @@ final class RacServer implements Serializable{
 		return getReportRangePass;
 	} 
 	
+	/**getImpactedMinHourly return a timeseries with count of impact min for each hour**/
+	public List<Metric> getImpactedMinHourly(){
+		//APT
+		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
+		
+		//ACT
+		if (hasACT()){
+			List<Metric> impactedMinACT = getImapctedMinHourlyACT();
+			impactedMin=_computationUtil.get().unionOR(impactedMin,impactedMinACT);
+		}
+		
+		impactedMin.get(0).setMetric(this.racServerAddress);		
+		List<Metric> downsampledImpactedMin=_computationUtil.get().downsample("1h-count", impactedMin);
+		//System.out.println("a"+downsampledImpactedMin);
+		List<Metric> filledImpactedMin=_computationUtil.get().mergeZero(reportRange,60,downsampledImpactedMin);
+		//System.out.println("b"+filledImpactedMin);
+		return filledImpactedMin;
+	}
+	
+	/**given RacServerLevel metric, return impactedMinmetric**/
+	private List<Metric> getImpactedMinHourlyAPT(List<Metric> racLevelApt, List<Metric> racLevelCPU) {
+		return _computationUtil.get().detectAPT(racLevelApt, this.racServerAddress);
+	}
+	
+	/**getImpactedMin by detecting ACT**/
+	private List<Metric> getImapctedMinHourlyACT(){
+		if (this.weightedACT==null || this.weightedACT.size()==0){
+			throw new RuntimeException("No ACT provided, not legal to call this method");
+		}
+		assert(this.weightedACT!=null&&this.weightedACT.size()==1):"ACT has to be provided";
+		List<Metric> ACT=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedACT.get(0))));
+		List<Metric> ACTSLA=_computationUtil.get().detectACT(ACT, this.racServerAddress);
+		return ACTSLA;
+	}
+	
+	/**getAvaRateHourly return a timeseries reporting avaRate each hour**/
+	public List<Metric> getAvaRateHourly(){
+		List<Metric> availability=getWeightedTrafficCountHourly();
+		List<Metric> availability_zeroRemoved=availability.stream().map(m->_computationUtil.get().removeZeroMetric(m)).collect(Collectors.toList());
+		List<Metric> avaRateHourly=getImpactedMinHourly();
+		
+		List<Metric> toBeDivided = new ArrayList<Metric>();
+		avaRateHourly.forEach(m -> toBeDivided.add(m));
+		availability_zeroRemoved.forEach(m -> toBeDivided.add(m));
+		
+		//System.out.println("tobeDivided:"+toBeDivided);
+		List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
+		//System.out.println("dividedResult"+dividedResult);
+		
+		assert(dividedResult!=null):"dividedResult should be valid"; 
+		List<Metric> filleddividedResult=_computationUtil.get().mergeZero(reportRange,60,dividedResult);
+
+		//System.out.println("filleddividedResult"+filleddividedResult);
+		List<Metric> negatedAvaRate=_computationUtil.get().negate(filleddividedResult);
+		return Collections.unmodifiableList(negatedAvaRate);
+	}
+	
 	public List<Metric> getRawAPTMinutely(){
 		final Metric weightedAPTPass=new Metric(this.weightedAPT.get(0));
 		return Collections.unmodifiableList(Arrays.asList(weightedAPTPass));
+	}
+	
+	public List<Metric> getRawAPTHourly(){
+		final List<Metric> weightedAPTPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedAPT.get(0))));
+		final List<Metric> weightedTrafficPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedTraffic.get(0))));
+		return _computationUtil.get().weightedByTraffic(weightedAPTPass, weightedTrafficPass, "1h-sum", this.reportRange);
 	}
 	
 	public List<Metric> getRawACTMinutely(){
@@ -816,13 +849,51 @@ final class RacServer implements Serializable{
 		return Collections.unmodifiableList(Arrays.asList(weightedACTPass));
 	}
 	
+	public List<Metric> getRawACTHourly(){
+		if (!this.hasACT()){
+			throw new RuntimeException("No ACT provided, not legal to call this method");
+		}
+		assert(this.hasACT()):"ACT has to be provided";
+		final List<Metric> weightedACTPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedACT.get(0))));
+		final List<Metric> weightedTrafficPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedTraffic.get(0))));
+		return _computationUtil.get().weightedByTraffic(weightedACTPass, weightedTrafficPass, "1h-sum", this.reportRange);
+	}
+	
 	public List<Metric> getRawCPUMinutely(){
 		if (!this.hasCPU()){
 			throw new RuntimeException("No CPU provided, not legal to call this method");
 		}
-		assert(this.hasCPU()):"ACT has to be provided";
+		assert(this.hasCPU()):"CPU has to be provided";
 		final Metric weightedCPUPass=new Metric(this.weightedCPU.get(0));
 		return Collections.unmodifiableList(Arrays.asList(weightedCPUPass));
+	}
+	
+	public List<Metric> getRawCPUHourly(){
+		if (!this.hasCPU()){
+			throw new RuntimeException("No CPU provided, not legal to call this method");
+		}
+		assert(this.hasCPU()):"CPU has to be provided";
+		final List<Metric> weightedCPUPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedCPU.get(0))));
+		final List<Metric> weightedTrafficPass=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedTraffic.get(0))));
+		return _computationUtil.get().weightedByTraffic(weightedCPUPass, weightedTrafficPass, "1h-sum", this.reportRange);
+	}
+	
+	public List<Metric> getWeightedTrafficMinutely(){
+		final Metric weightedTrafficPass=new Metric(this.weightedTraffic.get(0));
+		List<Metric> weightedTrafficPassList=Collections.unmodifiableList(Arrays.asList(weightedTrafficPass));
+		return weightedTrafficPassList;
+	}
+	
+	public List<Metric> getWeightedTrafficCountHourly(){
+		List<Metric> weightedTraffic=getWeightedTrafficMinutely();
+		List<Metric> weightedTrafficDownsampled=_computationUtil.get().downsample("1h-count", weightedTraffic);
+		return Collections.unmodifiableList(weightedTrafficDownsampled);
+	}
+	
+	public List<Metric> getWeightedTrafficSumHourly(){
+		List<Metric> weightedTraffic=getWeightedTrafficMinutely();
+		List<Metric> weightedTrafficDownsampled=_computationUtil.get().downsample("1h-sum", weightedTraffic);
+		return Collections.unmodifiableList(weightedTrafficDownsampled);
 	}
 	
 	public boolean hasACT(){
@@ -833,19 +904,7 @@ final class RacServer implements Serializable{
 		return (this.weightedCPU==null || this.weightedCPU.size()==0)?false:true;
 	}
 	
- 	public List<Metric> getWeightedTrafficMinutely(){
-		final Metric weightedTrafficPass=new Metric(this.weightedTraffic.get(0));
-		List<Metric> weightedTrafficPassList=Collections.unmodifiableList(Arrays.asList(weightedTrafficPass));
-		return weightedTrafficPassList;
-	}
-	
-	public List<Metric> getWeightedTrafficHourly(){
-		List<Metric> weightedTraffic=getWeightedTrafficMinutely();
-		List<Metric> weightedTrafficDownsampled=_computationUtil.get().downsample("1h-count", weightedTraffic);
-		return Collections.unmodifiableList(weightedTrafficDownsampled);
-	}
-	
-	/**To Honor the sequence of RacServer**/
+	/**To honor the sequence of RacServer**/
 	public static Comparator<RacServer> compareByName(){
 		return (rac1,rac2) -> rac1.getRacServerAddress().compareTo(rac2.getRacServerAddress());
 	}
@@ -1275,5 +1334,24 @@ final class ComputationUtil{
 			resultMetrics.add(newMetric);
 		});
 		return Collections.unmodifiableList(resultMetrics);
+	}
+
+	protected List<Metric> weightedByTraffic(List<Metric> metrics, List<Metric> traffic, String downsampleDistance, ReportRange reportRange){
+		assert (metrics!=null && metrics.size()==1 && traffic!=null && traffic.size()==1):"input not valid";
+		List<Metric> product=scale(metrics,traffic);
+		List<Metric> productDownsampled=downsample(downsampleDistance, product);
+		
+		List<Metric> divisor=Arrays.asList(removeZeroMetric(traffic.get(0)));
+		List<Metric> divisorDownsampled=downsample(downsampleDistance, divisor);
+		
+		List<Metric> toBeDivided = new ArrayList<Metric>();
+		toBeDivided.addAll(productDownsampled);
+		toBeDivided.addAll(divisorDownsampled);
+		List<Metric> dividedResult=divide(toBeDivided);
+		
+		assert(dividedResult!=null):"dividedResult should be valid"; 
+		List<Metric> filleddividedResult=mergeZero(reportRange,60,dividedResult);
+
+		return filleddividedResult;
 	}
 }
