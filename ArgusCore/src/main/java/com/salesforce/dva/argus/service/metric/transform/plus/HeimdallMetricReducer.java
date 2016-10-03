@@ -148,7 +148,7 @@ interface Reportable{
 	List<Metric> reportRAC();//REPORT IMPACT. APT. ACT, CPU, TRAFFIC
 	List<Metric> reportRACHOUR();
 	List<Metric> reportPOD();//REPORT PODLEVL APT. IMPACT. AVA. TTM
-	List<Metric> reportTOTAL();//REPORT AVATOTAL, AvailbleMin,ImpactedMin, TTM
+	List<Metric> reportTOTAL();//REPORT AVATOTAL, AvailbleMin, ImpactedMin, TTM
 }
 /**Aspect Defined as SFDCPod**/
 interface SFDCPod{
@@ -393,12 +393,22 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	}
 	
 	private List<Metric> renderAvailableTOTAL(){
-		final List<Metric> dataRecievedCount=_computationUtil.get().downsample("1h-count", podTraffic);
-		final List<Metric> dataRecievedCountFilled=_computationUtil.get().mergeZero(RacServer.getReportRange(),60,dataRecievedCount);
-		final List<Metric> weightDownsampled=_computationUtil.get().downsample("100d-sum", dataRecievedCountFilled);
-		assert(weightDownsampled.get(0).getDatapoints().size()==1):"downsampled to one result";
-		return weightDownsampled;
+		Metric m=new Metric("SUM", "SinglePoint");
+		
+		Map<Long,String> datapoints=new HashMap<Long,String>();
+		datapoints.put(RacServer.getReportRange().getStart(), String.valueOf(countAvaiableMin()));
+		m.setDatapoints(datapoints);
+		return Collections.unmodifiableList(Arrays.asList(m));
 	}
+	
+	private Long countAvaiableMin(){
+		Long result=this.racServers.stream()
+				.map(r -> r.getWeightedTrafficMinutely().get(0).getDatapoints().entrySet())
+				.flatMap(sets -> sets.stream())
+				.collect(Collectors.counting());
+		return result;
+	}
+	
 	
 	/**Reportable**/
 	@Override

@@ -216,7 +216,7 @@ public class HeimdallMetricReducerTest {
         
         
         
-        List<Metric> result = transform.transform(metrics,Arrays.asList("RACHOUR"));
+        List<Metric> result = transform.transform(metrics,Arrays.asList("TOTAL"));
 
         
         List<Metric> expected = new ArrayList<Metric>();

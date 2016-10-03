@@ -2663,7 +2663,7 @@ public class HeimdallMetricReducerTestFULL {
         
         Metric expected_metric5 = new Metric("SUM", "AvailableMin");
         Map<Long, String> expected_Datapoints5=new HashMap<Long, String>();
-        expected_Datapoints5.put(0L, "12.0");
+        expected_Datapoints5.put(0L, "18");
         expected_metric5.setDatapoints(expected_Datapoints5);
         expected.add(expected_metric5);
         
