@@ -77,6 +77,8 @@ public class LDAPAuthService extends DefaultService implements AuthService {
     private final UserService _userService;
     private final SystemConfiguration _config;
     private final MonitorService _monitorService;
+    private final UserCountCache _monthlyUsers;
+    private final UserCountCache _dailyUsers;
 
     //~ Constructors *********************************************************************************************************************************
 
@@ -96,6 +98,8 @@ public class LDAPAuthService extends DefaultService implements AuthService {
         _userService = userService;
         _config = config;
         _monitorService = monitorService;
+        _dailyUsers = new UserCountCache(86400000L);
+        _monthlyUsers = new UserCountCache(2592000000L);
     }
 
     //~ Methods **************************************************************************************************************************************
@@ -112,9 +116,10 @@ public class LDAPAuthService extends DefaultService implements AuthService {
     public PrincipalUser getUser(String username, String password) {
         requireNotDisposed();
         requireArgument(_isUsernameValid(username), MessageFormat.format("Invalid username: {0}", username));
-        
+
         PrincipalUser result = null;
         String userDn = _findDNForUser(username);
+
         if (userDn != null && password != null) {
             result = _findPrincipalUser(userDn, username, password);
         }
@@ -195,7 +200,11 @@ public class LDAPAuthService extends DefaultService implements AuthService {
                 result = new PrincipalUser(_userService.findAdminUser(), username, email);
                 result = _userService.updateUser(result);
             }
-            _monitorService.updateCounter(MonitorService.Counter.UNIQUE_USERS, _userService.getUniqueUserCount(), new HashMap<String, String>(0));
+            _dailyUsers.put(username, System.currentTimeMillis());
+            _monthlyUsers.put(username, System.currentTimeMillis());
+            _monitorService.updateCounter(MonitorService.Counter.DAILY_USERS, _dailyUsers.size(), new HashMap<>(0));
+            _monitorService.updateCounter(MonitorService.Counter.MONTHLY_USERS, _monthlyUsers.size(), new HashMap<>(0));
+            _monitorService.updateCounter(MonitorService.Counter.UNIQUE_USERS, _userService.getUniqueUserCount(), new HashMap<>(0));
             return result;
         } else {
             return null;
@@ -220,6 +229,7 @@ public class LDAPAuthService extends DefaultService implements AuthService {
      * @author  Tom Valine (tvaline@salesforce.com)
      */
     public enum Property {
+
         /** The LDAP endpoint. */
         LDAP_ENDPOINT("service.property.auth.ldap.endpoint", "ldaps://ldaps.test.com:123"),
         /** The LDAP search base. */

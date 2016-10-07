@@ -267,7 +267,7 @@ public class DivideTransformTest {
         expected.put(3000L, "0.003");
 
         List<Metric> result = divideTransform.transform(metrics, constants);
-        System.out.println(result);
+
         assertEquals(result.get(0).getDatapoints().size(), 3);
         assertEquals(expected, result.get(0).getDatapoints());
     }

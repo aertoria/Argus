@@ -40,6 +40,7 @@ import com.google.inject.Provider;
  * @author  Tom Valine (tvaline@salesforce.com), Bhinav Sura (bhinav.sura@salesforce.com)
  */
 public final class ServiceFactory {
+
     //~ Instance fields ******************************************************************************************************************************
 
     @Inject
@@ -71,7 +72,7 @@ public final class ServiceFactory {
     @Inject
     Provider<AuditService> _auditServiceProvider;
     @Inject
-    Provider<MailService> _mailServiceProvider; 
+    Provider<MailService> _mailServiceProvider;
     @Inject
     Provider<AuthService> _authServiceProvider;
     @Inject
@@ -84,15 +85,12 @@ public final class ServiceFactory {
     Provider<CacheService> _cacheServiceProvider;
     @Inject
     Provider<DiscoveryService> _discoveryServiceProvider;
-    
+    @Inject
+    Provider<BatchService> _batchServiceProvider;
+
+
     //~ Methods **************************************************************************************************************************************
-//    @Inject
-//    Provider<EthanService> _ethanService;
-//    
-//    public synchronized EthanService getEthanService() {
-//        return _ethanService.get();
-//    }
-    
+
     /**
      * Returns an instance of the TSDB service.
      *
@@ -281,6 +279,14 @@ public final class ServiceFactory {
     public synchronized DiscoveryService getDiscoveryService() {
         return _discoveryServiceProvider.get();
     }
-  
+
+    /**
+     * Returns an instance of the batch service.
+     *
+     * @return  An instance of the batch service.
+     */
+    public synchronized BatchService getBatchService() {
+        return _batchServiceProvider.get();
+    }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

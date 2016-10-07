@@ -34,7 +34,7 @@ public class DeferredDiscoveryService extends DefaultService implements Discover
 
 	@Override
 	public List<MetricQuery> getMatchingQueries(MetricQuery query) {
-		System.out.println("ArgusCore+ DeferredDiscoveryService acknowledged");
+		System.out.println("ArgusCore+ DeferredDiscoveryService acknowledged PRD");
 		List<MetricQuery> queryList = new ArrayList<MetricQuery>();
 		queryList.add(query);
 		return queryList;

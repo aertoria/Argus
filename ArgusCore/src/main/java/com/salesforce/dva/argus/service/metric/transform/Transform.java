@@ -39,7 +39,7 @@ import java.util.List;
  *
  * @author  Bhinav Sura (bsura@salesforce.com)
  */
-public interface Transform{
+public interface Transform {
 
     //~ Methods **************************************************************************************************************************************
 

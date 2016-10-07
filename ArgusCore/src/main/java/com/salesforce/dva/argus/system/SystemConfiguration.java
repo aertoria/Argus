@@ -211,6 +211,7 @@ public final class SystemConfiguration extends Properties {
      * @author  Tom Valine (tvaline@salesforce.com), Bhinav Sura (bhinav.sura@salesforce.com)
      */
     public enum Property {
+
         BUILD("system.property.build", "XXXX-XX"),
         LOG_LEVEL("system.property.log.level", "INFO"),
         VERSION("system.property.version", "X.X"),
@@ -236,6 +237,7 @@ public final class SystemConfiguration extends Properties {
         SCHEMA_SERVICE_PROPERTY_FILE("service.config.schema","argus.properties"),
         TSDB_SERVICE_IMPL_CLASS("service.binding.tsdb", "com.salesforce.dva.argus.service.tsdb.DefaultTSDBService"),
         TSDB_SERVICE_PROPERTY_FILE("service.config.tsdb","argus.properties");
+
         private final String _name;
         private final String _defaultValue;
 

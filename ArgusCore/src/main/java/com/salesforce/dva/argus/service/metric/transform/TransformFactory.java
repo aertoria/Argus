@@ -54,6 +54,7 @@ public class TransformFactory {
 	
 	@Inject
 	Provider<HeimdallMetricReducer> _heimdallMetricReducer;
+
     //~ Static fields/initializers *******************************************************************************************************************
 
     /** Default metric name. */
@@ -95,8 +96,6 @@ public class TransformFactory {
             case SUM:
                 return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping());
             case MULTIPLY:
-            case SCALE_MATCH:
-                return new ScaleMatchTransform();
             case SCALE:
                 return new MetricReducerOrMappingTransform(new ScaleValueReducerOrMapping());
             case DIFF:
@@ -137,8 +136,6 @@ public class TransformFactory {
                 return new FillTransform();
             case FILL_CALCULATE:
                 return new FillCalculateTransform();
-            case FILTER:
-                return _filterReducerTransform.get();
             case ALIAS:
                 return new AliasTransform();
             case INCLUDE:
@@ -172,7 +169,7 @@ public class TransformFactory {
             case CONSECUTIVE:
                 return new MetricMappingTransform(new ConsecutiveValueMapping());
             case foreach:
-            	return new MetricIteratingTransform();
+                return new MetricIteratingTransform();
             case LOG:
                 return new MetricMappingTransform(new LogValueMapping());
             case SHIFT:
@@ -190,7 +187,19 @@ public class TransformFactory {
             case NORMALIZE_V:
                 return new MetricZipperTransform(new DivideValueZipper());
             case GROUPBY:
-            	throw new UnsupportedOperationException(functionName);
+            	return new GroupByTransform(this);
+            case ANOMALY_DENSITY:
+                return new AnomalyDetectionGaussianDensityTransform();
+            case ANOMALY_ZSCORE:
+                return new AnomalyDetectionGaussianZScoreTransform();
+            case ANOMALY_KMEANS:
+                return new AnomalyDetectionKMeansTransform();
+            case ANOMALY_RPCA:
+                return new AnomalyDetectionRPCATransform();
+            case SCALE_MATCH:
+                return new ScaleMatchTransform();
+            case FILTER:
+                return _filterReducerTransform.get();
             case P90:
                 return new P90Transform();
             case HEIMDALL_TOTALAVA:
@@ -251,7 +260,6 @@ public class TransformFactory {
         LIMIT("LIMIT", "Returns a subset input metrics in stable order from the head of the list not to exceed the specified limit."),
         SUM_V("SUM_V", "Calculate sum in a vector style."),
         SCALE_V("SCALE_V", "Calculate multiplication in a vector style."),
-        SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         DIFF_V("DIFF_V", "Calculate subtraction in a vector style."),
         DIVIDE_V("DIVIDE_V", "Calculate quotient in a vector style."),
         NORMALIZE_V("NORMALIZE_V", "Perform normalization in a vector style."),
@@ -259,7 +267,6 @@ public class TransformFactory {
             "Calculates the standard deviation per timestamp for more than one metric, or the standard deviation for all data points for a single metric."),
         FILL("FILL", "Creates additional data points to fill gaps."),
         FILL_CALCULATE("FILL_CALCULATE", "Creates a constant line based on the calculated value."),
-        FILTER("FILTER", "Filter based on matching tag value"),
         INCLUDE("INCLUDE", "Retains metrics based on the matching of a regular expression against the metric name."),
         EXCLUDE("EXCLUDE", "Culls metrics based on the matching of a regular expression against the metric name."),
         CONSECUTIVE("CONSECUTIVE","Filter out all values that are non-consecutive"),
@@ -267,7 +274,13 @@ public class TransformFactory {
         HW_FORECAST("HW_FORECAST", "Performns HoltWinters Forecast."),
         HW_DEVIATION("HW_DEVIATION", "Performns HoltWinters Deviation."),
         GROUPBY("GROUPBY", "Creates groups of metrics based on some matching criteria and then performs the given aggregation."),
+        ANOMALY_DENSITY("ANOMALY_DENSITY", "Calculates an anomaly score (0-100) for each value of the metric based on the probability density of each value with a Gaussian distribution."),
+        ANOMALY_ZSCORE("ANOMALY_ZSCORE", "Calculates an anomaly score (0-100) for each value of the metric based on the z-score of each value with a Gaussian distribution."),
+        ANOMALY_KMEANS("ANOMALY_KMEANS", "Calculates an anomaly score (0-100) for each value of the metric based on a K-means clustering of the metric data."),
+        ANOMALY_RPCA("ANOMALY_RPCA", "Calculates an anomaly score (0-100) for each value of the metric based on the RPCA matrix decomposition algorithm."),
         P90("P90", "Give P90 value of this metrics."),
+        FILTER("FILTER", "Filter based on matching tag value"),
+        SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
     	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic");
         private final String _name;
