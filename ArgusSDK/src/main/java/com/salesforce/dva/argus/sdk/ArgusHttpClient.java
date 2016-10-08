@@ -131,7 +131,6 @@ class ArgusHttpClient {
     /* Execute a request given by type requestType. */
     ArgusResponse executeHttpRequest(RequestType requestType, String url, Object payload) throws IOException {
         url = _endpoint + url;
-
         String json = payload == null ? null : toJson(payload);
 
         return ArgusResponse.generateResponse(_doHttpRequest(requestType, url, json));

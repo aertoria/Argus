@@ -22,8 +22,10 @@ angular.module('argus.directives.controls.date', [])
         	};
 
         	$scope.onSetTime = function(newDate, oldDate) {
-        		$scope.ctrlVal = $filter('date')(newDate, "short");
+                var localTime=$filter('date')(newDate, "short");
+                $scope.ctrlVal = localTime;
         	};
+
         },
         require: '^agDashboard',
         template: // TODO: move to external template
@@ -37,9 +39,19 @@ angular.module('argus.directives.controls.date', [])
                 '</ul>' +
             '</div>',
         link: function(scope, element, attributes, dashboardCtrl) {
+            //used for process time to GMT format
+            function processGMTTime(timeString){
+                timeStringGMT=timeString+' GMT';
+                dateGMT = Date.parse(timeStringGMT);
+                if(isNaN(dateGMT)){
+                    return timeString;
+                }
+                return dateGMT;
+            };
+
             dashboardCtrl.updateControl(scope.controlName, scope.ctrlVal, "agDate");
             scope.$watch('ctrlVal', function(newValue, oldValue) {
-                dashboardCtrl.updateControl(scope.controlName, newValue, "agDate", true);
+                dashboardCtrl.updateControl(scope.controlName, processGMTTime(newValue), "agDate", true);
             });
         }
     }

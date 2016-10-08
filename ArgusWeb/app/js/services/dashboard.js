@@ -1109,7 +1109,7 @@ angular.module('argus.services.dashboard', [])
                         tooltip: {
                             formatter: function () {
                                 return 'Time: ' + this.series.xAxis.categories[this.point.x] +
-                                    '<br>RacNNode: ' + this.series.yAxis.categories[this.point.y] +
+                                    '<br>RacNode: ' + this.series.yAxis.categories[this.point.y] +
                                     '<br><br>DB Availablity:  <b>' + this.point.value + '%' +
                                     '<br>ImpactedMin:  <b>' + this.point.ImpactedMin + ' min' +
                                     '<br>(out-of)MonitoredMin:  <b>' + this.point.CollectedMin + ' min' +

@@ -40,7 +40,10 @@ public class AuthServiceIT extends AbstractTest {
     @Test
     public void testLoginLogout() throws IOException {
         try(ArgusService argusService = ArgusService.getInstance(ITParam.ENDPOINT.getValue(),10)) {
-            AuthService authService = argusService.getAuthService();
+            AuthService authService = argusService.getAuthService();            
+            System.out.println(ITParam.ENDPOINT.getValue());
+            System.out.println(ITParam.USERNAME.getValue());
+            System.out.println(ITParam.PASSWORD.getValue());
             authService.login(ITParam.USERNAME.getValue(),ITParam.PASSWORD.getValue());
             authService.logout();
         }
