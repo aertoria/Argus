@@ -2845,10 +2845,10 @@ public class HeimdallMetricReducerTest{
 
         
         List<Metric> expected = new ArrayList<Metric>();
-        Metric expected_metric1 = new Metric("AVA", "CHI.SP2.cs15.Rac1");
+        Metric expected_metric1 = new Metric("APT", "CHI.SP2.cs15.Rac1");
         Map<Long, String> expected_Datapoints1=new HashMap<Long, String>();
-        expected_Datapoints1.put(0L, "100.0");
-        expected_Datapoints1.put(3600000L, "100.0");
+        expected_Datapoints1.put(0L, "64.23529411764706");
+        expected_Datapoints1.put(3600000L, "0");
         expected_metric1.setDatapoints(expected_Datapoints1);
         expected.add(expected_metric1);
 

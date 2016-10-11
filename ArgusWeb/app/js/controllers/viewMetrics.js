@@ -87,8 +87,10 @@ angular.module('argus.controllers.viewMetrics', ['ngResource'])
             }
             // end TODO
 
+            //TODO login first
             return SearchService.search(newParams)
                 .then(function(response) {
+                    console.log(response);
                     return response.data;
                 });
         };

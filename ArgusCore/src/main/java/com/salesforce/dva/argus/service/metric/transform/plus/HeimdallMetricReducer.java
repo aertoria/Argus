@@ -145,10 +145,10 @@ interface Renderable{
 
 /**Aspect Defined as Reported by Transform**/
 interface Reportable{
-	List<Metric> reportRAC();//REPORT IMPACT. APT. ACT, CPU, TRAFFIC
-	List<Metric> reportRACHOUR();
-	List<Metric> reportPOD();//REPORT PODLEVL APT. IMPACT. AVA. TTM
-	List<Metric> reportTOTAL();//REPORT AVATOTAL, AvailbleMin, ImpactedMin, TTM
+	List<Metric> reportRAC();	//REPORT IMPACT. APT. ACT, CPU, TRAFFIC
+	List<Metric> reportRACHOUR();//REPORT AVA,APT,IMPACT,Traffic,ACT,CPU
+	List<Metric> reportPOD();	//REPORT PODLEVL APT. IMPACT. AVA. TTM
+	List<Metric> reportTOTAL();	//REPORT AVATOTAL, AvailbleMin, ImpactedMin, TTM
 }
 /**Aspect Defined as SFDCPod**/
 interface SFDCPod{
@@ -456,13 +456,15 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	@Override
 	public List<Metric> reportRACHOUR() {
 		List<Metric> reportRACHOUR=new ArrayList<Metric>();	
-		reportRACHOUR.addAll(containRACHOUR(r -> r.getAvaRateHourly().get(0), r -> true, "AVA"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawAPTHourly().get(0), r -> true, "APT"));
-		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourly().get(0), r -> true, "ImpactedMin"));
-		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficCountHourly().get(0), r -> true, "CollectedMin"));
-		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficSumHourly().get(0), r -> true, "Traffic"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawACTHourly().get(0), r -> r.hasACT(), "ACT"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawCPUHourly().get(0), r -> r.hasCPU(), "CPU"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficSumHourly().get(0), r -> true, "Traffic"));
+		
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getAvaRateHourly().get(0), r -> true, "AVA"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourly().get(0), r -> true, "ImpactedMin"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficCountHourly().get(0), r -> true, "CollectedMin"));
+
 		return Collections.unmodifiableList(reportRACHOUR);
 	}
 	
@@ -782,11 +784,13 @@ final class RacServer implements Serializable{
 		return getReportRangePass;
 	} 
 	
-	/**getImpactedMinHourly return a timeseries with count of impact min for each hour**/
+	/**getImpactedMinHourly return a timeseries with count of impact min for each hour
+	 * called by all ava related renderables and renderings.
+	 * **/
 	public List<Metric> getImpactedMinHourly(){
 		//APT
 		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
-		
+
 		//ACT
 		if (hasACT()){
 			List<Metric> impactedMinACT = getImapctedMinHourlyACT();
@@ -1268,18 +1272,21 @@ final class ComputationUtil{
 	protected List<Metric> detectAPT(List<Metric> input, String objectAddress){
 		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
 		List<Metric> cull_below_filter = cull_below(input, 500);
+		
 		if (cull_below_filter.get(0).getDatapoints().size() == 0) {
 			System.out.println("cull_below_filter return. No data has been found that is above 500 @"+objectAddress);
 			return cull_below_filter;
 		}
-
+	
 		List<Metric> consecutive_filter = consecutive(cull_below_filter);
 		if (consecutive_filter.get(0).getDatapoints().size() == 0) {
 			System.out.println("consecutive return. No data has been found that is consecutive more than 5 @"+objectAddress);
 			return consecutive_filter;
 		}
 		assert(consecutive_filter.get(0).getDatapoints().size() > 0) : "till now, some data should be detected";
+		
 		return consecutive_filter;
+		
 	}
 	
 	/**Givin a time series, return any datapoints that is above 150, could be null**/

@@ -89,9 +89,10 @@ public class DiscoveryResources extends AbstractResource {
         @DefaultValue("10") @QueryParam("limit") final int limit,
         @DefaultValue("1") @QueryParam("page") final int page,
         @QueryParam("type") String type) {
-        PrincipalUser remoteUser = validateAndGetOwner(req, null);
-
+    	
+		PrincipalUser remoteUser = validateAndGetOwner(req, null);
         validateResourceAuthorization(req, remoteUser, remoteUser);
+        
         if (type == null) {
             List<MetricSchemaRecord> records = _discoveryService.filterRecords(namespaceRegex, scopeRegex, metricRegex, tagkRegex, tagvRegex, limit,
                 page);
