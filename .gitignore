@@ -15,4 +15,5 @@ argus-build.properties
 .Project
 .classpath
 property
-.properties
+*.properties
+
