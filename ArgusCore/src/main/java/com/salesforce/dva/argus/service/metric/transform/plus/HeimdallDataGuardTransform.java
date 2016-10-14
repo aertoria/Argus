@@ -72,7 +72,7 @@ public class HeimdallDataGuardTransform implements Transform {
             	Float confidence = (float) ((result.get("totalPoints") - result.get("nullPoints")) * 100.00/result.get("totalPoints"));
             	Float SLAcompliance = (float) (result.get("compliedPoints") * 100.0 / (result.get("compliedPoints") + result.get("failedPoints")));
             	
-            	System.out.println("POD: "+ pod +" -> "+ result.get("compliedPoints") +" / "+ (result.get("compliedPoints") + result.get("failedPoints")));
+            	//System.out.println("POD: "+ pod +" -> "+ result.get("compliedPoints") +" / "+ (result.get("compliedPoints") + result.get("failedPoints")));
             	
             	Map<Long, String> complianceData = new HashMap<Long, String>();
             	/*

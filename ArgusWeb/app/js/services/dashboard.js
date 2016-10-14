@@ -492,15 +492,14 @@ angular.module('argus.services.dashboard', [])
             var end=paraJSON["end"];
             var pod=paraJSON["pod"];
 
-            var dgLagThreshold=paraJSON["dgLagThreshold"];
+            var dgLagThreshold=paraJSON["threshold"];
             var IGLstr = paraJSON['IGLlist'];
             var SLApc = paraJSON['SLAtime'];
             var prodThreshold = paraJSON['prodThr'];
             var csThreshold = paraJSON['csThr'];
-            var thresholdLine = paraJSON['thrLine'];
-            var podDRstr = paraJSON['DRpods'];
-            var CSDRstr = paraJSON['CSpods'];
-
+            //var thresholdLine = paraJSON['thrLine'];
+            //var podDRstr = paraJSON['DRpods'];
+            //var CSDRstr = paraJSON['CSpods'];
             //if (paraJSON["threasholdConfig"]==-1)
             //    {var Cfg=300100;}
             //    else if(paraJSON["threasholdConfig"]==1)
@@ -2642,6 +2641,8 @@ angular.module('argus.services.dashboard', [])
 
                 //console.log(DRpods);
 
+                //console.log("SLAPC-"+SLApc);
+
                 // var URL=CONFIG.wsUrl+"metrics?expression="+expression;
 
                 var requestURL =  CONFIG.wsUrl + "metrics?expression=" + expression;
@@ -2655,7 +2656,7 @@ angular.module('argus.services.dashboard', [])
 
 
                     var reportDetails = '<h3><span id="helpBlock" class="help-block">Dataguard lag report</span></h3>';
-                    var note = '<h5><span id="helpBlock" class="help-block">Percentage pods complying to SLA( 99.7 % of time). </span></h5>';
+                    var note = '<h5><span id="helpBlock" class="help-block">Percentage pods complying to SLA( threshold: '+ dgLagThreshold+' <i>sec</i>, '+SLApc+' % of time). </span></h5>';
 
 
                     //var conf = "remote_dg_transport_lag";
@@ -2663,103 +2664,18 @@ angular.module('argus.services.dashboard', [])
                     var dgTRObj = {};
                     var dgApplyObj = {};
 
-
                     var dgTRObj = lagSpecificList(rawdata, 'remote_dg_transport_lag');
                     var dgApplyObj = lagSpecificList(rawdata, 'remote_dataguard_lag');
 
 
-                    /*
-                    for(var metric in rawdata){
-
-                        //console.log(rawdata[metric]);
-                        //console.log(rawdata[metric]['metric'].split("."));
-
-                        var conf = "remote_dg_transport_lag";
-                        var conf2 = "remote_dataguard_lag";
-
-                        if(conf === rawdata[metric]['metric'].split(".")[1]){
-
-
-                            var pod = rawdata[metric]['metric'].split(".")[0];
-                            var podType = pod.substring(0,2);
-
-                            var obj = {};
-                            obj['pod'] = pod;
-                            obj['compliance'] = rawdata[metric]['datapoints']['0'];
-                            obj['conf'] = rawdata[metric]['datapoints']['1'];
-
-                            if(dgTRObj[podType]){
-
-                                if(objectsIn[pod] == 1){
-
-                                }
-                                else{
-                                    dgTRObj[podType].push(obj);
-                                    objectsIn[pod] = 1;
-                                }
-
-
-                            }
-                            else{
-                                var podarr = [];
-                                podarr.push(obj);
-                                objectsIn[pod] = 1;
-                                dgTRObj[podType] = podarr;
-
-                            }
-
-
-
-                        }
-
-                        if(conf2=== rawdata[metric]['metric'].split(".")[1]){
-
-
-                            var pod = rawdata[metric]['metric'].split(".")[0];
-                            var podType = pod.substring(0,2);
-
-                            var obj = {};
-                            obj['pod'] = pod;
-                            obj['compliance'] = rawdata[metric]['datapoints']['0'];
-                            obj['conf'] = rawdata[metric]['datapoints']['1'];
-
-                            if(dgApply[podType]){
-
-                                if(objectsIn2[pod] == 1){
-
-                                }
-                                else{
-                                    dgApply[podType].push(obj);
-                                    objectsIn2[pod] = 1;
-                                }
-
-
-                            }
-                            else{
-                                var podarr = [];
-                                podarr.push(obj);
-                                objectsIn2[pod] = 1;
-                                dgApply[podType] = podarr;
-
-                            }
-
-
-
-                        }
-
-
-
-                    }
-                    */
-
-                    var podsNA = countPods(dgTRObj['na'] || [], 99.7);
-                    var podsAP = countPods(dgTRObj['ap'] || [], 99.7);
-                    var podsEU = countPods(dgTRObj['eu'] || [], 99.7);
+                    var podsNA = countPods(dgTRObj['na'] || [], parseFloat(SLApc));
+                    var podsAP = countPods(dgTRObj['ap'] || [], parseFloat(SLApc));
+                    var podsEU = countPods(dgTRObj['eu'] || [], parseFloat(SLApc));
                     //var podsCS = countPods(dgTRObj['cs'] || [], 99.7);
 
-                    var ApplypodsNA = countPods(dgApplyObj['na'] || [], 99.7);
-                    var ApplypodsAP = countPods(dgApplyObj['ap'] || [], 99.7);
-                    var ApplypodsEU = countPods(dgApplyObj['eu'] || [], 99.7);
+                    var ApplypodsNA = countPods(dgApplyObj['na'] || [], parseFloat(SLApc));
+                    var ApplypodsAP = countPods(dgApplyObj['ap'] || [], parseFloat(SLApc));
+                    var ApplypodsEU = countPods(dgApplyObj['eu'] || [], parseFloat(SLApc));
                     //var ApplypodsCS = countPods(dgApplyObj['cs'] || [], 99.7);
 
                     $('#'+divId).append(reportDetails+note+'<br/>'+'<div style="margin: 10px">' +
@@ -2768,17 +2684,17 @@ angular.module('argus.services.dashboard', [])
                         '<tbody id="table"> '+
                         '</tbody>' +
                         '<tr><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Transport lag</th>' +
-                        '<td>'+ generateALlHTML(dgTRObj['na'] || [], 'na', parseFloat(99.7)) +'</td>' +
-                        '<td>'+ generateALlHTML(dgTRObj['ap'] || [], 'ap', parseFloat(99.7)) +'</td>' +
-                        '<td>'+ generateALlHTML(dgTRObj['eu'] || [], 'eu', parseFloat(99.7)) +'</td>' +
+                        '<td>'+ generateALlHTML(dgTRObj['na'] || [], 'na', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+ generateALlHTML(dgTRObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+ generateALlHTML(dgTRObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
                         '<td rowspan="2" id="CS1">'+ generateALlHTML(dgTRObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
                         '</tr>' +
                         '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])*100.0/(podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods']) )  +'% ('+ (podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])  + '/' + (podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods'])+')</h3></span></td>' +
                         '</tr>' +
                         '<tr ><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Apply lag</th>' +
-                        '<td>'+generateALlHTML(dgApplyObj['na'] || [], 'na', parseFloat(99.7))+'</td>' +
-                        '<td>'+generateALlHTML(dgApplyObj['ap'] || [], 'ap', parseFloat(99.7)) +'</td>' +
-                        '<td>'+generateALlHTML(dgApplyObj['eu'] || [], 'eu', parseFloat(99.7)) +'</td>' +
+                        '<td>'+generateALlHTML(dgApplyObj['na'] || [], 'na', parseFloat(SLApc))+'</td>' +
+                        '<td>'+generateALlHTML(dgApplyObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+generateALlHTML(dgApplyObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
                         '<td rowspan="2" id="CS2">'+generateALlHTML(dgApplyObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
                         '</tr>' +
                         '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])*100.0/(ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) )  +'% ('+ (ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])  + '/' + (ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) + ')</h3></span></td>' +
@@ -2788,128 +2704,8 @@ angular.module('argus.services.dashboard', [])
                         '</div>');
 
 
-                    /*
-
-                    var requestURL2 =  CONFIG.wsUrl+"/metrics?expression=DataGuardTransform("+ CSpods.toString() +", #600#)";
-
-                    var dgTRObj = {};
-                    var dgApply = {};
-                    var objectsIn = {};
-                    var objectsIn2 = {};
-
-                    $.getJSON(requestURL2, function(rawdata){
-
-                        for(var metric in rawdata){
-
-                            //console.log(rawdata[metric]);
-                            //console.log(rawdata[metric]['metric'].split("."));
-
-                            var conf = "remote_dg_transport_lag";
-                            var conf2 = "remote_dataguard_lag";
-
-                            if(conf === rawdata[metric]['metric'].split(".")[1]){
-
-
-                                var pod = rawdata[metric]['metric'].split(".")[0];
-                                var podType = pod.substring(0,2);
-
-                                var obj = {};
-                                obj['pod'] = pod;
-                                obj['compliance'] = rawdata[metric]['datapoints']['0'];
-                                obj['conf'] = rawdata[metric]['datapoints']['1'];
-
-                                if(dgTRObj[podType]){
-
-                                    if(objectsIn[pod] == 1){
-
-                                    }
-                                    else{
-                                        dgTRObj[podType].push(obj);
-                                        objectsIn[pod] = 1;
-                                    }
-
-
-                                }
-                                else{
-                                    var podarr = [];
-                                    podarr.push(obj);
-                                    objectsIn[pod] = 1;
-                                    dgTRObj[podType] = podarr;
-
-                                }
-
-
-
-                            }
-
-                            if(conf2=== rawdata[metric]['metric'].split(".")[1]){
-
-
-                                var pod = rawdata[metric]['metric'].split(".")[0];
-                                var podType = pod.substring(0,2);
-
-                                var obj = {};
-                                obj['pod'] = pod;
-                                obj['compliance'] = rawdata[metric]['datapoints']['0'];
-                                obj['conf'] = rawdata[metric]['datapoints']['1'];
-
-                                if(dgApply[podType]){
-
-                                    if(objectsIn2[pod] == 1){
-
-                                    }
-                                    else{
-                                        dgApply[podType].push(obj);
-                                        objectsIn2[pod] = 1;
-                                    }
-
-
-                                }
-                                else{
-                                    var podarr = [];
-                                    podarr.push(obj);
-                                    objectsIn2[pod] = 1;
-                                    dgApply[podType] = podarr;
-
-                                }
-
-
-
-                            }
-
-
-
-                        }
-
-                        $('#CS1').html(generateALlHTML(dgTRObj['cs'], 'cs', 99.7));
-                        $('#CS2').html(generateALlHTML(dgApply['cs'], 'cs', 99.7));
-
-
-
-
-
-                    });
-
-
-                    */
-
 
                 });
-
-
-
-
-
-
-
-
-
-                //generate expression
-
-
-
-
-
 
 
 
