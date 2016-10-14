@@ -108,5 +108,29 @@ public class MetricService extends EndpointService {
 
         return new PutResult(String.valueOf(map.get("Success")), String.valueOf(map.get("Errors")), errorMessages);
     }
+    
+    
+    /**
+     * Transfer the metrics for the given set of expressions.
+     *
+     * @param   expressions  The metric expressions to evaluate.
+     *
+     * @return  The metrics that match the given expressions.
+     *
+     * @throws  IOException  If the server cannot be reached.
+     */
+    public PutResult transferMetrics(List<String> expressions) throws IOException {
+        StringBuilder requestUrl = new StringBuilder(RESOURCE);
+
+        for (int i = 0; i < expressions.size(); i++) {
+            requestUrl.append(i == 0 ? "?" : "&");
+            requestUrl.append("expression=").append(expressions.get(i));
+        }
+
+        ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl.toString(), null);
+
+        assertValidResponse(response, requestUrl.toString());
+        return fromJson(response.getResult(), new TypeReference<List<Metric>>() { });
+    }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

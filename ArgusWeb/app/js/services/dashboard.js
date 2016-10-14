@@ -423,9 +423,9 @@ angular.module('argus.services.dashboard', [])
 
             //obsolete
             var paraJSON=doControlParser(para);
-            //var StartTime=paraJSON["StartTime"];
-            //var EndTime=paraJSON["EndTime"];
-            //var Pod=paraJSON["Pod"];
+            var start=paraJSON["start"];
+            var end=paraJSON["end"];
+            var pod=paraJSON["pod"];
 
             var dgLagThreshold=paraJSON["dgLagThreshold"];
             var IGLstr = paraJSON['IGLlist'];
@@ -2629,7 +2629,7 @@ angular.module('argus.services.dashboard', [])
                 var updatedMetricList = [];
                 var updatedAnnotationList = [];
                 var updatedOptionList = [];
-
+                scope.controls=controls;
                 // TODO: move these 3 items to 'utils' folder
                 for (var key in scope.metrics) {
                     if (scope.metrics.hasOwnProperty(key)) {
