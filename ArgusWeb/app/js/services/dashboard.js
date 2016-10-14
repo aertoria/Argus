@@ -2582,7 +2582,7 @@ angular.module('argus.services.dashboard', [])
             }
 
 
-            function generateALlHTML(processedJSON, podCat, threshold){
+            function generateTableCells(processedJSON, podCat, threshold){
 
                 if(!processedJSON){
                     return '<h3><span  id="helpBlock" class="help-block">'+ podCat.toUpperCase()+': - (0/0)</span></h3>'
@@ -2684,18 +2684,18 @@ angular.module('argus.services.dashboard', [])
                         '<tbody id="table"> '+
                         '</tbody>' +
                         '<tr><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Transport lag</th>' +
-                        '<td>'+ generateALlHTML(dgTRObj['na'] || [], 'na', parseFloat(SLApc)) +'</td>' +
-                        '<td>'+ generateALlHTML(dgTRObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
-                        '<td>'+ generateALlHTML(dgTRObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
-                        '<td rowspan="2" id="CS1">'+ generateALlHTML(dgTRObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
+                        '<td>'+ generateTableCells(dgTRObj['na'] || [], 'na', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+ generateTableCells(dgTRObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+ generateTableCells(dgTRObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
+                        '<td rowspan="2" id="CS1">'+ generateTableCells(dgTRObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
                         '</tr>' +
                         '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])*100.0/(podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods']) )  +'% ('+ (podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])  + '/' + (podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods'])+')</h3></span></td>' +
                         '</tr>' +
                         '<tr ><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Apply lag</th>' +
-                        '<td>'+generateALlHTML(dgApplyObj['na'] || [], 'na', parseFloat(SLApc))+'</td>' +
-                        '<td>'+generateALlHTML(dgApplyObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
-                        '<td>'+generateALlHTML(dgApplyObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
-                        '<td rowspan="2" id="CS2">'+generateALlHTML(dgApplyObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
+                        '<td>'+generateTableCells(dgApplyObj['na'] || [], 'na', parseFloat(SLApc))+'</td>' +
+                        '<td>'+generateTableCells(dgApplyObj['ap'] || [], 'ap', parseFloat(SLApc)) +'</td>' +
+                        '<td>'+generateTableCells(dgApplyObj['eu'] || [], 'eu', parseFloat(SLApc)) +'</td>' +
+                        '<td rowspan="2" id="CS2">'+generateTableCells(dgApplyObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
                         '</tr>' +
                         '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])*100.0/(ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) )  +'% ('+ (ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])  + '/' + (ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) + ')</h3></span></td>' +
                         '</tr>' +

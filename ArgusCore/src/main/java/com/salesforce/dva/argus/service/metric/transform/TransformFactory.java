@@ -205,7 +205,7 @@ public class TransformFactory {
                 return new P90Transform();
             case HEIMDALL_TOTALAVA:
             	return _heimdallTotalAvaTransform.get();
-            case HeimdallDataGuardTransform:
+            case HEIMDALLDATAGUARDTRANSFORM:
             	return new HeimdallDataGuardTransform();
             case HEIMDALL:
             	return _heimdallMetricReducer.get();
@@ -285,7 +285,7 @@ public class TransformFactory {
         FILTER("FILTER", "Filter based on matching tag value"),
         SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
-        HeimdallDataGuardTransform("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
+        HEIMDALLDATAGUARDTRANSFORM("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
     	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic");
         private final String _name;
         private final String _description;
