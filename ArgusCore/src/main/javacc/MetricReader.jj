@@ -148,6 +148,7 @@ TOKEN : { < HEIMDALL : "HEIMDALL" > }
 TOKEN : { < SCALE_MATCH : "SCALE_MATCH" > }
 TOKEN : { < FILTER : "FILTER" > }
 TOKEN : { < P90 : "P90" > }
+TOKEN : { < HeimdallDataGuardTransform : "HeimdallDataGuardTransform" > }
 TOKEN : { < SUM : "SUM" > }
 TOKEN : { < SUM_V : "SUM_V" > }
 TOKEN : { < DIVIDE : "DIVIDE" > }
@@ -323,6 +324,9 @@ private String functionName() :
 	{ return t.image; }
 	|
 	t = <P90>
+	{ return t.image; }
+	|
+	t = <HeimdallDataGuardTransform>
 	{ return t.image; }
 	|
 	t = <MULTIPLY>

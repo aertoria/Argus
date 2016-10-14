@@ -417,6 +417,71 @@ angular.module('argus.services.dashboard', [])
 
         };
 
+
+        var lagSpecificList = function(data, lagType){
+
+            var dgObj = {};
+            var objectsIn = {};
+
+            for(var metric in data){
+
+                if(lagType === data[metric]['metric'].split(".")[1]){
+
+                    var pod = data[metric]['metric'].split(".")[0];
+                    var podType = pod.substring(0,2);
+                    var obj = {};
+
+                    obj['pod'] = pod;
+                    obj['compliance'] = data[metric]['datapoints']['0'];
+                    obj['conf'] = data[metric]['datapoints']['1'];
+
+                    if(dgObj[podType]){
+
+                        if(objectsIn[pod] == 1){
+                            //already filled
+                        }
+                        else{
+                            dgObj[podType].push(obj);
+                            objectsIn[pod] = 1;
+                        }
+                    }
+                    else{
+                        var podarr = [];
+                        podarr.push(obj);
+                        objectsIn[pod] = 1;
+                        dgObj[podType] = podarr;
+
+                    }
+                }
+
+            }
+
+            return  dgObj;
+
+        };
+
+        var countPods = function(data, SLApc){
+            var podsComplied = 0;
+            var totalPods = 0;
+
+
+            for(var metric in data){
+
+                if(data[metric]['conf'] == 0.00){
+                    continue;
+                }
+                if(data[metric]['compliance'] >= SLApc){
+                    podsComplied++;
+                }
+                totalPods++;
+            }
+
+
+            return  {'podsComplied': podsComplied, 'totalPods':totalPods};
+
+        };
+
+
         function updateAva(config, metricList, divId, attributes, para){
             var expression=parseExpression(metricList);
             var type = attributes["type"];
@@ -433,6 +498,8 @@ angular.module('argus.services.dashboard', [])
             var prodThreshold = paraJSON['prodThr'];
             var csThreshold = paraJSON['csThr'];
             var thresholdLine = paraJSON['thrLine'];
+            var podDRstr = paraJSON['DRpods'];
+            var CSDRstr = paraJSON['CSpods'];
 
             //if (paraJSON["threasholdConfig"]==-1)
             //    {var Cfg=300100;}
@@ -466,7 +533,9 @@ angular.module('argus.services.dashboard', [])
                 drawArgusPlusHDAVA();
             }else if(type == 'argus+REPORT'){
                 drawArgusPlusReport();
-            }else{
+            }else if(type == 'argus+DGLag'){
+                drawDGLagSLA();
+            } else{
                 growl.error("This heimdall component type is not defined");
             }
 
@@ -2510,6 +2579,340 @@ angular.module('argus.services.dashboard', [])
                     });
 
                 });
+
+            }
+
+
+            function generateALlHTML(processedJSON, podCat, threshold){
+
+                if(!processedJSON){
+                    return '<h3><span  id="helpBlock" class="help-block">'+ podCat.toUpperCase()+': - (0/0)</span></h3>'
+                }
+
+                var complyPods = '';
+                var ccount = 0;
+                var dcount = 0;
+                var defaulters = '';
+                var missingInfp = '';
+                var confidence = 0.0;
+                var mis = 0;
+
+
+                for(var pod in processedJSON){
+
+                    if(processedJSON[pod]['conf'] == 0.00){
+
+                        missingInfp += processedJSON[pod]['pod'] +', ';
+                        mis++;
+                        continue;
+                    }
+
+
+                    if(processedJSON[pod]['compliance']  >= threshold ){
+                        complyPods += processedJSON[pod]['pod'] + '('+ processedJSON[pod]['compliance'] +'%), ';
+                        ccount++;
+                        confidence +=  parseFloat(processedJSON[pod]['conf']);
+                        console.log("conf_"+processedJSON[pod]['conf']);
+                    }
+                    else{
+                        defaulters += processedJSON[pod]['pod'] + '('+ processedJSON[pod]['compliance'] +'%), ';
+                        dcount++;
+                        confidence +=  parseFloat(processedJSON[pod]['conf']);
+                        console.log("conf_"+processedJSON[pod]['conf']);
+                    }
+                }
+
+
+                return  '<span  id="helpBlock" class="help-block"><h3>'+ podCat.toUpperCase()+': ' + Math.round(ccount*100 /(ccount+dcount))+ '% ('+ccount +'/'+ (ccount+dcount)+')' +
+                    '<span style="font-size: 16px"> with '+ Math.round(confidence*1.0/(dcount+ccount)*1.0)+'% confidence</span>' +
+                    '<h4>'+ 'Pods met '+'('+ ccount+'): '+ complyPods.substr(0, complyPods.length-2) +'</h4>' +
+                    '<h4>'+ 'Pods not met '+'('+ dcount+'): '+ defaulters.substr(0, defaulters.length-2) +'</h4>' +
+                    '<h4>Missing Information('+ mis +'): '+ missingInfp.substr(0, missingInfp.length -2)
+                    +'</h4></h3></span>';
+
+            }
+
+            /*
+             *
+             * DG lag SLA Argus based
+             *
+             */
+            function drawDGLagSLA(){
+                $('#'+divId).html('<p>Generating reports...</p>');
+
+                //console.log(DRpods);
+
+                // var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+
+                var requestURL =  CONFIG.wsUrl + "metrics?expression=" + expression;
+                console.log(requestURL);
+
+
+                $.getJSON(requestURL, function(rawdata){
+
+                    $('#'+divId).html('');
+                    //console.log(rawdata);
+
+
+                    var reportDetails = '<h3><span id="helpBlock" class="help-block">Dataguard lag report</span></h3>';
+                    var note = '<h5><span id="helpBlock" class="help-block">Percentage pods complying to SLA( 99.7 % of time). </span></h5>';
+
+
+                    //var conf = "remote_dg_transport_lag";
+
+                    var dgTRObj = {};
+                    var dgApplyObj = {};
+
+
+                    var dgTRObj = lagSpecificList(rawdata, 'remote_dg_transport_lag');
+                    var dgApplyObj = lagSpecificList(rawdata, 'remote_dataguard_lag');
+
+
+                    /*
+                    for(var metric in rawdata){
+
+                        //console.log(rawdata[metric]);
+                        //console.log(rawdata[metric]['metric'].split("."));
+
+                        var conf = "remote_dg_transport_lag";
+                        var conf2 = "remote_dataguard_lag";
+
+                        if(conf === rawdata[metric]['metric'].split(".")[1]){
+
+
+                            var pod = rawdata[metric]['metric'].split(".")[0];
+                            var podType = pod.substring(0,2);
+
+                            var obj = {};
+                            obj['pod'] = pod;
+                            obj['compliance'] = rawdata[metric]['datapoints']['0'];
+                            obj['conf'] = rawdata[metric]['datapoints']['1'];
+
+                            if(dgTRObj[podType]){
+
+                                if(objectsIn[pod] == 1){
+
+                                }
+                                else{
+                                    dgTRObj[podType].push(obj);
+                                    objectsIn[pod] = 1;
+                                }
+
+
+                            }
+                            else{
+                                var podarr = [];
+                                podarr.push(obj);
+                                objectsIn[pod] = 1;
+                                dgTRObj[podType] = podarr;
+
+                            }
+
+
+
+                        }
+
+                        if(conf2=== rawdata[metric]['metric'].split(".")[1]){
+
+
+                            var pod = rawdata[metric]['metric'].split(".")[0];
+                            var podType = pod.substring(0,2);
+
+                            var obj = {};
+                            obj['pod'] = pod;
+                            obj['compliance'] = rawdata[metric]['datapoints']['0'];
+                            obj['conf'] = rawdata[metric]['datapoints']['1'];
+
+                            if(dgApply[podType]){
+
+                                if(objectsIn2[pod] == 1){
+
+                                }
+                                else{
+                                    dgApply[podType].push(obj);
+                                    objectsIn2[pod] = 1;
+                                }
+
+
+                            }
+                            else{
+                                var podarr = [];
+                                podarr.push(obj);
+                                objectsIn2[pod] = 1;
+                                dgApply[podType] = podarr;
+
+                            }
+
+
+
+                        }
+
+
+
+                    }
+                    */
+
+                    var podsNA = countPods(dgTRObj['na'] || [], 99.7);
+                    var podsAP = countPods(dgTRObj['ap'] || [], 99.7);
+                    var podsEU = countPods(dgTRObj['eu'] || [], 99.7);
+                    //var podsCS = countPods(dgTRObj['cs'] || [], 99.7);
+
+                    var ApplypodsNA = countPods(dgApplyObj['na'] || [], 99.7);
+                    var ApplypodsAP = countPods(dgApplyObj['ap'] || [], 99.7);
+                    var ApplypodsEU = countPods(dgApplyObj['eu'] || [], 99.7);
+                    //var ApplypodsCS = countPods(dgApplyObj['cs'] || [], 99.7);
+
+                    $('#'+divId).append(reportDetails+note+'<br/>'+'<div style="margin: 10px">' +
+                        '<table class="table table-bordered table-hover">' +
+                        '<thead style="text-align: center"> <tr> <th colspan="" >Aggregation Levels</th> <th colspan="" ><h3>NA</h3></th> <th colspan="" ><h3>AP</h3></th> <th colspan="" ><h3>EU</h3></th> <th colspan=""><h3>CS</h3></th></tr>' +
+                        '<tbody id="table"> '+
+                        '</tbody>' +
+                        '<tr><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Transport lag</th>' +
+                        '<td>'+ generateALlHTML(dgTRObj['na'] || [], 'na', parseFloat(99.7)) +'</td>' +
+                        '<td>'+ generateALlHTML(dgTRObj['ap'] || [], 'ap', parseFloat(99.7)) +'</td>' +
+                        '<td>'+ generateALlHTML(dgTRObj['eu'] || [], 'eu', parseFloat(99.7)) +'</td>' +
+                        '<td rowspan="2" id="CS1">'+ generateALlHTML(dgTRObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
+                        '</tr>' +
+                        '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])*100.0/(podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods']) )  +'% ('+ (podsNA['podsComplied']+ podsAP['podsComplied']+ podsEU['podsComplied'])  + '/' + (podsNA['totalPods']+ podsEU['totalPods'] + podsAP['totalPods'])+')</h3></span></td>' +
+                        '</tr>' +
+                        '<tr ><th rowspan="2" scope="row"><h3>DGoWAN</h3> Remote Apply lag</th>' +
+                        '<td>'+generateALlHTML(dgApplyObj['na'] || [], 'na', parseFloat(99.7))+'</td>' +
+                        '<td>'+generateALlHTML(dgApplyObj['ap'] || [], 'ap', parseFloat(99.7)) +'</td>' +
+                        '<td>'+generateALlHTML(dgApplyObj['eu'] || [], 'eu', parseFloat(99.7)) +'</td>' +
+                        '<td rowspan="2" id="CS2">'+generateALlHTML(dgApplyObj['cs'] || [], 'cs', parseFloat(99.7)) +'</td>' +
+                        '</tr>' +
+                        '<td colspan="3"><span id="helpBlock" class="help-block"><h3>production pods: '+  Math.round((ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])*100.0/(ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) )  +'% ('+ (ApplypodsNA['podsComplied']+ ApplypodsAP['podsComplied']+ ApplypodsEU['podsComplied'])  + '/' + (ApplypodsNA['totalPods']+ ApplypodsEU['totalPods'] + ApplypodsAP['totalPods']) + ')</h3></span></td>' +
+                        '</tr>' +
+                        '</thead>' +
+                        '</table>' +
+                        '</div>');
+
+
+                    /*
+
+                    var requestURL2 =  CONFIG.wsUrl+"/metrics?expression=DataGuardTransform("+ CSpods.toString() +", #600#)";
+
+                    var dgTRObj = {};
+                    var dgApply = {};
+                    var objectsIn = {};
+                    var objectsIn2 = {};
+
+                    $.getJSON(requestURL2, function(rawdata){
+
+                        for(var metric in rawdata){
+
+                            //console.log(rawdata[metric]);
+                            //console.log(rawdata[metric]['metric'].split("."));
+
+                            var conf = "remote_dg_transport_lag";
+                            var conf2 = "remote_dataguard_lag";
+
+                            if(conf === rawdata[metric]['metric'].split(".")[1]){
+
+
+                                var pod = rawdata[metric]['metric'].split(".")[0];
+                                var podType = pod.substring(0,2);
+
+                                var obj = {};
+                                obj['pod'] = pod;
+                                obj['compliance'] = rawdata[metric]['datapoints']['0'];
+                                obj['conf'] = rawdata[metric]['datapoints']['1'];
+
+                                if(dgTRObj[podType]){
+
+                                    if(objectsIn[pod] == 1){
+
+                                    }
+                                    else{
+                                        dgTRObj[podType].push(obj);
+                                        objectsIn[pod] = 1;
+                                    }
+
+
+                                }
+                                else{
+                                    var podarr = [];
+                                    podarr.push(obj);
+                                    objectsIn[pod] = 1;
+                                    dgTRObj[podType] = podarr;
+
+                                }
+
+
+
+                            }
+
+                            if(conf2=== rawdata[metric]['metric'].split(".")[1]){
+
+
+                                var pod = rawdata[metric]['metric'].split(".")[0];
+                                var podType = pod.substring(0,2);
+
+                                var obj = {};
+                                obj['pod'] = pod;
+                                obj['compliance'] = rawdata[metric]['datapoints']['0'];
+                                obj['conf'] = rawdata[metric]['datapoints']['1'];
+
+                                if(dgApply[podType]){
+
+                                    if(objectsIn2[pod] == 1){
+
+                                    }
+                                    else{
+                                        dgApply[podType].push(obj);
+                                        objectsIn2[pod] = 1;
+                                    }
+
+
+                                }
+                                else{
+                                    var podarr = [];
+                                    podarr.push(obj);
+                                    objectsIn2[pod] = 1;
+                                    dgApply[podType] = podarr;
+
+                                }
+
+
+
+                            }
+
+
+
+                        }
+
+                        $('#CS1').html(generateALlHTML(dgTRObj['cs'], 'cs', 99.7));
+                        $('#CS2').html(generateALlHTML(dgApply['cs'], 'cs', 99.7));
+
+
+
+
+
+                    });
+
+
+                    */
+
+
+                });
+
+
+
+
+
+
+
+
+
+                //generate expression
+
+
+
+
+
+
+
+
 
             }
 
