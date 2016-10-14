@@ -1,0 +1,78 @@
+package com.salesforce.dva.argus.sdk.transfer;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.salesforce.dva.argus.sdk.ArgusService;
+import com.salesforce.dva.argus.sdk.ArgusService.PutResult;
+import com.salesforce.dva.argus.sdk.entity.Metric;
+
+/**
+ * Provides methods to transfer metrics.
+ *
+ * @author  aertoria (ethan.wang@salesforce.com)
+ */
+@SuppressWarnings("serial")
+public class TransferService implements Serializable{
+	private transient ArgusService _sourceSVC;
+	private transient ArgusService _targetSVC;
+	
+	private TransferService(){}
+	
+	
+	/**
+     * Static factory method.
+     *
+     * @param  _sourceSVC. ArgusService. a dependecy needs to be injected.
+     * 
+     * @param  _targetSVC. ArgusService. a dependecy needs to be injected.
+     */
+	public static TransferService getTransferService(ArgusService _sourceSVC,ArgusService _targetSVC){
+		TransferService self=new TransferService();
+		self._sourceSVC=_sourceSVC;
+		self._targetSVC=_targetSVC;
+		return self;
+	}
+	
+	
+    /**
+     * transfer metrics
+     *
+     * @param   expression  A expression of metrics
+     *
+     * @return  The JSON representation of the object.
+     *
+     * @throws  IOException  If a serialization error occurs.
+     */
+	public PutResult transfer(String expression) throws IOException{
+		final List<Metric> metrics=readFromSource(Arrays.asList(expression));
+		PutResult p=writeToTarget(metrics);
+		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
+		return p;
+	}
+	
+	public List<Metric> readFromSource(List<String> expressions) throws IOException{
+		assert(expressions!=null && expressions.size()>0):"input not valid";
+		final List<String> cleanExpressions=TransferService.expressionCleanUp(expressions);
+		return this._sourceSVC.getMetricService().getMetrics(cleanExpressions);
+	}
+	
+	public PutResult writeToTarget(List<Metric> metrics) throws IOException{
+		assert(metrics!=null && metrics.size()>0):"input not valid";
+		return this._targetSVC.getMetricService().putMetrics(metrics);
+	}
+	
+	@SuppressWarnings("deprecation")
+	private static List<String> expressionCleanUp(List<String> expressions){
+		assert(expressions!=null && expressions.size()>0):"input not valid";
+		return expressions
+				.stream()
+				.map(e -> URLEncoder.encode(e))
+				.collect(Collectors.toList());
+	}
+	
+}

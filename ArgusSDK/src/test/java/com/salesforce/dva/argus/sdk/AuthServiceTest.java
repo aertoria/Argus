@@ -41,7 +41,6 @@ public class AuthServiceTest extends AbstractTest {
     public void testLoginLogout() throws IOException {
         try(ArgusService argusService = new ArgusService(getMockedClient("/AuthServiceTest.json"))) {
             AuthService authService = argusService.getAuthService();
-
             authService.login("aUsername", "aPassword");
             authService.logout();
         }
