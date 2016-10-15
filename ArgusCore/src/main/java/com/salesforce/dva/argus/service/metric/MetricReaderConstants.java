@@ -82,141 +82,143 @@ public interface MetricReaderConstants {
   /** RegularExpression Id. */
   int P90 = 30;
   /** RegularExpression Id. */
-  int SUM = 31;
+  int HeimdallDataGuardTransform = 31;
   /** RegularExpression Id. */
-  int SUM_V = 32;
+  int SUM = 32;
   /** RegularExpression Id. */
-  int DIVIDE = 33;
+  int SUM_V = 33;
   /** RegularExpression Id. */
-  int DIVIDE_V = 34;
+  int DIVIDE = 34;
   /** RegularExpression Id. */
-  int DIFF = 35;
+  int DIVIDE_V = 35;
   /** RegularExpression Id. */
-  int DIFF_V = 36;
+  int DIFF = 36;
   /** RegularExpression Id. */
-  int MULTIPLY = 37;
+  int DIFF_V = 37;
   /** RegularExpression Id. */
-  int SCALE = 38;
+  int MULTIPLY = 38;
   /** RegularExpression Id. */
-  int SCALE_V = 39;
+  int SCALE = 39;
   /** RegularExpression Id. */
-  int AVERAGE = 40;
+  int SCALE_V = 40;
   /** RegularExpression Id. */
-  int INTEGRAL = 41;
+  int AVERAGE = 41;
   /** RegularExpression Id. */
-  int DERIVATIVE = 42;
+  int INTEGRAL = 42;
   /** RegularExpression Id. */
-  int MIN = 43;
+  int DERIVATIVE = 43;
   /** RegularExpression Id. */
-  int MAX = 44;
+  int MIN = 44;
   /** RegularExpression Id. */
-  int AVERAGEBELOW = 45;
+  int MAX = 45;
   /** RegularExpression Id. */
-  int PERCENTILE = 46;
+  int AVERAGEBELOW = 46;
   /** RegularExpression Id. */
-  int MOVINGAVERAGE = 47;
+  int PERCENTILE = 47;
   /** RegularExpression Id. */
-  int ZEROIFMISSINGSUM = 48;
+  int MOVINGAVERAGE = 48;
   /** RegularExpression Id. */
-  int ABSOLUTE = 49;
+  int ZEROIFMISSINGSUM = 49;
   /** RegularExpression Id. */
-  int ALIAS = 50;
+  int ABSOLUTE = 50;
   /** RegularExpression Id. */
-  int NORMALIZE = 51;
+  int ALIAS = 51;
   /** RegularExpression Id. */
-  int NORMALIZE_V = 52;
+  int NORMALIZE = 52;
   /** RegularExpression Id. */
-  int UNION = 53;
+  int NORMALIZE_V = 53;
   /** RegularExpression Id. */
-  int COUNT = 54;
+  int UNION = 54;
   /** RegularExpression Id. */
-  int GROUP = 55;
+  int COUNT = 55;
   /** RegularExpression Id. */
-  int ABOVE = 56;
+  int GROUP = 56;
   /** RegularExpression Id. */
-  int BELOW = 57;
+  int ABOVE = 57;
   /** RegularExpression Id. */
-  int PROPAGATE = 58;
+  int BELOW = 58;
   /** RegularExpression Id. */
-  int MOVING = 59;
+  int PROPAGATE = 59;
   /** RegularExpression Id. */
-  int EXCLUDE = 60;
+  int MOVING = 60;
   /** RegularExpression Id. */
-  int INCLUDE = 61;
+  int EXCLUDE = 61;
   /** RegularExpression Id. */
-  int HIGHEST = 62;
+  int INCLUDE = 62;
   /** RegularExpression Id. */
-  int LOWEST = 63;
+  int HIGHEST = 63;
   /** RegularExpression Id. */
-  int LIMIT = 64;
+  int LOWEST = 64;
   /** RegularExpression Id. */
-  int RANGE = 65;
+  int LIMIT = 65;
   /** RegularExpression Id. */
-  int FILL = 66;
+  int RANGE = 66;
   /** RegularExpression Id. */
-  int FILL_CALCULATE = 67;
+  int FILL = 67;
   /** RegularExpression Id. */
-  int LOG = 68;
+  int FILL_CALCULATE = 68;
   /** RegularExpression Id. */
-  int CULL_ABOVE = 69;
+  int LOG = 69;
   /** RegularExpression Id. */
-  int CULL_BELOW = 70;
+  int CULL_ABOVE = 70;
   /** RegularExpression Id. */
-  int SORT = 71;
+  int CULL_BELOW = 71;
   /** RegularExpression Id. */
-  int SHIFT = 72;
+  int SORT = 72;
   /** RegularExpression Id. */
-  int DOWNSAMPLE = 73;
+  int SHIFT = 73;
   /** RegularExpression Id. */
-  int DEVIATION = 74;
+  int DOWNSAMPLE = 74;
   /** RegularExpression Id. */
-  int JOIN = 75;
+  int DEVIATION = 75;
   /** RegularExpression Id. */
-  int CONSECUTIVE = 76;
+  int JOIN = 76;
   /** RegularExpression Id. */
-  int foreach = 77;
+  int CONSECUTIVE = 77;
   /** RegularExpression Id. */
-  int HW_FORECAST = 78;
+  int foreach = 78;
   /** RegularExpression Id. */
-  int HW_DEVIATION = 79;
+  int HW_FORECAST = 79;
   /** RegularExpression Id. */
-  int ANOMALY_DENSITY = 80;
+  int HW_DEVIATION = 80;
   /** RegularExpression Id. */
-  int ANOMALY_ZSCORE = 81;
+  int ANOMALY_DENSITY = 81;
   /** RegularExpression Id. */
-  int ANOMALY_KMEANS = 82;
+  int ANOMALY_ZSCORE = 82;
   /** RegularExpression Id. */
-  int ANOMALY_RPCA = 83;
+  int ANOMALY_KMEANS = 83;
   /** RegularExpression Id. */
-  int GROUPBY = 84;
+  int ANOMALY_RPCA = 84;
   /** RegularExpression Id. */
-  int COLON = 85;
+  int GROUPBY = 85;
   /** RegularExpression Id. */
-  int COMMA = 86;
+  int COLON = 86;
   /** RegularExpression Id. */
-  int LEFT_CURLY = 87;
+  int COMMA = 87;
   /** RegularExpression Id. */
-  int RIGHT_CURLY = 88;
+  int LEFT_CURLY = 88;
   /** RegularExpression Id. */
-  int LEFT_PARENTHESIS = 89;
+  int RIGHT_CURLY = 89;
   /** RegularExpression Id. */
-  int RIGHT_PARENTHESIS = 90;
+  int LEFT_PARENTHESIS = 90;
   /** RegularExpression Id. */
-  int AGGREGATOR = 91;
+  int RIGHT_PARENTHESIS = 91;
   /** RegularExpression Id. */
-  int TIME = 92;
+  int AGGREGATOR = 92;
   /** RegularExpression Id. */
-  int DOWNSAMPLER = 93;
+  int TIME = 93;
   /** RegularExpression Id. */
-  int NAMESPACE = 94;
+  int DOWNSAMPLER = 94;
   /** RegularExpression Id. */
-  int SCOPE = 95;
+  int NAMESPACE = 95;
   /** RegularExpression Id. */
-  int METRIC = 96;
+  int SCOPE = 96;
   /** RegularExpression Id. */
-  int TAGS = 97;
+  int METRIC = 97;
   /** RegularExpression Id. */
-  int CONSTANT = 98;
+  int TAGS = 98;
+  /** RegularExpression Id. */
+  int CONSTANT = 99;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -254,6 +256,7 @@ public interface MetricReaderConstants {
     "\"SCALE_MATCH\"",
     "\"FILTER\"",
     "\"P90\"",
+    "\"HeimdallDataGuardTransform\"",
     "\"SUM\"",
     "\"SUM_V\"",
     "\"DIVIDE\"",

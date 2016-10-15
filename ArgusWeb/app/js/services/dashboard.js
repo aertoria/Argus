@@ -483,6 +483,8 @@ angular.module('argus.services.dashboard', [])
 
 
         function updateAva(config, metricList, divId, attributes, para){
+            $('#'+divId).html('<img src="img/spin.gif" />');
+            //url(../img/spin.gif)
             var expression=parseExpression(metricList);
             var type = attributes["type"];
 
@@ -2421,7 +2423,7 @@ angular.module('argus.services.dashboard', [])
                 $('#'+divId).html('');
                 $('#prodTable').html('');
                 $('#csTable').html('');
-                $('#'+divId).html('generating reports...');
+                $('#'+divId).html('<img src="img/spin.gif" />');
 
                 URL = CONFIG.grahiteUrl+'getMaxLag/?startTime='+StartTime+'&endTime='+EndTime+'&lagType=remoteTransportLag';
 
@@ -2637,7 +2639,7 @@ angular.module('argus.services.dashboard', [])
              *
              */
             function drawDGLagSLA(){
-                $('#'+divId).html('<p>Generating reports...</p>');
+                $('#'+divId).html('<img src="img/spin.gif" />');
 
                 //console.log(DRpods);
 
