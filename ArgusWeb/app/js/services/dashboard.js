@@ -1234,6 +1234,8 @@ angular.module('argus.services.dashboard', [])
                 });
             }
 
+
+
             /*
              _   _  _____  _____ ___  _________   ___   _      _          ______ __   __ _____  _   _  _____  _   _       _____  _____ ______  _____
              | | | ||  ___||_   _||  \/  ||  _  \ / _ \ | |    | |         | ___ \\ \ / /|_   _|| | | ||  _  || \ | |     /  __ \|  _  || ___ \|  ___|
@@ -1242,6 +1244,9 @@ angular.module('argus.services.dashboard', [])
              | | | || |___  _| |_ | |  | || |/ / | | | || |____| |____     | |      | |    | |  | | | |\ \_/ /| |\  |     | \__/\\ \_/ /| |\ \ | |___
              \_| |_/\____/  \___/ \_|  |_/|___/  \_| |_/\_____/\_____/     \_|      \_/    \_/  \_| |_/ \___/ \_| \_/      \____/ \___/ \_| \_/\____/
              */
+
+
+
             //Report
             function drawReport(){
                 URL=CONFIG.grahiteUrl+'getRate/?StartTime='+StartTime+'&EndTime='+EndTime+'&Pod='+Pod+'&Cfg='+Cfg;
@@ -2715,9 +2720,568 @@ angular.module('argus.services.dashboard', [])
             }
 
         }
-        ////
 
 
+
+
+
+
+
+
+        function updateTreemap(config, data, divId, optionList, attributes){
+            var options = getOptionsByTreemapType(config);
+            var tempData = {};
+            var tempPercentage = 0;
+            /* y.li */
+            var tempOverallWeightedAverage = 0;
+
+            if (attributes.threshold && attributes.lower && attributes.upper) {
+
+                var low = 'Healthy Pods<br>(threshold exceeded <br> < ' + parseFloat(attributes.lower)*100 + '%)';
+                var middle = 'Warning Pods<br>(threshold exceeded <br> between ' + parseFloat(attributes.lower)*100 + '% and '
+                    + parseFloat(attributes.upper)*100 + '%)';
+                var high = 'Unhealthy Pods<br>(threshold exceeded <br> > ' + parseFloat(attributes.upper)*100 + '%)';
+
+                tempData[low] = {};
+                tempData[middle] = {};
+                tempData[high] = {};
+
+                if (attributes.filter) data = combineData(data, attributes.filter);
+
+                for (var i = 0; i < data.length; i++) {
+
+                    if ((attributes.method).toUpperCase() === 'THRESHOLD') {
+                        tempPercentage = getAbovePercentage(data[i], parseFloat(attributes.threshold));
+                    }
+                    else if ((attributes.method).toUpperCase() === 'PEAKHOURTHRESHOLD' && attributes.filter) {
+                        tempPercentage = getAbovePeakHourPercentage(data[i], parseFloat(attributes.threshold));
+                    }
+
+                    if (tempPercentage < parseFloat(attributes.lower))
+                        tempData[low][data[i].tags.podId] = tempPercentage;
+                    else if (tempPercentage >= parseFloat(attributes.lower) && tempPercentage < parseFloat(attributes.upper))
+                        tempData[middle][data[i].tags.podId] = tempPercentage;
+                    else if (tempPercentage >= parseFloat(attributes.upper))
+                        tempData[high][data[i].tags.podId] = tempPercentage;
+                }
+                /* y.li */
+                tempOverallWeightedAverage = getOverallWeightedAverage(data);
+
+            }
+
+            var points = [],
+                level_1_object,
+                level_1_num,
+                level_2_object,
+                level_2_num,
+                category,
+                pod;
+
+            var colors = ['#00FF00', '#FF8000', '#FF0040'];
+            level_1_num = 0;
+            for (var category in tempData) {
+                if (tempData.hasOwnProperty(category)) {
+                    level_1_object = {
+                        id: "id_" + level_1_num,
+                        name: category,
+                        color: colors[level_1_num]
+                    };
+                    level_2_num = 0;
+                    for (var pod in tempData[category]) {
+                        if (tempData[category].hasOwnProperty(pod)) {
+                            level_2_object = {
+                                id: level_1_object.id + "_" + level_2_num,
+                                name: pod,
+                                parent: level_1_object.id,
+                                value: 1,
+                                display: tempData[category][pod]
+                            };
+                            points.push(level_2_object);
+                            level_2_num = level_2_num + 1;
+                        }
+                    }
+                    level_1_object.display = level_2_num;
+                    points.push(level_1_object);
+                    level_1_num = level_1_num + 1;
+                }
+            }
+
+            options.series[0].data = points;
+            options.subtitle = {
+                align: 'left',
+                verticalAlign: 'top',
+                floating: true,
+                style: {
+                    color: '#303030'
+                },
+                text: '<span style="font-size: 18px">Weighted (Trust Log Line Count) Average Across All Pods Selected: </span>' +
+                '<span style="color: green; font-weight: bold; font-size: 18px">' +
+                tempOverallWeightedAverage + '</span> ' +
+                '<span style="font-size: 18px"> ms</span>',
+                x: 0,
+                y: 50
+            };
+
+            $('#' + divId).highcharts(options);
+            //TODO
+        }
+
+        function getOptionsByTreemapType(config) {
+            var options = config ? angular.copy(config) : {};
+            options.chart = {
+                marginTop: 70,
+                marginBottom: 70,
+                height: 600
+            };
+            options.series =  [{
+                type: 'treemap',
+                layoutAlgorithm: 'squarified',
+                allowDrillToNode: true,
+                dataLabels: {
+                    enabled: false
+                },
+                levelIsConstant: false,
+                levels: [{
+                    level: 1,
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    borderWidth: 2
+                }]
+            }];
+            options.tooltip = {
+                formatter: function () {
+                    return this.point.display;
+                }
+            };
+
+            options.title = {
+                text: ''
+            };
+            return options;
+
+        }
+
+
+
+        function combineData(data, filter) {
+            var result = [];
+            if (filter) {
+                data.sort(compareTag);
+                for (var i = 0; i < data.length - 1; i++) {
+                    if (compareTag(data[i], data[i + 1]) === 0) {
+                        var metricData, countData;
+                        if (data[i].metric === filter) {
+                            metricData = data[i + 1];
+                            countData = data[i];
+                        } else {
+                            metricData = data[i];
+                            countData = data[i + 1];
+                        }
+                        var keys = [];
+                        for (var j in data[i].datapoints) {
+                            if (j in data[i + 1].datapoints) {
+                                keys.push(j);
+                            }
+                        }
+                        var metricDatapoints = {};
+                        var countDatapoints = {};
+                        for (var j = 0; j < keys.length; j++) {
+                            metricDatapoints[keys[j]] = metricData.datapoints[keys[j]];
+                            countDatapoints[keys[j]] = countData.datapoints[keys[j]];
+                        }
+                        metricData.datapoints = metricDatapoints;
+                        metricData.countDatapoints = countDatapoints;
+                        result.push(metricData);
+                    }
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    var countDatapoints = {};
+                    for (time in data[i].datapoints) {
+                        countDatapoints[time] = 1;
+                    }
+                    data[i].countDatapoints = countDatapoints;
+                    result.push(data[i]);
+                }
+            }
+            return result;
+        }
+
+        function compareWeightedAverage(a,b) {
+            if (getWeightedAverage(a) < getWeightedAverage(b)) return 1;
+            if (getWeightedAverage(a) > getWeightedAverage(b)) return -1;
+            return 0;
+        }
+
+        function getWeightedAverage(data) {
+            var total = 0;
+            var count = 0;
+            for (var time in data.datapoints) {
+                total += parseInt(data.datapoints[time]) * parseInt(data.countDatapoints[time]);
+                count += parseInt(data.countDatapoints[time]);
+            }
+            if (count > 0)
+                return total / count;
+            else
+                return 0;
+        }
+
+
+        function compareAverage(a,b) {
+            if (getAverage(a) < getAverage(b)) return 1;
+            if (getAverage(a) > getAverage(b)) return -1;
+            return 0;
+        }
+
+        function getAverage(data) {
+            var total = 0;
+            var count = 0;
+            for (var time in data.datapoints) {
+                total += parseInt(data.datapoints[time]);
+                count += 1;
+            }
+            if (count > 0)
+                return total / count;
+            else
+                return 0;
+        }
+
+        function compareCount(a,b) {
+            if (getCount(a) < getCount(b)) return 1;
+            if (getCount(a) > getCount(b)) return -1;
+            return 0;
+        }
+
+        function getCount(data) {
+            var count = 0;
+            for (var time in data.datapoints) {
+                count += parseInt(data.countDatapoints[time]);
+            }
+            return count;
+        }
+
+        function comparePeakHourAverage(timeSpan, a, b) {
+            if (getPeakHourAverage(timeSpan ,a) < getPeakHourAverage(timeSpan, b)) return 1;
+            if (getPeakHourAverage(timeSpan, a) > getPeakHourAverage(timeSpan, b)) return -1;
+            return 0;
+        }
+
+        function getPeakHourAverage(timeSpan, data) {
+            var precalculation = getHourlySumAndCount(timeSpan, data);
+            var sums = precalculation.sums;
+            sums.push.apply(sums, sums);
+            var counts = precalculation.counts;
+            counts.push.apply(counts, counts);
+            var maxCount = 0;
+            var average = 0;
+            for (var i = 0; i < timeSpan.span; i++) {
+                var countsInterval = counts.slice(i, i + 10);
+                var sumsInterval = sums.slice(i, i + 10);
+                var thisCount = countsInterval.reduce(function(a, b) {
+                    return a + b;
+                });
+                var thisSum = sumsInterval.reduce(function(a, b) {
+                    return a + b;
+                });
+                if (thisCount > maxCount) {
+                    maxCount = thisCount;
+                    average = thisSum / thisCount;
+                }
+            }
+            return average;
+        }
+
+        function getHourlySumAndCount(timeSpan, data) {
+            var sums = Array.apply(null, Array(timeSpan.span)).map(Number.prototype.valueOf,0);
+            var counts = Array.apply(null, Array(timeSpan.span)).map(Number.prototype.valueOf,0);
+            var pivotHour = Math.floor(timeSpan.begin / 1000 / 60 / 60);
+            for (var time in data.datapoints) {
+                var hour = Math.floor(parseInt(time) / 1000 / 60 / 60);
+                sums[hour - pivotHour] += parseInt(data.datapoints[time]) * parseInt(data.countDatapoints[time]);
+                counts[hour - pivotHour] += parseInt(data.countDatapoints[time]);
+            }
+            var result = {};
+            result.sums = sums;
+            result.counts = counts;
+            return result;
+        }
+
+        function getTimeSpan(data) {
+            var begin = 9999999999999;
+            var end = 0;
+            for (var i = 0; i < data.length; i++) {
+                for (var time in data[i].datapoints) {
+                    begin = Math.min(begin, parseInt(time));
+                    end = Math.max(end, parseInt(time));
+                }
+            }
+            var span = Math.floor(end/1000/60/60) - Math.floor(begin/1000/60/60) + 1;
+            return {begin: begin, end: end, span: span};
+        }
+
+        function compareTag(a, b) {
+            if (JSON.stringify(a.tags) < JSON.stringify(b.tags)) return 1;
+            if (JSON.stringify(a.tags) > JSON.stringify(b.tags)) return -1;
+            return 0;
+        }
+
+
+        function compareAbovePercentage(threshold,a, b) {
+            if (getAbovePercentage(a, threshold) < getAbovePercentage(b, threshold)) return 1;
+            if (getAbovePercentage(a, threshold) > getAbovePercentage(b, threshold)) return -1;
+            return 0;
+        }
+
+        function getAbovePercentage(data, threshold) {
+            var total = 0;
+            var above = 0;
+            for (var time in data.datapoints) {
+                total += 1;
+                if (parseInt(data.datapoints[time]) >= threshold) {
+                    above += 1;
+                }
+            }
+            if (total > 0)
+                return above / total;
+            else
+                return 0;
+        }
+
+        /* y.li */
+
+        function getOverallWeightedAverage(data) {
+            var sum = 0;
+            var count = 0;
+            for (var i = 0; i < data.length; i++) {
+                for (var time in data[i].datapoints) {
+                    sum += parseInt(data[i].datapoints[time]) * parseInt(data[i].countDatapoints[time]);
+                    count += parseInt(data[i].countDatapoints[time]);
+                }
+            }
+            return +(sum / count).toFixed(2);
+
+        }
+
+
+
+        function getAbovePeakHourPercentage(data, threshold) {
+            //TODO
+            var counts = Array.apply(null, Array(24)).map(Number.prototype.valueOf,0);
+            for (var time in data.countDatapoints) {
+                var hour = Math.floor(parseInt(time) / 1000 / 60 / 60) % 24;
+                counts[hour] += parseInt(data.countDatapoints[time]);
+            }
+            counts.push.apply(counts, counts);
+            var maxCount = 0;
+            var startHour = 0;
+            for (var i = 0; i < 24; i++) {
+                var countsInterval = counts.slice(i, i + 10);
+                var thisCount = countsInterval.reduce(function(a, b) {
+                    return a + b;
+                });
+                if (thisCount > maxCount) {
+                    maxCount = thisCount;
+                    startHour = i;
+                }
+            }
+
+            var total = 0;
+            var above = 0;
+            for (var time in data.datapoints) {
+                var hour = Math.floor(parseInt(time) / 1000 / 60 / 60) % 24;
+                if ((hour >= startHour && hour < startHour + 10)
+                    || (hour + 24 >= startHour && hour + 24 < startHour + 10)) {
+                    total += 1;
+                    if (parseInt(data.datapoints[time]) >= threshold) {
+                        above += 1;
+                    }
+                }
+            }
+            if (total > 0)
+                return above / total;
+            else
+                return 0;
+
+        }
+
+
+        function convertHour(data) {
+            hourlyDatapoints = {};
+            hourlyCountDatapoints = {};
+            for (var time in data.datapoints) {
+                var hourlyTime = Math.floor(parseInt(time)/36e5)*36e5+18e5;
+                if (hourlyDatapoints.hasOwnProperty(hourlyTime)) {
+                    hourlyDatapoints[hourlyTime] += parseInt(data.datapoints[time]) * parseInt(data.countDatapoints[time]);
+                    hourlyCountDatapoints[hourlyTime] += parseInt(data.countDatapoints[time]);
+                } else {
+                    hourlyDatapoints[hourlyTime] = parseInt(data.datapoints[time]) * parseInt(data.countDatapoints[time]);
+                    hourlyCountDatapoints[hourlyTime] = parseInt(data.countDatapoints[time]);
+                }
+            }
+            for (var time in hourlyDatapoints) {
+                var avg = hourlyDatapoints[time] / hourlyCountDatapoints[time];
+                hourlyDatapoints[time] = avg;
+            }
+            data.datapoints = hourlyDatapoints;
+            data.countDatapoints = hourlyCountDatapoints;
+            return data;
+        }
+
+        function abbreviateNumber(value) {
+            var newValue = value;
+            if (value >= 1000) {
+                var suffixes = ["", "k", "m", "b","t"];
+                var suffixNum = Math.floor( (""+value).length/3 );
+                var shortValue = '';
+                for (var precision = 2; precision >= 1; precision--) {
+                    shortValue = parseFloat( (suffixNum != 0 ? (value / Math.pow(1000,suffixNum) ) : value).toPrecision(precision));
+                    var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g,'');
+                    if (dotLessShortValue.length <= 2) { break; }
+                }
+                if (shortValue % 1 != 0)  shortNum = shortValue.toFixed(1);
+                newValue = shortValue+suffixes[suffixNum];
+            }
+            return newValue;
+        }
+
+        function copySeries(data) {
+            var result = [];
+            if (data) {
+                for (var i = 0; i < data.length; i++) {
+                    var series = $.map(data[i].datapoints, function (value, key) {
+                        if(value != null)
+                            return [[parseInt(key), parseFloat(value)]];
+                        else return [[parseInt(key), value]];
+                    });
+                    result.push({name: createSeriesName(data[i]), data: series});
+                }
+            } else {
+                result.push({name: 'result', data: []});
+            }
+            return result;
+        };
+
+        function createSeriesName(metric) {
+            var scope = metric.scope;
+            var name = metric.metric;
+            var tags = createTagString(metric.tags);
+            return scope + ':' + name + tags;
+        };
+
+        function createTagString(tags) {
+            var result = '';
+            if (tags) {
+                var tagString ='';
+                for (var key in tags) {
+                    if (tags.hasOwnProperty(key)) {
+                        tagString += (key + '=' + tags[key] + ',');
+                    }
+                }
+                if(tagString.length) {
+                    result += '{';
+                    result += tagString.substring(0, tagString.length - 1);
+                    result += '}';
+                }
+            }
+            return result;
+        };
+
+        function populateAnnotations(annotationsList, chart){
+            if (annotationsList && annotationsList.length>0 && chart) {
+                for (var i = 0; i < annotationsList.length; i++) {
+                    addAlertFlag(annotationsList[i],chart);
+                }
+            }
+        };
+
+        function addAlertFlag(annotationExpression,chart) {
+            Annotations.query({expression: annotationExpression}, function (data) {
+                if(data && data.length>0) {
+                    var forName = createSeriesName(data[0]);
+                    var series = copyFlagSeries(data);
+                    series.linkedTo = forName;
+
+                    for(var i=0;i<chart.series.length;i++){
+                        if(chart.series[i].name == forName){
+                            series.color = chart.series[i].color;
+                            break;
+                        }
+                    }
+
+                    chart.addSeries(series);
+                }
+            });
+        };
+
+        function copyFlagSeries(data) {
+            var result;
+            if (data) {
+                result = {type: 'flags', shape: 'circlepin', stackDistance: 20, width: 16, lineWidth: 2};
+                result.data = [];
+                for (var i = 0; i < data.length; i++) {
+                    var flagData = data[i];
+                    result.data.push({x: flagData.timestamp, title: 'A', text: formatFlagText(flagData.fields)});
+                }
+            } else {
+                result = null;
+            }
+            return result;
+        };
+
+        function formatFlagText(fields) {
+            var result = '';
+            if (fields) {
+                for (var field in fields) {
+                    if (fields.hasOwnProperty(field)) {
+                        result += (field + ': ' + fields[field] + '<br/>');
+                    }
+                }
+            }
+            return result;
+        };
+
+
+
+        function setCustomOptions(options,optionList){
+            for(var idx in optionList) {
+                var propertyName = optionList[idx].name;
+                var propertyValue = optionList[idx].value;
+                var result = constructObjectTree(propertyName, propertyValue);
+                copyProperties(result,options);
+            }
+            return options;
+        }
+
+        function copyProperties(from,to){
+            for (var key in from) {
+                if (from.hasOwnProperty(key)) {
+                    if(!to[key] || typeof from[key] == 'string' || from[key] instanceof String ){//if from[key] is not an object and is last property then just copy so that it will overwrite the existing value
+                        to[key]=from[key];
+                    }else{
+                        copyProperties(from[key],to[key]);
+                    }
+                }
+            }
+        }
+
+        //It constructs the object tree.
+        function constructObjectTree(name, value) {
+            var result = {};
+            var index = name.indexOf('.');
+            if (index == -1) {
+                result[name] = value;
+                return result;
+            } else {
+                var property = name.substring(0, index);
+                result[property] = constructObjectTree(name.substring(index + 1), value);
+                return result;
+            }
+        };
 
 
 

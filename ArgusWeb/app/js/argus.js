@@ -54,6 +54,7 @@ angular.module('argus', [
   'argus.directives.charts.d3LineChart',
   'argus.directives.charts.flags',
   'argus.directives.charts.heatmap',
+  'argus.directives.charts.treemap',
   'argus.directives.charts.metric',
   'argus.directives.charts.option',
   'argus.directives.charts.statusIndicator',

@@ -3,7 +3,7 @@ angular.module('argus.directives.charts.metric', [])
     var metricNameIndex = 100;
     return {
         restrict: 'E',
-        require: ['?^agChart', '?^agStatusIndicator', '?^agHeatmap', '?^agTable', '?^agAvaTreemap'],
+        require: ['?^agChart', '?^agStatusIndicator', '?^agHeatmap', '?^agTable', '?^agAvaTreemap', '?^agTreemap'],
         scope: {
             expression: '@'
         },
@@ -24,8 +24,10 @@ angular.module('argus.directives.charts.metric', [])
                 elementCtrl = controllers[2];
             } else if (controllers[3]) {
                 elementCtrl = controllers[3];
-            } else {
+            } else if (controllers[4]) {
                 elementCtrl = controllers[4];
+            } else {
+                elementCtrl = controllers[5];
             }
 
             // separate specific series data from other attributes

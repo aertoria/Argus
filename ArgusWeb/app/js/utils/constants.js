@@ -3,7 +3,8 @@ angular.module('argus.constants', [])
 		chart: 'chart',
 		heatmap: 'heatmap',
 		table: 'table',
-        avatreemap: 'avatreemap'
+        avatreemap: 'avatreemap',
+        treemap: 'treemap'
 })
 
 .constant('CHARTTYPE', {
