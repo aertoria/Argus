@@ -481,7 +481,6 @@ angular.module('argus.services.dashboard', [])
 
         };
 
-
         function updateAva(config, metricList, divId, attributes, para){
             $('#'+divId).html('<img src="img/spin.gif" />');
             //url(../img/spin.gif)
@@ -2724,11 +2723,8 @@ angular.module('argus.services.dashboard', [])
 
 
 
-
-
-
-
         function updateTreemap(config, data, divId, optionList, attributes){
+            $('#'+divId).html('<img src="img/spin.gif" />');
             var options = getOptionsByTreemapType(config);
             var tempData = {};
             var tempPercentage = 0;
