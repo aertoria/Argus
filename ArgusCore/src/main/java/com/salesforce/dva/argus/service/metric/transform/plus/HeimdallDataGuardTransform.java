@@ -81,8 +81,8 @@ public class HeimdallDataGuardTransform implements Transform {
             	 * index 0 - compliance value
             	 * index 1 - confidence value
             	 */
-            	complianceData.put((long) 0, String.valueOf(Math.round(SLAcompliance*10000.0)/10000.0));
-            	complianceData.put((long) 1, String.valueOf(Math.round(confidence*10000.0)/10000.0));
+            	complianceData.put((long) 0, String.valueOf(Math.round(SLAcompliance*10.0)/10.0));
+            	complianceData.put((long) 1, String.valueOf(Math.round(confidence*10.0)/10.0));
             	
             	//push into new metrics array
             	newMetricsList.add(generateMetric(pod+"-"+defaultMetricName, pod+"."+dataGuardMetric, complianceData));	
