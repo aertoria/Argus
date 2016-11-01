@@ -46,6 +46,7 @@ import com.salesforce.dva.argus.service.annotation.DefaultAnnotationService;
 import com.salesforce.dva.argus.service.audit.DefaultAuditService;
 import com.salesforce.dva.argus.service.batch.DefaultBatchService;
 import com.salesforce.dva.argus.service.broker.DefaultJSONService;
+import com.salesforce.dva.argus.service.broker.DeferredSchemaService;
 import com.salesforce.dva.argus.service.collect.DefaultCollectionService;
 import com.salesforce.dva.argus.service.history.DefaultHistoryService;
 import com.salesforce.dva.argus.service.jpa.DefaultDashboardService;
@@ -217,21 +218,22 @@ final class SystemInitializer extends AbstractModule {
         bindConcreteClass(Property.MAIL_SERVICE_IMPL_CLASS, MailService.class);
         bindConcreteClass(Property.AUTH_SERVICE_IMPL_CLASS, AuthService.class);
         //bindConcreteClass(Property.SCHEMA_SERVICE_IMPL_CLASS, SchemaService.class);
-        bindConcreteClass(HbaseSchemaService.class, SchemaService.class);
+        //bindConcreteClass(HbaseSchemaService.class, SchemaService.class);
+        bindConcreteClass(DeferredSchemaService.class, SchemaService.class);
         
         // Named annotation binding
         //bindConcreteClassWithNamedAnnotation(getConcreteClassToBind(Property.TSDB_SERVICE_IMPL_CLASS, TSDBService.class), TSDBService.class);
         bindConcreteClassWithNamedAnnotation(DefaultJSONService.class, TSDBService.class);
         
-        //bindConcreteClassWithNamedAnnotation(DefaultDiscoveryService.class, DiscoveryService.class);
-        bindConcreteClassWithNamedAnnotation(DeferredDiscoveryService.class, DiscoveryService.class);
+        bindConcreteClassWithNamedAnnotation(DefaultDiscoveryService.class, DiscoveryService.class);
+        //bindConcreteClassWithNamedAnnotation(DeferredDiscoveryService.class, DiscoveryService.class);
 
         // static binding
         //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
         bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
         
-        //bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
-        bindConcreteClass(DeferredDiscoveryService.class, DiscoveryService.class);
+        bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
+        //bindConcreteClass(DeferredDiscoveryService.class, DiscoveryService.class);
 
         bindConcreteClass(DefaultUserService.class, UserService.class);
         bindConcreteClass(DefaultDashboardService.class, DashboardService.class);

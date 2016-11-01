@@ -127,29 +127,42 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
 
     @Override
     public List<MetricQuery> getMatchingQueries(MetricQuery query) {
+    	System.out.println("query input...+"+query.toString());
+    	
         requireNotDisposed();
         SystemAssert.requireArgument(query != null, "Metric query cannot be null.");
 
         Map<String, MetricQuery> queries = new HashMap<String, MetricQuery>(HARD_LIMIT);
         long start = System.nanoTime();
-
+        
+        
         if (isWildcardQuery(query)) {
-            _logger.debug(MessageFormat.format("MetricQuery'{'{0}'}' contains wildcards. Will match against schema records.", query));
+            //_logger.debug(MessageFormat.format("MetricQuery'{'{0}'}' contains wildcards. Will match against schema records.", query));
             if (query.getTags() == null || query.getTags().isEmpty()) {
                 MetricSchemaRecordQuery schemaQuery = new MetricSchemaRecordQuery(query.getNamespace(), query.getScope(), query.getMetric(), "*",
                     "*");
+                
                 int page = 1;
-
+                System.out.println("schemaQuery input...+"+schemaQuery.toString());
                 while (true) {
+                	
+                	//looping forever, why
+                	System.out.println("\n\n\n\n*******\nGetting this query:"+query.toString());
+                	System.out.println("Getting this schemaQuery: "+schemaQuery.toString());
                     List<MetricSchemaRecord> records = _schemaService.get(schemaQuery, 200, page++);
-
+                    System.out.println("page: "+page);
+                    System.out.println("this time I fetched.."+records.size());
+                    
                     if (records.isEmpty()) {
                         break;
                     }
+                    
                     for (MetricSchemaRecord record : records) {
                         String identifier = new StringBuilder(record.getScope()).append(record.getMetric()).append(record.getNamespace()).toString();
-
+                                                
+                        //only run when there is some diff query in the list ready to discover
                         if (!queries.containsKey(identifier)) {
+                        	System.out.println("I should never run!!!!");
                             if (queries.size() == HARD_LIMIT) {
                                 break;
                             }
@@ -158,6 +171,7 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
 
                             mq.setNamespace(record.getNamespace());
                             _copyRemainingProperties(mq, query);
+                                                        
                             queries.put(identifier, mq);
                         }
                     }
@@ -165,7 +179,8 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
                         break;
                     }
                 }
-            } else {
+            } 
+            else {
                 for (Entry<String, String> tag : query.getTags().entrySet()) {
                     MetricSchemaRecordQuery schemaQuery = new MetricSchemaRecordQuery(query.getNamespace(), query.getScope(), query.getMetric(),
                         tag.getKey(), tag.getValue());

@@ -71,6 +71,8 @@ public class HeimdallMetricReducer implements Transform{
 			return render(()->pod.renderAPTPOD());
 		case "TRAFFIC":
 			return render(()->pod.renderTRAFFIC());
+		case "TRAFFICPOD":
+			return render(()->pod.renderTRAFFICPOD());
 		case "ACT":
 			return render(()->pod.renderACT());
 		case "CPU":
@@ -134,6 +136,7 @@ interface Renderable{
 	List<Metric> renderAPT();
 	List<Metric> renderAPTPOD();
 	List<Metric> renderTRAFFIC();
+	List<Metric> renderTRAFFICPOD();
 	List<Metric> renderACT();
 	List<Metric> renderCPU();
 	List<Metric> renderAVA();
@@ -311,7 +314,7 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	public List<Metric> renderIMPACTPOD() {
 		Optional<Metric> constructedResult=this.racServers.stream()
 										  .map(r -> r.getImpactedMinHourly().get(0))
-										  .reduce((m1,m2) -> _computationUtil.get().sum(Arrays.asList(m1,m2)).get(0));
+										  .reduce((m1,m2) -> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
 		if(constructedResult.isPresent()){
 			Metric m=constructedResult.get();
 			m.setMetric(podAddress);
@@ -346,6 +349,19 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 				  .map(r -> r.getWeightedTrafficMinutely().get(0))
 				  .collect(Collectors.toList());
 		return Collections.unmodifiableList(constructedResult);
+	}
+	
+	@Override
+	public List<Metric> renderTRAFFICPOD() {
+		Optional<Metric> constructedResult=this.racServers.stream()
+				  .map(r -> r.getWeightedTrafficSumHourly().get(0))
+				  .reduce((m1,m2) -> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
+		if(constructedResult.isPresent()){
+			Metric m=constructedResult.get();
+			m.setMetric(podAddress);
+			return Collections.unmodifiableList(Arrays.asList(m));
+		}
+		throw new RuntimeException("Not a single result");
 	}
 	
 	@Override
@@ -1295,7 +1311,7 @@ final class ComputationUtil{
 		return detectAbove(input,150,objectAddress);
 	}
 	
-	/**Givin a time series, return any datapoints that is above 150, could be null**/
+	/**Givin a time series, return any datapoints that is above 65, could be null**/
 	protected List<Metric> detectCPU(List<Metric> input, String objectAddress){
 		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
 		return detectAbove(input,65,objectAddress);

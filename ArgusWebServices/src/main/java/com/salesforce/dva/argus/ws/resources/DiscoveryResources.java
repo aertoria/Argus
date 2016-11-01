@@ -96,12 +96,10 @@ public class DiscoveryResources extends AbstractResource {
         if (type == null) {
             List<MetricSchemaRecord> records = _discoveryService.filterRecords(namespaceRegex, scopeRegex, metricRegex, tagkRegex, tagvRegex, limit,
                 page);
-
             return records;
         } else {
             List<String> records = _discoveryService.getUniqueRecords(namespaceRegex, scopeRegex, metricRegex, tagkRegex, tagvRegex,
                 RecordType.fromName(type), limit, page);
-
             return records;
         }
     }

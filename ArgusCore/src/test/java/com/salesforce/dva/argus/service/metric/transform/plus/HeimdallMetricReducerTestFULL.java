@@ -53,8 +53,9 @@ public class HeimdallMetricReducerTestFULL {
 		injector=null;
 	}
 
+	
 	@Test
-	public void HeimdallTotalAvaTransform_APT(){
+	public void HeimdallTotalAvaTransform_IMPACTPOD(){
 		Transform transform=injector.getInstance(HeimdallMetricReducer.class);
 		int offset=1000*60;
 		long start=0L;
@@ -107,28 +108,54 @@ public class HeimdallMetricReducerTestFULL {
         metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
         
         
+        Metric metric_5 = new Metric(TEST_SCOPE, TEST_METRIC);
+        Map<Long, String> datapoints_5 = new HashMap<Long, String>();
+        datapoints_5.put(start+1L*offset, "932.0");
+        datapoints_5.put(start+2L*offset, "995.0");
+        datapoints_5.put(start+3L*offset, "667.0");
+        datapoints_5.put(start+4L*offset, "567.0");
+        datapoints_5.put(start+5L*offset, "765.0");
+        datapoints_5.put(start+6L*offset, "485.0");
+        metric_5.setDatapoints(datapoints_5);
+        metric_5.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+        metric_5.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode1.Last_1_Min_Avg");
+     
+        
         Metric metric_6 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_6 = new HashMap<Long, String>();
-        datapoints_6.put(start+1L*offset, "0.0");
-        datapoints_6.put(start+2L*offset, "0.0");
-        datapoints_6.put(start+3L*offset, "0.0");
-        datapoints_6.put(start+4L*offset, "0.0");
-        datapoints_6.put(start+5L*offset, "0.0");
-        datapoints_6.put(start+6L*offset, "0.0");
+        datapoints_6.put(start+1L*offset, "4.0");
+        datapoints_6.put(start+2L*offset, "5.0");
+        datapoints_6.put(start+3L*offset, "6.0");
+        datapoints_6.put(start+4L*offset, "7.0");
+        datapoints_6.put(start+5L*offset, "8.0");
+        datapoints_6.put(start+6L*offset, "4.0");
         metric_6.setDatapoints(datapoints_6);
         metric_6.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_6.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode1.Last_1_Min_Avg");
-       
+     
+        
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
         metrics.add(metric_2);
         metrics.add(metric_3);
         metrics.add(metric_4);
-        metrics.add(metric_6);
-        
-        List<Metric> result = transform.transform(metrics,Arrays.asList("IMPACT"));
+        metrics.add(metric_5);
+        metrics.add(metric_6);      
+        List<Metric> result = transform.transform(metrics,Arrays.asList("IMPACTPOD"));
 
+//        [namespace=>null, scope=>SUM, metric=>CHI.SP2.cs15, tags=>{}, datapoints=>{0=10.0}]\
+   
+        List<Metric> expected = new ArrayList<Metric>();
+        Metric expected_metric1 = new Metric("SUM", "CHI.SP2.cs15");
+        Map<Long, String> expected_Datapoints1=new HashMap<Long, String>();
+        expected_Datapoints1.put(0L, "10.0");
+        expected_metric1.setDatapoints(expected_Datapoints1);
+        expected.add(expected_metric1);
+       
         System.out.println(result);
- 
+        
+        assertEquals(expected,result); 
+        assertEquals(result.get(0).getDatapoints(),expected.get(0).getDatapoints()); 
 	}
+	
 }

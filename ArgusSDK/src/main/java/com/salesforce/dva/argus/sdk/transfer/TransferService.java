@@ -11,6 +11,8 @@ import com.salesforce.dva.argus.sdk.ArgusService;
 import com.salesforce.dva.argus.sdk.ArgusService.PutResult;
 import com.salesforce.dva.argus.sdk.entity.Metric;
 
+import junit.framework.Assert;
+
 /**
  * Provides methods to transfer metrics.
  *
@@ -51,6 +53,21 @@ public class TransferService implements Serializable{
 	public PutResult transfer(String expression) throws IOException{
 		final List<Metric> metrics=readFromSource(Arrays.asList(expression));
 		PutResult p=writeToTarget(metrics);
+		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
+		return p;
+	}
+	
+	
+	public PutResult transfer(String src_expression, String tgt_scope, String tgt_metric) throws IOException {
+		final List<Metric> metrics=readFromSource(Arrays.asList(src_expression));
+		assert(metrics.size()==1):"result is not valid";
+		
+		Metric metric=new Metric();
+		metric.setScope(tgt_scope);
+		metric.setMetric(tgt_metric);
+		metric.setDatapoints(metrics.get(0).getDatapoints());
+		
+		PutResult p=writeToTarget(Arrays.asList(metric));
 		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
 		return p;
 	}
