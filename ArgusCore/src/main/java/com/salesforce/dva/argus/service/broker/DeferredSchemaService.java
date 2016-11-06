@@ -44,12 +44,30 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 		//			{"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP4.cs40","metric":"IMPACTPOD","tagKey":null,"tagValue":null}
 		// Step2: convert this JSON into  List<MetricSchemaRecord and return it.
 		
+//		query.getMetric()
+//		query.getScope()
+		
+		/**
+		 * givien
+		 * 		https://argus-ws.data.sfdc.net/argusws/discover/metrics/schemarecords?
+				limit=104&metric=IMPACTPOD&scope=REDUCEDTEST.core.*
+				
+		   return
+		   		[{"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP1.cs14","metric":"IMPACTPOD","tagKey":null,"tagValue":null},
+				 {"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP1.cs7","metric":"IMPACTPOD","tagKey":null,"tagValue":null},
+				 {"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP1.cs8","metric":"IMPACTPOD","tagKey":null,"tagValue":null}]
+		 */
+
+		
+				
 		//1477094400:1477180800:REDUCEDTEST.core.CHI.SP3.cs24:IMPACTPOD:avg
 		String scope="REDUCEDTEST.core.CHI.SP3.cs24";
 		String metric="IMPACTPOD";
+		//Also please set tag and tag values
 		MetricSchemaRecord m=new MetricSchemaRecord(scope,metric);
 		return Arrays.asList(m);
 	}
+
 
 	
 	@Override

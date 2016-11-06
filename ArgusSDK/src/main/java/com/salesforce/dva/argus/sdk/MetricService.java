@@ -82,7 +82,6 @@ public class MetricService extends EndpointService {
         }
 
         ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl.toString(), null);
-
         assertValidResponse(response, requestUrl.toString());
         return fromJson(response.getResult(), new TypeReference<List<Metric>>() { });
     }
@@ -126,7 +125,6 @@ public class MetricService extends EndpointService {
             requestUrl.append(i == 0 ? "?" : "&");
             requestUrl.append("expression=").append(expressions.get(i));
         }
-
         ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl.toString(), null);
 
         assertValidResponse(response, requestUrl.toString());

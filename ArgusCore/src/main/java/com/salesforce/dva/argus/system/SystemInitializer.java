@@ -62,6 +62,7 @@ import com.salesforce.dva.argus.service.schema.CachedDiscoveryService;
 import com.salesforce.dva.argus.service.schema.DefaultDiscoveryService;
 import com.salesforce.dva.argus.service.schema.DeferredDiscoveryService;
 import com.salesforce.dva.argus.service.schema.HbaseSchemaService;
+import com.salesforce.dva.argus.service.schema.JSONDiscoveryService;
 import com.salesforce.dva.argus.service.tsdb.CachedTSDBService;
 import com.salesforce.dva.argus.service.warden.DefaultWardenService;
 import com.salesforce.dva.argus.system.SystemConfiguration.Property;
@@ -221,20 +222,26 @@ final class SystemInitializer extends AbstractModule {
         //bindConcreteClass(HbaseSchemaService.class, SchemaService.class);
         bindConcreteClass(DeferredSchemaService.class, SchemaService.class);
         
-        // Named annotation binding
+        /**
+         * Named annotation binding
+         */
         //bindConcreteClassWithNamedAnnotation(getConcreteClassToBind(Property.TSDB_SERVICE_IMPL_CLASS, TSDBService.class), TSDBService.class);
         bindConcreteClassWithNamedAnnotation(DefaultJSONService.class, TSDBService.class);
         
-        bindConcreteClassWithNamedAnnotation(DefaultDiscoveryService.class, DiscoveryService.class);
+        //bindConcreteClassWithNamedAnnotation(DefaultDiscoveryService.class, DiscoveryService.class);
         //bindConcreteClassWithNamedAnnotation(DeferredDiscoveryService.class, DiscoveryService.class);
-
-        // static binding
+        bindConcreteClassWithNamedAnnotation(JSONDiscoveryService.class, DiscoveryService.class);
+        
+        /**
+         *  static binding
+         */
         //bindConcreteClass(CachedTSDBService.class, TSDBService.class);
         bindConcreteClass(DefaultJSONService.class, TSDBService.class);//To use Argus+ as source
         
-        bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
+        //bindConcreteClass(DefaultDiscoveryService.class, DiscoveryService.class);
         //bindConcreteClass(DeferredDiscoveryService.class, DiscoveryService.class);
-
+        bindConcreteClass(JSONDiscoveryService.class, DiscoveryService.class);
+        
         bindConcreteClass(DefaultUserService.class, UserService.class);
         bindConcreteClass(DefaultDashboardService.class, DashboardService.class);
         bindConcreteClass(DefaultCollectionService.class, CollectionService.class);

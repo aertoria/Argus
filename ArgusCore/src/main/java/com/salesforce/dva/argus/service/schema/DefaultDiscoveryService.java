@@ -84,7 +84,9 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
     }
 
     //~ Methods **************************************************************************************************************************************
-
+	/**
+	 * call if type == null
+	 */
     @Override
     public List<MetricSchemaRecord> filterRecords(String namespaceRegex, String scopeRegex, String metricRegex, String tagkRegex, String tagvRegex,
         int limit, int page) {
@@ -104,7 +106,10 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
         _logger.debug("Time to filter records in ms: " + (System.nanoTime() - start) / 1000000);
         return result;
     }
-
+    
+	/**
+	 * call if type != null
+	 */
     @Override
     public List<String> getUniqueRecords(String namespaceRegex, String scopeRegex, String metricRegex, String tagkRegex, String tagvRegex,
         RecordType type, int limit, int page) {
@@ -115,16 +120,17 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
         SystemAssert.requireArgument(page > 0, "Page must be a positive integer");
 
         MetricSchemaRecordQuery query = new MetricSchemaRecordQuery(namespaceRegex, scopeRegex, metricRegex, tagkRegex, tagvRegex);
-
         _logger.debug(query.toString());
-
         long start = System.nanoTime();
         List<String> records = _schemaService.getUnique(query, limit, page, type);
-
         _logger.debug("Time to get Unique Records in ms: " + (System.nanoTime() - start) / 1000000);
         return records;
     }
 
+    /**
+	 * call by regular MetricReader. Line 729
+	 * List<MetricQuery> queries = discoveryService.getMatchingQueries(query);
+	 */
     @Override
     public List<MetricQuery> getMatchingQueries(MetricQuery query) {
     	System.out.println("query input...+"+query.toString());
@@ -134,7 +140,7 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
 
         Map<String, MetricQuery> queries = new HashMap<String, MetricQuery>(HARD_LIMIT);
         long start = System.nanoTime();
-        
+
         
         if (isWildcardQuery(query)) {
             //_logger.debug(MessageFormat.format("MetricQuery'{'{0}'}' contains wildcards. Will match against schema records.", query));
@@ -145,7 +151,6 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
                 int page = 1;
                 System.out.println("schemaQuery input...+"+schemaQuery.toString());
                 while (true) {
-                	
                 	//looping forever, why
                 	System.out.println("\n\n\n\n*******\nGetting this query:"+query.toString());
                 	System.out.println("Getting this schemaQuery: "+schemaQuery.toString());
@@ -162,7 +167,6 @@ public class DefaultDiscoveryService extends DefaultService implements Discovery
                                                 
                         //only run when there is some diff query in the list ready to discover
                         if (!queries.containsKey(identifier)) {
-                        	System.out.println("I should never run!!!!");
                             if (queries.size() == HARD_LIMIT) {
                                 break;
                             }

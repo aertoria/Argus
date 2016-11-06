@@ -47,7 +47,7 @@ public class DiscoveryService extends EndpointService {
 
     //~ Static fields/initializers *******************************************************************************************************************
 
-    private static final String RESOURCE = "/discover";
+    private static final String RESOURCE = "/discover/metrics/schemarecords";
 
     //~ Constructors *********************************************************************************************************************************
 
@@ -80,6 +80,9 @@ public class DiscoveryService extends EndpointService {
         String tagValueRegex, int limit) throws IOException {
         StringBuilder urlBuilder = _buildBaseUrl(namespaceRegex, scopeRegex, metricRegex, tagKeyRegex, tagValueRegex, limit);
         String requestUrl = urlBuilder.toString();
+        
+        
+        System.out.println(requestUrl);
         ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl, null);
 
         assertValidResponse(response, requestUrl);
@@ -108,6 +111,8 @@ public class DiscoveryService extends EndpointService {
         urlBuilder.append("&type=").append(type.name().toLowerCase(Locale.ENGLISH));
 
         String requestUrl = urlBuilder.toString();
+        
+        System.out.println(requestUrl);
         ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl, null);
 
         assertValidResponse(response, requestUrl);

@@ -37,7 +37,6 @@ import static com.salesforce.dva.argus.system.SystemAssert.*;
 
 
 public class MetricReader<T> implements MetricReaderConstants {
-
         private TSDBService tsdbService;
         private DiscoveryService discoveryService;
         private TransformFactory factory;

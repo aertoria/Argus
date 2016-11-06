@@ -380,7 +380,7 @@ public class ArgusService implements AutoCloseable {
          * @throws  ArgusServiceException  If the request resulted in an error.
          */
         protected void assertValidResponse(ArgusHttpClient.ArgusResponse response, String requestUrl) throws ArgusServiceException {
-            if (response.getErrorMessage() != null) {
+        	if (response.getErrorMessage() != null) {
                 throw new ArgusServiceException(response.getStatus(), response.getErrorMessage(), requestUrl, response.getResult());
             }
         }

@@ -583,8 +583,6 @@ angular.module('argus.services.dashboard', [])
                         datainput.push(currentPod);
                     }
 
-
-
                     //datainput=[
                     //    {
                     //    colorValue:"32.0",
@@ -599,8 +597,6 @@ angular.module('argus.services.dashboard', [])
                     //];
 
                     console.log(datainput);
-
-
                     $('#'+divId).highcharts({
                         chart: {
                             height: 900
@@ -743,6 +739,8 @@ angular.module('argus.services.dashboard', [])
                         }
 
                     });
+                }).error(function(jqXHR, textStatus, errorThrown) {
+                    errorHandle(jqXHR, textStatus, errorThrown);
                 });
             }//end dg-lag treemap
 
@@ -1070,7 +1068,8 @@ angular.module('argus.services.dashboard', [])
                             data: returnJSON
                         }]
                     });
-
+                }).error(function(jqXHR, textStatus, errorThrown){
+                    errorHandle(jqXHR, textStatus, errorThrown);
                 });
             }
 
@@ -1236,6 +1235,8 @@ angular.module('argus.services.dashboard', [])
                         }],
 
                     });
+                }).error(function(jqXHR, textStatus, errorThrown) {
+                    errorHandle(jqXHR, textStatus, errorThrown);
                 });
             }
 
@@ -1424,6 +1425,8 @@ angular.module('argus.services.dashboard', [])
                         }],
 
                     });
+                }).error(function(jqXHR, textStatus, errorThrown) {
+                    errorHandle(jqXHR, textStatus, errorThrown);
                 });
             }
 
@@ -1446,9 +1449,28 @@ angular.module('argus.services.dashboard', [])
                         //'POD: '+Pod+',&nbsp;(UTC) Start: '+ StartTime+',&nbsp;End: '+EndTime+
                         '</span></h3>'
                     );
+                }).error(function(jqXHR, textStatus, errorThrown) {
+                        errorHandle(jqXHR, textStatus, errorThrown);
                 });
             }
 
+
+            var errorHandle=function(jqXHR, textStatus, errorThrown) {
+                var errormessage=textStatus+errorThrown+" Detail: " + jqXHR.responseText;
+                growl.info('We can not render this chart');
+                $('#'+divId).html('<img src="img/error.png" />'+errormessage +
+                    `
+                    <a class="btn btn-primary" role="button" data-toggle="collapse" href="#demo" aria-expanded="false" aria-controls="collapseExample">
+                      Detail
+                    </a>
+                    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#demo" aria-expanded="false" aria-controls="collapseExample">
+                      Log Detail
+                    </button>
+                    <div class="collapse" id="demo">
+                        sdadas.
+                    </div>
+                    `);
+            };
 
 
             /*
