@@ -1,4 +1,5 @@
 package com.salesforce.dva.argus.service.broker;
+import java.util.HashMap;
 /**
  * Provides methods fetch data.
  *
@@ -39,11 +40,20 @@ public class DefaultJSONService extends DefaultService implements TSDBService {
 	@Override
 	public Map<MetricQuery, List<Metric>> getMetrics(List<MetricQuery> queries) {
 		service.login(username, password);
-        SystemAssert.requireArgument(queries.size()==1, "ArgusCore+ requires turn off discovery service!");
-        String expression=getExpression(queries.get(0));
-        System.out.println("\n\nArgusCore+ service...expression acknowledged+ "+expression);
-        return service.getMeticMap(queries.get(0), expression);
+		Map<MetricQuery, List<Metric>> resultMap=new HashMap<MetricQuery, List<Metric>>();
+		queries.forEach(query -> {		
+			getMetrics(query).entrySet().forEach(e -> resultMap.put(e.getKey(), e.getValue()));
+		});
+        return resultMap;
 	}
+	
+	public Map<MetricQuery, List<Metric>> getMetrics(MetricQuery query) {
+		//service.login(username, password);
+        String expression=getExpression(query);
+        System.out.println("\n\nArgusCore+ service...expression acknowledged+ "+expression);
+        return service.getMeticMap(query, expression);
+	}
+	
 		
 	private String getExpression(MetricQuery query){
 		String namespace=query.getNamespace();

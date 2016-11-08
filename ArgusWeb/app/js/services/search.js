@@ -6,12 +6,11 @@ angular.module('argus.services.search', [])
         // TODO: refactor api call to a separate factory for metric queries
         var request = $http({
             method: 'GET',
-            //url: CONFIG.wsUrl + 'discover/metrics/schemarecords',
-            url: CONFIG.dscUrl + 'discover/metrics/schemarecords',
+            url: CONFIG.wsUrl + 'discover/metrics/schemarecords',
+            //url: CONFIG.dscUrl + 'discover/metrics/schemarecords',
             params: searchParams,
             timeout: 30000
         });
-
         return request;
     };
 

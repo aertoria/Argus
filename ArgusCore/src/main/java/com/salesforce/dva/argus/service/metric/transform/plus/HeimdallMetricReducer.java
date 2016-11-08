@@ -410,7 +410,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	
 	private List<Metric> renderAvailableTOTAL(){
 		Metric m=new Metric("SUM", "SinglePoint");
-		
 		Map<Long,String> datapoints=new HashMap<Long,String>();
 		datapoints.put(RacServer.getReportRange().getStart(), String.valueOf(countAvaiableMin()));
 		m.setDatapoints(datapoints);
@@ -773,6 +772,7 @@ final class RacServer implements Serializable{
 		System.out.println("APTTimeAppLevel:\t"+this.listAPTTimeAppLevel.size());
 		System.out.println("APTTrafficAppLevel:\t"+this.listAPTTrafficAppLevel.size());
 		System.out.println("weightedAPT:\t\t"+this.weightedAPT.get(0).getDatapoints().size());
+		System.out.println("weightedTraffic:\t"+this.weightedTraffic.get(0).getDatapoints().size());
 		
 		if(this.hasACT()){
 			System.out.println("weightedACT:\t\t"+this.weightedACT.get(0).getDatapoints().size());

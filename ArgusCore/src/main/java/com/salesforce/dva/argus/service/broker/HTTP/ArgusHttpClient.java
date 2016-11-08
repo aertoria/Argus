@@ -1,5 +1,6 @@
 package com.salesforce.dva.argus.service.broker.HTTP;
 import com.salesforce.dva.argus.entity.Metric;
+import com.salesforce.dva.argus.entity.MetricSchemaRecord;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.system.SystemException;
@@ -224,6 +225,7 @@ public class ArgusHttpClient{
         LOGGER.info("Posted {} annotations.", annotations.size());
     }
 
+            	
     /* Execute a request given by type requestType. */
     private HttpResponse executeHttpRequest(RequestType requestType, String url, StringEntity entity) throws IOException {
         HttpResponse httpResponse = null;
@@ -279,7 +281,7 @@ public class ArgusHttpClient{
      *
      * @author  Tom Valine (tvaline@salesforce.com)
      */
-    private static enum RequestType {
+    public static enum RequestType {
         POST("post"),
         GET("get"),
         DELETE("delete"),
@@ -300,16 +302,13 @@ public class ArgusHttpClient{
             return requestType;
         }
     }
-    
-    
+
     public Map<MetricQuery, List<Metric>> getMeticMap(MetricQuery query, String expression){
     	Map<MetricQuery, List<Metric>> complexMap=new HashMap<MetricQuery, List<Metric>>();
     	complexMap.put(query, getMetric(query,expression));
     	return complexMap;
     }
-    
-    
-    
+        
     public List<Metric> getMetric(MetricQuery query, String expression) {
         HttpResponse response = null;
         String responseAsString = null;
@@ -366,7 +365,11 @@ public class ArgusHttpClient{
     	return metric;
     }   
     
-    //provided one metricQuery, return a Metric template
+    /**
+     * provided one metricQuery, return a Metric template
+     * @param query
+     * @return
+     */
     private Metric getMetricByQuery(MetricQuery query){
     	String scope=query.getScope();
     	String namespace=query.getNamespace();
@@ -377,5 +380,64 @@ public class ArgusHttpClient{
     	metric.setTags(tags);
     	return metric;
     }
+    
+    /**
+     * used for DiscoveryService
+     * @param namespaceRegex
+     * @param scopeRegex
+     * @param metricRegex
+     * @param tagKeyRegex
+     * @param tagValueRegex
+     * @param limit
+     * @return
+     */
+    public List<MetricSchemaRecord> getDiscoveredMetricSchemaRecord(String namespaceRegex, String scopeRegex, String metricRegex, String tagKeyRegex, String tagValueRegex, int limit) {
+    	StringBuilder urlBuilder = _buildBaseUrl(namespaceRegex, scopeRegex, metricRegex, tagKeyRegex, tagValueRegex, limit);
+        String requestUrl = this.endpoint+urlBuilder.toString();
+        System.out.println(requestUrl); 
+        HttpResponse response;
+        List<MetricSchemaRecord> listOfResult=null;
+		try {
+			response = executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl, null);        
+	        HttpEntity entity = response.getEntity();
+	        String result = EntityUtils.toString(entity);
+	        listOfResult=fromJson(result, new TypeReference<List<MetricSchemaRecord>>(){});
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return listOfResult;
+    }
+       
+    protected <T> T fromJson(String json, TypeReference typeRef) throws IOException {
+        return (T) MAPPER.readValue(json, typeRef);
+    }
+
+    
+    
+    private StringBuilder _buildBaseUrl(String namespaceRegex, String scopeRegex, String metricRegex, String tagKeyRegex, String tagValueRegex,
+            int limit) {
+    		final String RESOURCE = "/discover/metrics/schemarecords";
+            StringBuilder urlBuilder = new StringBuilder(RESOURCE).append("?");
+
+            if (namespaceRegex != null) {
+                urlBuilder.append("namespace=").append(namespaceRegex).append("&");
+            }
+            if (scopeRegex != null) {
+                urlBuilder.append("scope=").append(scopeRegex).append("&");
+            }
+            if (metricRegex != null) {
+                urlBuilder.append("metric=").append(metricRegex).append("&");
+            }
+            if (tagKeyRegex != null) {
+                urlBuilder.append("tagk=").append(tagKeyRegex).append("&");
+            }
+            if (tagValueRegex != null) {
+                urlBuilder.append("tagv=").append(tagValueRegex).append("&");
+            }
+            urlBuilder.append("limit=").append(limit);
+            return urlBuilder;
+        }
+    
 }
 /* Copyright (c) 2014, Salesforce.com, Inc.  All rights reserved. */

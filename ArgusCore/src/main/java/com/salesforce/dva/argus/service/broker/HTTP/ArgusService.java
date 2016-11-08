@@ -20,12 +20,14 @@ package com.salesforce.dva.argus.service.broker.HTTP;
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 import com.salesforce.dva.argus.entity.Metric;
+import com.salesforce.dva.argus.entity.MetricSchemaRecord;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.salesforce.dva.argus.entity.Annotation;
 import com.salesforce.dva.argus.system.SystemAssert;
 
+import java.io.IOException;
 import java.util.*;
 
 public class ArgusService {
@@ -114,6 +116,13 @@ public class ArgusService {
     public List<Metric> getMetric(MetricQuery query,String expression){
     	SystemAssert.requireArgument(expression != null && query!=null, "expression and query cannot be null.");
         return client.getMetric(query,expression);
+    }
+    
+    /**
+     * used by discovery service
+     */
+    public List<MetricSchemaRecord> getDiscoveredMetricSchemaRecord(String namespaceRegex, String scopeRegex, String metricRegex, String tagKeyRegex, String tagValueRegex, int limit) {
+    	return client.getDiscoveredMetricSchemaRecord(namespaceRegex, scopeRegex, metricRegex, tagKeyRegex, tagValueRegex, limit);
     }
 }
 /* Copyright (c) 2014, Salesforce.com, Inc.  All rights reserved. */

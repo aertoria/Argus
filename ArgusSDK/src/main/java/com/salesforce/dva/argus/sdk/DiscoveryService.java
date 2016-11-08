@@ -80,9 +80,7 @@ public class DiscoveryService extends EndpointService {
         String tagValueRegex, int limit) throws IOException {
         StringBuilder urlBuilder = _buildBaseUrl(namespaceRegex, scopeRegex, metricRegex, tagKeyRegex, tagValueRegex, limit);
         String requestUrl = urlBuilder.toString();
-        
-        
-        System.out.println(requestUrl);
+
         ArgusResponse response = getClient().executeHttpRequest(ArgusHttpClient.RequestType.GET, requestUrl, null);
 
         assertValidResponse(response, requestUrl);

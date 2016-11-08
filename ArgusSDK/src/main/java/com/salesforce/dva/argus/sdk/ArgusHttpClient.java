@@ -179,7 +179,6 @@ class ArgusHttpClient {
      * @author  Tom Valine (tvaline@salesforce.com)
      */
     static enum RequestType {
-
         POST,
         GET,
         DELETE,

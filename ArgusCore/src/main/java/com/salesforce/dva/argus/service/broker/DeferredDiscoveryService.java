@@ -1,4 +1,4 @@
-package com.salesforce.dva.argus.service.schema;
+package com.salesforce.dva.argus.service.broker;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -42,6 +42,7 @@ import com.salesforce.dva.argus.entity.MetricSchemaRecordQuery;
 import com.salesforce.dva.argus.service.DiscoveryService;
 import com.salesforce.dva.argus.service.SchemaService;
 import com.salesforce.dva.argus.service.TSDBService;
+import com.salesforce.dva.argus.service.SchemaService.RecordType;
 import com.salesforce.dva.argus.service.metric.transform.TransformFactory;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.system.SystemConfiguration;
@@ -69,13 +70,16 @@ public class DeferredSchemaServiceTest{
     @BeforeClass
     public static void setUpBeforeClass() throws Exception  {
     	configuration=new SystemConfiguration(new Properties());
-		configuration.setProperty("service.property.json.endpoint", "https://localhost:443/argusws");
+		configuration.setProperty("service.property.json.endpoint", "https://argus-ws.data.sfdc.net:443/argusws");
+		configuration.setProperty("service.property.json.username", "USERNAME");
+		configuration.setProperty("service.property.json.password", "PASSWORD_SAMPLE");
 		
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override
 			protected void configure() {
 				new FactoryModuleBuilder().build(TransformFactory.class);
 				bind(TSDBService.class).to(DefaultJSONService.class);
+				//bind(DiscoveryService.class).to(JSONDiscoveryService.class);
 				bind(SchemaService.class).to(DeferredSchemaService.class);
 				bind(SystemConfiguration.class).toInstance(configuration);
 			}
@@ -98,11 +102,35 @@ public class DeferredSchemaServiceTest{
     @Test
     public void dd() {
     	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
-    	_discoveryService=injector.getInstance(DefaultDiscoveryService.class);
-    	
-    	MetricQuery q=new MetricQuery("REDUCEDTEST.core.CHI.*", "IMPACTPOD", null, 0L, 1L);
-    	_discoveryService.getMatchingQueries(q);
+    	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
+    	MetricQuery q=new MetricQuery("REDUCEDTEST.core.TYO.*", "IMPACTPOD", null, 1477094400L, 1477180800L);
+    	_discoveryService.getMatchingQueries(q).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
     }
-
+    
+    
+//    @Test
+    public void loop() {
+    	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
+    	Map<String, String> tags=new HashMap<String, String>();
+    	tags.put("device","*-app*-*.ops.sfdc.net");
+    	MetricQuery q=new MetricQuery("core.WAS.SP2.cs18", "SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg", tags, 1477094400L, 1477180800L);
+    	_discoveryService.getMatchingQueries(q).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
+    }
+    
+//    @Test
+    public void filterRecords() {
+    	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
+    	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
+    	MetricQuery q=new MetricQuery("REDUCEDTEST.core.TYO.*", "IMPACTPOD", null, 1477094400L, 1477180800L);
+    	_discoveryService.filterRecords(null,"REDUCEDTEST.core.*","IMPACTPOD", null,null,100,1).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
+    }
+    
+    @Test
+    public void getUnique() {
+    	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
+    	System.out.println(
+    		_discoveryService.getUniqueRecords(null,"REDUCEDTEST.core.*", "IMPACTPOD", null,null,RecordType.SCOPE,100,10)
+    	);
+    }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

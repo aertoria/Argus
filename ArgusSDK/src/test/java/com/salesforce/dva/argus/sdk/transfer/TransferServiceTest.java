@@ -48,7 +48,11 @@ public class TransferServiceTest {
 
 		DiscoveryService ds=targetSVC.getDiscoveryService();
 		List<MetricSchemaRecord> a=ds.getMatchingRecords(null, "REDUCEDTEST.core.CHI.*", "IMPACTPOD", null, null, 70);
-		a.forEach(m -> System.out.println(m.toString()));
+		a.forEach(m -> System.out.println(m.toString()+m.getScope()+m.getMetric()));
+		
+		
+//		ArgusHttpClient client = new ArgusHttpClient(endpoint, maxConn, 10000, 10000);
+//		DiscoveryService dss=new DiscoveryService(_client);
 	}
 	
 //	@Test
