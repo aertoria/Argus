@@ -24,8 +24,8 @@ public class TransferServiceTest {
 	public static void setUpBeforeClass() throws Exception {
 		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argusws", 10);
 		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
-		sourceSVC.getAuthService().login("USERNAME", "PASSWORD_SAMPLE");
-		targetSVC.getAuthService().login("USERNAME", "PASSWORD_SAMPLE");
+		sourceSVC.getAuthService().login("**removed**", "****");
+		targetSVC.getAuthService().login("**removed**", "****");
 	}
 
 	@AfterClass
