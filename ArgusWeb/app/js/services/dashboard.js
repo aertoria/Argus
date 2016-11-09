@@ -564,29 +564,206 @@ angular.module('argus.services.dashboard', [])
 
                 var URLDSC=CONFIG.wsUrl + "discover/expressions?expression="+expression;
                 console.log(URLDSC);
-                var stackedRawData=[];
 
-                var rootPromise=$.getJSON(URLDSC);
-                rootPromise.done(function(rawdata){
+
+
+                var stackedRawData=[];
+                var promisesCollections=[];
+
+                $.getJSON(URLDSC).done(function(rawdata){
                     console.log(rawdata);
                     for(var idx in rawdata){
                         var expression=rawdata[idx];
                         //console.log(expression);
                         var URL=CONFIG.wsUrl+"metrics?expression="+expression;
-                        $.getJSON(URL).done(function(rawdata){
-                            //console.log("presenting"+expression);
-                            //console.log(rawdata);
-                            for(var idx in rawdata) {
-                                podMetric = rawdata[idx];
-                                stackedRawData.push(podMetric);
-                            }
-                        });
+                        promisesCollections.push($.getJSON(URL));
+                        //
+                        //$.getJSON(URL).done(function(rawdata){
+                        //    for(var idx in rawdata) {
+                        //        podMetric = rawdata[idx];
+                        //        stackedRawData.push(podMetric);
+                        //    }
+                        //});
                     }
 
+                    Promise.all(promisesCollections)
+                           .then(function(data){
+                               console.log("prinit out data");
+                               console.log(data);
+                           });
 
+
+                }).then(function(e){
                     console.log("now should all finished");
                     console.log(stackedRawData);
+                    console.log("now should all finished");
+
+
+
+                    datainput=[];
+                    rawdata=stackedRawData
+                    for(var idx in rawdata){
+                        podMetric=rawdata[idx];
+                        var scope=podMetric['scope'];
+                        var dataValue=getOnlyValueFromHashMap(podMetric['datapoints']);
+                        console.log(scope+":"+dataValue);
+
+                        var currentPod={
+                            name: scope+'<br> IMPACT TIME:'+dataValue,
+                            value: parseInt(dataValue),
+                            colorValue: parseInt(dataValue)
+                        };
+                        datainput.push(currentPod);
+                    }
+                    console.log("datainput");
+                    console.log(datainput);
+                    $('#'+divId).highcharts({
+                        chart: {
+                            height: 900
+                        },
+                        xAxis: {
+                            events: {
+                                setExtremes: function (e) {
+                                    if(e.max == 100 && e.min == 0){
+                                        this.series[0].levelMap[2].dataLabels.format = "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>";
+                                    }
+                                },
+                            }
+                        },
+                        colorAxis: {
+                            dataClassColor: 'category',
+                            dataClasses: [{
+                                to: 99999,
+                                from: 440,
+                                color:'#B90009'
+                            },{
+                                to: 440,
+                                from: 278,
+                                color:'#C5221A'
+                            },{
+                                to:278,
+                                from: 171,
+                                color:'#D23B2B'
+                            },{
+                                to: 171,
+                                from: 107,
+                                color:'#D23B2B'
+                            },{
+                                to:107,
+                                from:64,
+                                color:'#F98375'
+                            },{
+                                to:64,
+                                from:43,
+                                color:'#F3B3A2'
+                            },{
+                                to:43,
+                                from:21,
+                                color:'#9FD2A1'
+                            },{
+                                to:21,
+                                from:12,
+                                color:'#9DD56F'
+                            },{
+                                to:12,
+                                from:8,
+                                color:'#85C462'
+                            },{
+                                to:8,
+                                from:5,
+                                color:'#74B35A'
+                            },{
+                                to:5,
+                                from:3,
+                                color:'#62A247'
+                            },{
+                                to:3,
+                                from:0,
+                                color:'#4E8E1C'
+                            },{
+                                to:-1,
+                                from:-10,
+                                color:'#6E6E6E'
+                            }]
+                        },
+                        tooltip: {
+                            backgroundColor: 'yellow',
+                            formatter: function () {
+                                return "<b>"+ this.point.name+"</b>";
+                            }
+                        },
+                        series: [{
+                            type: "treemap",
+                            drillUpButton:{
+                                relativeTo: 'spacingBox',
+                                position: {
+                                    y: 0,
+                                    x: 0
+                                },
+                                theme: {
+                                    color: 'white',
+                                    fill: 'rgb(66, 180, 240)',
+                                    'stroke-width': 1,
+                                    stroke: 'black',
+                                    r: 3,
+                                    states: {
+                                        hover: {
+                                            fill: 'rgb(66, 139, 202)'
+                                        },
+                                        select: {
+                                            stroke: '#039',
+                                            fill: 'rgb(66, 139, 220)'
+                                        }
+                                    }
+                                }
+
+                            },
+                            levels: [{
+                                level: 1,
+                                layoutAlgorithm: 'squarified',
+                                borderRadius: 100,
+                                borderColor: 'black',
+                                borderWidth: 3,
+
+                            }, {
+                                level: 2,
+                                layoutAlgorithm: 'squarified',
+                                borderRadius: 100,
+                                borderColor: '#e0e0e0',
+                                borderWidth: 2,
+
+                                dataLabels: {
+                                    align: 'left',
+                                    verticalAlign: 'top',
+                                    rotation: 0,
+                                    padding:  5,
+                                    useHTML: true,
+                                    enabled: true,
+                                    format: "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>",
+                                    style: {
+                                        fontSize: "14px",
+                                        color: 'contrast',
+                                        textShadow: 'underline',
+                                    }
+                                }
+                            }],
+                            inside: true,
+                            events:{
+                                //click: regionClick
+                            },
+                            allowDrillToNode: true,
+                            data: datainput,
+                        }],
+                        title: {
+                            text: 'DBAvailablity Rollup'
+                        }
+
+                    });
                 });
+
+
+
+
 
 
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
@@ -594,15 +771,15 @@ angular.module('argus.services.dashboard', [])
 
                 console.log(URL);
                 $.getJSON(URL, function(rawdata){
-                    console.log("rawdata is");
-                    console.log(rawdata);
+                    //console.log("rawdata is");
+                    //console.log(rawdata);
 
                     datainput=[];
                     for(var idx in rawdata){
                         podMetric=rawdata[idx];
                         var scope=podMetric['scope'];
                         var dataValue=getOnlyValueFromHashMap(podMetric['datapoints']);
-                        console.log(scope+":"+dataValue);
+                        //console.log(scope+":"+dataValue);
 
                         var currentPod={
                             name: scope+'<br> IMPACT TIME:'+dataValue,
@@ -625,7 +802,8 @@ angular.module('argus.services.dashboard', [])
                     //    }
                     //];
 
-                    console.log(datainput);
+                    //console.log("datainput2");
+                    //console.log(datainput);
                     $('#'+divId).highcharts({
                         chart: {
                             height: 900
