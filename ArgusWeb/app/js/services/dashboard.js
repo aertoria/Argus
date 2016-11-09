@@ -1458,18 +1458,20 @@ angular.module('argus.services.dashboard', [])
             var errorHandle=function(jqXHR, textStatus, errorThrown) {
                 var errormessage=textStatus+errorThrown+" Detail: " + jqXHR.responseText;
                 growl.info('We can not render this chart');
-                $('#'+divId).html('<img src="img/error.png" />'+errormessage +
-                    `
-                    <a class="btn btn-primary" role="button" data-toggle="collapse" href="#demo" aria-expanded="false" aria-controls="collapseExample">
-                      Detail
-                    </a>
-                    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#demo" aria-expanded="false" aria-controls="collapseExample">
-                      Log Detail
-                    </button>
-                    <div class="collapse" id="demo">
-                        sdadas.
-                    </div>
-                    `);
+                $('#'+divId).html('<img src="img/error.png" />'+errormessage
+                    //+
+                    //`
+                    //<a class="btn btn-primary" role="button" data-toggle="collapse" href="#demo" aria-expanded="false" aria-controls="collapseExample">
+                    //  Detail
+                    //</a>
+                    //<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#demo" aria-expanded="false" aria-controls="collapseExample">
+                    //  Log Detail
+                    //</button>
+                    //<div class="collapse" id="demo">
+                    //    sdadas.
+                    //</div>
+                    //`
+                );
             };
 
 

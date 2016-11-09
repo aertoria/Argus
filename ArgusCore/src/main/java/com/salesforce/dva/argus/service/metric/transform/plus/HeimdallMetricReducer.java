@@ -1,4 +1,4 @@
-package com.salesforce.dva.argus.service.metric.transform.plus;
+ package com.salesforce.dva.argus.service.metric.transform.plus;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class HeimdallMetricReducer implements Transform{
 		//align up
 		List<Metric> metricsLineup=_computationUtil.get().downsample("1m-avg", metrics);
 		List<Metric> metricsLineupInHour=_computationUtil.get().downsample("1h-avg", metrics);
-		final ReportRange reportRange=ReportRange.getReportRange(metricsLineupInHour.get(0));
+		final ReportRange reportRange=ReportRange.getReportRange(metricsLineupInHour);
 		
 		List<MetricConsumer> listConsumer=consumeMetrics(metricsLineup);
 		
@@ -285,11 +285,9 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 												.get(0)
 					)
 				.reduce((m1,m2)-> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
-
 		Optional<Metric> constructedDivisor=this.racServers.stream()
 						.map(r -> r.getWeightedTrafficCountHourly().get(0))
 						.reduce((m1,m2) ->_computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
-		
 		assert(constructedProduct.isPresent()&&constructedDivisor.isPresent()):"accumulation result is not valid";
 		if(constructedProduct.isPresent()&&constructedDivisor.isPresent()){
 			List<Metric> toBeDivided = Arrays.asList(constructedProduct.get(),_computationUtil.get().removeZeroMetric(constructedDivisor.get()));			
@@ -326,7 +324,7 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	@Override
 	public List<Metric> renderIMPACTTOTAL() {
 		List<Metric> IMPACTPOD=renderIMPACTPOD();
-		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTPOD);
+		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTPOD,RacServer.getReportRange().getStart());
 		return IMPACTTOTAL;
 	}
 	
@@ -396,15 +394,17 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	}
 	
 	@Override
-	public List<Metric> renderAVATOTAL(){	
+	public List<Metric> renderAVATOTAL(){
 		final List<Metric> dataRecievedCount=_computationUtil.get().downsample("1h-count", podTraffic);
 		final List<Metric> dataRecievedCountFilled=_computationUtil.get().mergeZero(RacServer.getReportRange(),60,dataRecievedCount);
+		
 		final List<Metric> podLevelAVA=caculateAVAPOD();
 		final List<Metric> product=_computationUtil.get().scale(Arrays.asList(podLevelAVA.get(0),dataRecievedCountFilled.get(0)));
-		final List<Metric> productDownsampled=_computationUtil.get().downsample("100d-sum", product);
-		final List<Metric> weightDownsampled=_computationUtil.get().downsample("100d-sum", dataRecievedCountFilled);
+		final List<Metric> productDownsampled=_computationUtil.get().downsample("100d-sum", product, RacServer.getReportRange().getStart());
+		final List<Metric> weightDownsampled=_computationUtil.get().downsample("100d-sum", dataRecievedCountFilled, RacServer.getReportRange().getStart());
 		assert(weightDownsampled.get(0).getDatapoints().size()==1):"downsampled to one result";
 		final List<Metric> avaDownsampled=_computationUtil.get().divide(Arrays.asList(productDownsampled.get(0),weightDownsampled.get(0)));
+		
 		return Collections.unmodifiableList(avaDownsampled);
 	}
 	
@@ -546,7 +546,7 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	@Override
 	public List<Metric> renderTTMTOTAL() {
 		List<Metric> TTMPOD=renderTTMPOD();
-		List<Metric> TTMPODTOTAL = _computationUtil.get().downsample("100d-sum", TTMPOD);
+		List<Metric> TTMPODTOTAL = _computationUtil.get().downsample("100d-sum", TTMPOD, RacServer.getReportRange().getStart());
 		return TTMPODTOTAL;
 	}
 	
@@ -803,10 +803,11 @@ final class RacServer implements Serializable{
 	/**getImpactedMinHourly return a timeseries with count of impact min for each hour
 	 * called by all ava related renderables and renderings.
 	 * **/
+	@SuppressWarnings("unchecked")
 	public List<Metric> getImpactedMinHourly(){
 		//APT
 		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
-
+		
 		//ACT
 		if (hasACT()){
 			List<Metric> impactedMinACT = getImapctedMinHourlyACT();
@@ -815,9 +816,7 @@ final class RacServer implements Serializable{
 		
 		impactedMin.get(0).setMetric(this.racServerAddress);		
 		List<Metric> downsampledImpactedMin=_computationUtil.get().downsample("1h-count", impactedMin);
-		//System.out.println("a"+downsampledImpactedMin);
 		List<Metric> filledImpactedMin=_computationUtil.get().mergeZero(reportRange,60,downsampledImpactedMin);
-		//System.out.println("b"+filledImpactedMin);
 		return filledImpactedMin;
 	}
 	
@@ -842,19 +841,16 @@ final class RacServer implements Serializable{
 		List<Metric> availability=getWeightedTrafficCountHourly();
 		List<Metric> availability_zeroRemoved=availability.stream().map(m->_computationUtil.get().removeZeroMetric(m)).collect(Collectors.toList());
 		List<Metric> avaRateHourly=getImpactedMinHourly();
-		
+				
 		List<Metric> toBeDivided = new ArrayList<Metric>();
 		avaRateHourly.forEach(m -> toBeDivided.add(m));
 		availability_zeroRemoved.forEach(m -> toBeDivided.add(m));
 		
-		//System.out.println("tobeDivided:"+toBeDivided);
 		List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
-		//System.out.println("dividedResult"+dividedResult);
 		
 		assert(dividedResult!=null):"dividedResult should be valid"; 
 		List<Metric> filleddividedResult=_computationUtil.get().mergeZero(reportRange,60,dividedResult);
 
-		//System.out.println("filleddividedResult"+filleddividedResult);
 		List<Metric> negatedAvaRate=_computationUtil.get().negate(filleddividedResult);
 		return Collections.unmodifiableList(negatedAvaRate);
 	}
@@ -1098,29 +1094,34 @@ final class MetricConsumer implements Serializable{
 @SuppressWarnings("serial")
 final class ReportRange implements Serializable{
 	private final List<Long> range;
-	private final Map<Long, String> zeroDatapoints;
 	
-	private ReportRange(List<Long> range,Map<Long, String> _templateDatapoints){
-		this.zeroDatapoints=_templateDatapoints;
+	/**
+	 * 
+	 * @param range
+	 */
+	private ReportRange(List<Long> range){
 		this.range=range;
 	}
 	
-	public static ReportRange getReportRange(Metric m){
-		assert(m!=null && m.getDatapoints().size()>0):"start and end should not be null";
-		ReportRange self=new ReportRange(Arrays.asList(
-										Collections.min(m.getDatapoints().keySet()),
-										Collections.max(m.getDatapoints().keySet())
-										),
-										generateTemplateDataPoints(m.getDatapoints()));
+	/**
+	 * givien a list of metrics. set the report range to be the maximum and minimum of any metric inside
+	 * @param metrics
+	 * @return
+	 */
+	public static ReportRange getReportRange(List<Metric> metrics){
+		assert(metrics!=null && metrics.size()>0):"start and end should not be null";
+		
+		Optional<Long> min=metrics.stream()
+				   .flatMap(m -> m.getDatapoints().keySet().stream())
+				   .collect(Collectors.minBy((k1,k2)->Long.compare(k1, k2)));
+		Optional<Long> max=metrics.stream()
+				   .flatMap(m -> m.getDatapoints().keySet().stream())
+				   .collect(Collectors.maxBy((k1,k2)->Long.compare(k1, k2))); 
+		assert(min.isPresent()&&max.isPresent()):"min value and max value should present";
+		ReportRange self=new ReportRange(Arrays.asList(min.get(),max.get()));
 		return self;		
 	}
-	
-	private static Map<Long,String> generateTemplateDataPoints(Map<Long, String> datapoints){
-		Map<Long, String> zeroDatapoints=new HashMap<Long,String>();
-		datapoints.entrySet().forEach(e -> zeroDatapoints.put(e.getKey(), String.valueOf("0")));
-		return zeroDatapoints;
-	} 
-	
+		
 	public Long getStart(){
 		return this.range.get(0);
 	}
@@ -1128,12 +1129,8 @@ final class ReportRange implements Serializable{
 	public Long getEnd(){
 		return this.range.get(1);
 	}
-	
-	public Map<Long, String> getZeroDatapoints(){
-		Map<Long, String> zeroDatapointsPass = Collections.unmodifiableMap(zeroDatapoints);
-		return zeroDatapointsPass;
-	}
 }
+
 
 
 /*
@@ -1227,6 +1224,17 @@ final class ComputationUtil{
 		List<String> constants = new ArrayList<String>();
 		constants.add(distance);// Define as connect distance
 		return _transformFactory.get().getTransform("DOWNSAMPLE").transform(mutable, constants);
+	}
+	
+	protected List<Metric> downsample(String distance, List<Metric> metrics,Long timeStamp){
+		assert (metrics!=null && metrics.size()==1):"only take single metric to downsample";
+		List<Metric> downsampledResult=downsample(distance,metrics);
+		assert(downsampledResult!=null&&downsampledResult.size()==1&&downsampledResult.get(0).getDatapoints().size()==1):"downsampled result should be single data points";
+		Metric m=new Metric(downsampledResult.get(0));
+		Map<Long,String> datapoints=new HashMap<Long,String>();
+		datapoints.put(timeStamp, downsampledResult.get(0).getDatapoints().entrySet().iterator().next().getValue());
+		m.setDatapoints(datapoints);
+		return Collections.unmodifiableList(Arrays.asList(m));
 	}
 
 	protected List<Metric> zeroFill(List<Metric> m) {
