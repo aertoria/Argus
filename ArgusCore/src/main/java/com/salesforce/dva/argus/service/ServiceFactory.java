@@ -279,7 +279,7 @@ public final class ServiceFactory {
     public synchronized DiscoveryService getDiscoveryService() {
         return _discoveryServiceProvider.get();
     }
-
+    
     /**
      * Returns an instance of the batch service.
      *

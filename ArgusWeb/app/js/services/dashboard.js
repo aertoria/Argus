@@ -559,14 +559,43 @@ angular.module('argus.services.dashboard', [])
                     return firstValue;
                 };
 
-                console.log("calling me!!!!");
                 Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
+
+
+                var URLDSC=CONFIG.wsUrl + "discover/expressions?expression="+expression;
+                console.log(URLDSC);
+                var stackedRawData=[];
+
+                var rootPromise=$.getJSON(URLDSC);
+                rootPromise.done(function(rawdata){
+                    console.log(rawdata);
+                    for(var idx in rawdata){
+                        var expression=rawdata[idx];
+                        //console.log(expression);
+                        var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                        $.getJSON(URL).done(function(rawdata){
+                            //console.log("presenting"+expression);
+                            //console.log(rawdata);
+                            for(var idx in rawdata) {
+                                podMetric = rawdata[idx];
+                                stackedRawData.push(podMetric);
+                            }
+                        });
+                    }
+
+
+                    console.log("now should all finished");
+                    console.log(stackedRawData);
+                });
+
+
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                //http://ewang-ltm.internal.salesforce.com:8080/argusws/metrics?expression=DOWNSAMPLE(1477094400:1477180800:REDUCEDTEST.core.CHI.*:IMPACTPOD:avg,%23100h-sum%23
+
                 console.log(URL);
                 $.getJSON(URL, function(rawdata){
                     console.log("rawdata is");
                     console.log(rawdata);
-
 
                     datainput=[];
                     for(var idx in rawdata){
@@ -735,7 +764,7 @@ angular.module('argus.services.dashboard', [])
                             data: datainput,
                         }],
                         title: {
-                            text: 'Dataguard-Lag'
+                            text: 'DBAvailablity Rollup'
                         }
 
                     });

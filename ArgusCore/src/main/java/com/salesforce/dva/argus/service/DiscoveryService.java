@@ -34,6 +34,7 @@ package com.salesforce.dva.argus.service;
 import com.salesforce.dva.argus.entity.MetricSchemaRecord;
 import com.salesforce.dva.argus.service.SchemaService.RecordType;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
+
 import java.util.List;
 
 /**
@@ -93,5 +94,16 @@ public interface DiscoveryService extends Service {
      * @return  True if the query is a wildcard query.
      */
     boolean isWildcardQuery(MetricQuery query);
+    
+    /**
+     * given a expression, return a list of expression. To be overriden
+     * 
+     * @param expression
+     * 
+     * @return
+     */
+    default List<String> getMatchingExpressions(String expression){
+    	throw new UnsupportedOperationException("This default method by default needs override with all paticipanting concrete methods");
+    }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

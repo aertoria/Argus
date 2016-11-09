@@ -35,8 +35,15 @@ import com.salesforce.dva.argus.entity.MetricSchemaRecord;
 import com.salesforce.dva.argus.entity.PrincipalUser;
 import com.salesforce.dva.argus.service.DiscoveryService;
 import com.salesforce.dva.argus.service.SchemaService.RecordType;
+import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.ws.annotation.Description;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -58,7 +65,6 @@ public class DiscoveryResources extends AbstractResource {
     //~ Instance fields ******************************************************************************************************************************
 
     private DiscoveryService _discoveryService = system.getServiceFactory().getDiscoveryService();
-
     //~ Methods **************************************************************************************************************************************
 
     /**
@@ -102,6 +108,33 @@ public class DiscoveryResources extends AbstractResource {
                 RecordType.fromName(type), limit, page);
             return records;
         }
+    }
+    
+    /**
+     * Used by DBCloud Argus Core
+     * @author: aertoria (ethan.wang@salesforce.com)
+     * 
+     * @param req
+     * @param namespaceRegex
+     * @param scopeRegex
+     * @param metricRegex
+     * @param tagkRegex
+     * @param tagvRegex
+     * @return
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/expressions")
+    @Description("Discover all expressions in a json, given a regex expression")
+    public List<? extends Object> getExpression(
+    	@Context HttpServletRequest req,
+    	@QueryParam("expression") final String expression
+        ) {
+		PrincipalUser remoteUser = validateAndGetOwner(req, null);
+        validateResourceAuthorization(req, remoteUser, remoteUser);
+
+        List<String> records = _discoveryService.getMatchingExpressions(expression);
+        return records;
     }
     
 }

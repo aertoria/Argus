@@ -35,10 +35,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
 import com.salesforce.dva.argus.AbstractTest;
 import com.salesforce.dva.argus.IntegrationTest;
 import com.salesforce.dva.argus.entity.Metric;
 import com.salesforce.dva.argus.entity.MetricSchemaRecordQuery;
+import com.salesforce.dva.argus.inject.SLF4JTypeListener;
 import com.salesforce.dva.argus.service.DiscoveryService;
 import com.salesforce.dva.argus.service.SchemaService;
 import com.salesforce.dva.argus.service.TSDBService;
@@ -74,6 +76,12 @@ public class DeferredSchemaServiceTest{
 		configuration.setProperty("service.property.json.username", "sampleUserName");
 		configuration.setProperty("service.property.json.password", "XXXXXXXX");
 		
+		
+		configuration.setProperty("service.property.json.endpoint", "https://argus-ws.data.sfdc.net:443/argusws");
+		configuration.setProperty("service.property.json.username", "USERNAME");
+		configuration.setProperty("service.property.json.password", "PASSWORD_SAMPLE");
+		
+		
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override
 			protected void configure() {
@@ -82,6 +90,7 @@ public class DeferredSchemaServiceTest{
 				//bind(DiscoveryService.class).to(JSONDiscoveryService.class);
 				bind(SchemaService.class).to(DeferredSchemaService.class);
 				bind(SystemConfiguration.class).toInstance(configuration);
+				bindListener(Matchers.any(), new SLF4JTypeListener());
 			}
 		});
     }
@@ -99,7 +108,7 @@ public class DeferredSchemaServiceTest{
     	_schemaService.get(msrq, 10, 2);
     }
     
-    @Test
+//    @Test
     public void dd() {
     	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
     	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
@@ -129,7 +138,7 @@ public class DeferredSchemaServiceTest{
     public void getUnique() {
     	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
     	System.out.println(
-    		_discoveryService.getUniqueRecords(null,"REDUCEDTEST.core.*", "IMPACTPOD", null,null,RecordType.SCOPE,100,10)
+    		_discoveryService.getMatchingExpressions("1477094400:1477180800:REDUCEDTEST.core.*:IMPACTPOD:avg")
     	);
     }
 }

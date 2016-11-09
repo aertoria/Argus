@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
@@ -17,10 +19,18 @@ import com.salesforce.dva.argus.service.DefaultService;
 import com.salesforce.dva.argus.service.DiscoveryService;
 import com.salesforce.dva.argus.service.SchemaService;
 import com.salesforce.dva.argus.service.SchemaService.RecordType;
+import com.salesforce.dva.argus.service.metric.transform.kepler.aertoria;
 import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
+import junit.framework.Assert;
+
+/**
+ * 
+ * @author {@link aertoria} ethan.wang@salesforce.com
+ *
+ */
 public class JSONDiscoveryService extends DefaultService implements DiscoveryService {
     //~ Static fields/initializers *******************************************************************************************************************
 
@@ -46,8 +56,8 @@ public class JSONDiscoveryService extends DefaultService implements DiscoverySer
         this._schemaService = schemaService;
     }
 
-    //~ Methods **************************************************************************************************************************************
-	/**
+    //~ Methods **************************************************************************************************************************************    
+    /**
 	 * call if type == null
 	 */
     @Override
@@ -62,7 +72,6 @@ public class JSONDiscoveryService extends DefaultService implements DiscoverySer
         MetricSchemaRecordQuery query = new MetricSchemaRecordQuery(namespaceRegex, scopeRegex, metricRegex, tagkRegex, tagvRegex);
 
         _logger.debug(query.toString());
-
         long start = System.nanoTime();
         List<MetricSchemaRecord> result = _schemaService.get(query, limit, page);
 
@@ -248,4 +257,36 @@ public class JSONDiscoveryService extends DefaultService implements DiscoverySer
         dest.setDownsamplingPeriod(orig.getDownsamplingPeriod());
     }
 
+    /**
+     * givien string -20d:-15d:REDUCEDTEST.core.*:IMPACTPOD{podId=*}:avg
+     * return List<string> 
+     */
+    @Override
+	public List<String> getMatchingExpressions(String expression){
+    	SystemAssert.requireArgument(expression != null,"input expressioin can not be null");
+    	
+    	final String[] splitedExpression=expression.split(":");
+    	assert(splitedExpression.length==5):"in valid expression length";
+    	
+    	
+    	final String startTime=splitedExpression[0];
+    	final String endTime=splitedExpression[1];
+    	final String scopeRex=splitedExpression[2];
+    	final String metricRexWithTag=splitedExpression[3];
+    	final String aggregator=splitedExpression[4];
+    	
+    	List<MetricSchemaRecord> discoveredRecords=filterRecords(null,scopeRex,metricRexWithTag,null,null,500,1);
+    	
+    	List<String> records=discoveredRecords.stream()
+							    	.map(r -> {
+							    		if(r.getTagKey()!=null){
+							    			return startTime+":"+endTime+":"+r.getScope()+":"+r.getMetric()+"{"+r.getTagKey()+"="+r.getTagValue()+"}:"+aggregator;
+							    		}
+							    		return startTime+":"+endTime+":"+r.getScope()+":"+r.getMetric()+":"+aggregator;
+							    	})
+							    	.collect(Collectors.toList());
+    	return records;
+    }
+    
+    
 }
