@@ -1,8 +1,6 @@
 package com.salesforce.dva.argus.service.metric.transform.plus;
 
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat; 
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -12,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.runner.RunWith; 
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.Mockito;  
+import org.mockito.runners.MockitoJUnitRunner; 
 
-import com.google.inject.Inject;
+/** import com.google.inject.Inject;  **/ 
 import com.salesforce.dva.argus.entity.Metric;
 import com.salesforce.dva.argus.service.metric.transform.Transform;
-import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardTransform;
-@RunWith(MockitoJUnitRunner.class)
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardTransform;;
+/** @RunWith(MockitoJUnitRunner.class)  **/
 public class HeimdallDataGuardTransformTest {
 	
 	 private static final String TEST_SCOPE_1 = "db.CHI.SP4.na27";
@@ -94,12 +92,14 @@ public class HeimdallDataGuardTransformTest {
 	        expected_1.put(0L, "87.5");
 	        expected_1.put(1L, "80.0");
 	        assertEquals(expected_1, result.get(0).getDatapoints());
+	        System.out.print(result.get(0).getDatapoints()); 
 	        
 	        
 	        Map<Long, String> expected_2 = new HashMap<Long, String>();
-	        expected_1.put(0L, "42.8571");
-	        expected_1.put(1L, "70.0");
-	        assertEquals(expected_1, result.get(1).getDatapoints());
+	        expected_2.put(0L, "42.9");
+	        expected_2.put(1L, "70.0");
+	        assertEquals(expected_2, result.get(1).getDatapoints());
+	        System.out.print(result.get(1).getDatapoints()); 
 	        
 	        
 	        /*

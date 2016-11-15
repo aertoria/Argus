@@ -76,7 +76,7 @@ public class HeimdallDataGuardTransform implements Transform {
             	
             	Map<Long, String> complianceData = new HashMap<Long, String>();
             	/*
-            	 * round off to 4 digits 
+            	 * round off to 1 digits 
             	 * 
             	 * index 0 - compliance value
             	 * index 1 - confidence value
