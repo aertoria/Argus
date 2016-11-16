@@ -2802,7 +2802,20 @@ public class HeimdallMetricReducerTest{
         expected_metric4.setDatapoints(expected_Datapoints4);
         expected.add(expected_metric4);
         
-        System.out.println(result);
+        Metric expected_metric5 = new Metric("SUM", "CollectedMin");
+        Map<Long, String> expected_Datapoints5=new HashMap<Long, String>();
+        expected_Datapoints5.put(0L, "12.0");
+        expected_Datapoints5.put(3600000L, "6.0");
+        expected_metric5.setDatapoints(expected_Datapoints5);
+        expected.add(expected_metric5);
+        
+        Metric expected_metric6 = new Metric("SUM", "Traffic");
+        Map<Long, String> expected_Datapoints6=new HashMap<Long, String>();
+        expected_Datapoints6.put(0L, "74.0");
+        expected_Datapoints6.put(3600000L, "40.0");
+        expected_metric6.setDatapoints(expected_Datapoints6);
+        expected.add(expected_metric6);
+        
         assertEquals(expected,result); 
         assertEquals(result.get(0).getDatapoints(),expected.get(0).getDatapoints()); 
 	}

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.salesforce.dva.argus.sdk.ArgusService;
@@ -40,7 +41,6 @@ public class TransferService implements Serializable{
 		return self;
 	}
 	
-	
     /**
      * transfer metrics
      *
@@ -57,7 +57,6 @@ public class TransferService implements Serializable{
 		return p;
 	}
 	
-	
 	public PutResult transfer(String src_expression, String tgt_scope, String tgt_metric) throws IOException {
 		final List<Metric> metrics=readFromSource(Arrays.asList(src_expression));
 		assert(metrics.size()==1):"result is not valid";
@@ -68,6 +67,24 @@ public class TransferService implements Serializable{
 		metric.setDatapoints(metrics.get(0).getDatapoints());
 		
 		PutResult p=writeToTarget(Arrays.asList(metric));
+		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
+		return p;
+	}
+	
+	public PutResult transfer(String src_expression, String tgt_scope) throws IOException {
+		final List<Metric> metrics=readFromSource(Arrays.asList(src_expression));
+		assert(metrics.size()>0):"result is not valid";
+		List<Metric> metricsToLoad= metrics.stream()
+										.map(m -> {
+														Metric metric=new Metric();
+														metric.setScope(tgt_scope);
+														metric.setMetric(m.getMetric());
+														metric.setDatapoints(m.getDatapoints());
+														return metric;
+													})					
+										.collect(Collectors.toList());
+		
+		PutResult p=writeToTarget(metricsToLoad);
 		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
 		return p;
 	}
@@ -86,10 +103,11 @@ public class TransferService implements Serializable{
 	@SuppressWarnings("deprecation")
 	private static List<String> expressionCleanUp(List<String> expressions){
 		assert(expressions!=null && expressions.size()>0):"input not valid";
-		return expressions
-				.stream()
+		List<String> r= expressions
+				.stream().sequential()
 				.map(e -> URLEncoder.encode(e))
 				.collect(Collectors.toList());
+		return r;
 	}
 	
 }

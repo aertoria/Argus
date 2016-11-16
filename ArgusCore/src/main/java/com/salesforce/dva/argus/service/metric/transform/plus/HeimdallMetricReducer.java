@@ -328,6 +328,18 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		return IMPACTTOTAL;
 	}
 	
+	public List<Metric> renderCollectedMinPOD(){
+		Optional<Metric> constructedResult=this.racServers.stream()
+										  .map(r -> r.getWeightedTrafficCountHourly().get(0))
+										  .reduce((m1,m2) -> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
+		if(constructedResult.isPresent()){
+			Metric m=constructedResult.get();
+			m.setMetric(podAddress);
+			return Collections.unmodifiableList(Arrays.asList(m));
+		}
+		throw new RuntimeException("Not a single result");
+	} 
+	
 	@Override
 	public List<Metric> renderAPT() {
 		List<Metric> constructedResult=this.racServers.stream()
@@ -444,12 +456,18 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		renderAVAPOD.get(0).setMetric("Availability"); 
 		List<Metric> renderTTMPOD=renderTTMPOD();
 		renderTTMPOD.get(0).setMetric("TTM");
+		List<Metric> renderCollectedMin=renderCollectedMinPOD();
+		renderCollectedMin.get(0).setMetric("CollectedMin");
+		List<Metric> renderTraffic=renderTRAFFICPOD();
+		renderTraffic.get(0).setMetric("Traffic");
 		
 		List<Metric> reportPod=new ArrayList<Metric>();
 		reportPod.addAll(renderAPTPOD);
 		reportPod.addAll(renderIMPACTPOD);
 		reportPod.addAll(renderAVAPOD);
 		reportPod.addAll(renderTTMPOD);
+		reportPod.addAll(renderCollectedMin);
+		reportPod.addAll(renderTraffic);
 		return Collections.unmodifiableList(reportPod);
 	}
 	
@@ -475,7 +493,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawACTHourly().get(0), r -> r.hasACT(), "ACT"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getRawCPUHourly().get(0), r -> r.hasCPU(), "CPU"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficSumHourly().get(0), r -> true, "Traffic"));
-		
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getAvaRateHourly().get(0), r -> true, "AVA"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourly().get(0), r -> true, "ImpactedMin"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficCountHourly().get(0), r -> true, "CollectedMin"));

@@ -135,7 +135,6 @@ public class MetricIteratingTransformTest {
         result.forEach(ms -> assertTrue("Returning result should be two executable pair with same datapoint each",ms.size()==2));
         result.forEach(ms -> assertTrue("Returning result should be two executable pair with same metrics name each",ms.stream().filter(m -> expectedMetric.contains(m.getMetric())).collect(Collectors.toList()).size()==2));
 	 }
-	 
 	 @Test
 	 public void MetricIteratingTransformTestBaseCase() {
 		Transform transform=new MetricIteratingTransform();
@@ -191,6 +190,5 @@ public class MetricIteratingTransformTest {
         result.forEach(ms -> assertTrue("Returning result should be two executable pair with same datapoint each",ms.size()==2));
         result.forEach(ms -> assertTrue("Returning result should be two executable pair with same metrics name each",ms.stream().filter(m -> expectedMetric.contains(m.getMetric())).collect(Collectors.toList()).size()==2));
 	 }
-
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

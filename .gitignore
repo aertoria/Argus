@@ -16,4 +16,5 @@ argus-build.properties
 .classpath
 property
 *.properties
-
+etl.properties
+*.property

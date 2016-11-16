@@ -74,13 +74,7 @@ public class DeferredSchemaServiceTest{
     	configuration=new SystemConfiguration(new Properties());
 		configuration.setProperty("service.property.json.endpoint", "https://localhost:443/argusws");
 		configuration.setProperty("service.property.json.username", "sampleUserName");
-		configuration.setProperty("service.property.json.password", "XXXXXXXX");
-		
-		
-		configuration.setProperty("service.property.json.endpoint", "https://argus-ws.data.sfdc.net:443/argusws");
-		configuration.setProperty("service.property.json.username", "USERNAME");
-		configuration.setProperty("service.property.json.password", "PASSWORD_SAMPLE");
-		
+		configuration.setProperty("service.property.json.password", "XXXXXXXX");	
 		
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override

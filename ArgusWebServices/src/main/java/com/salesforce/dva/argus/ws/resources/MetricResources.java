@@ -33,6 +33,7 @@ package com.salesforce.dva.argus.ws.resources;
 
 import com.salesforce.dva.argus.entity.Metric;
 import com.salesforce.dva.argus.entity.PrincipalUser;
+import com.salesforce.dva.argus.service.DiscoveryService;
 import com.salesforce.dva.argus.service.MetricService;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.ws.annotation.Description;
@@ -61,14 +62,12 @@ import java.util.Map.Entry;
 public class MetricResources extends AbstractResource {
 
     //~ Instance fields ******************************************************************************************************************************
-
     private final String COMMA = ",";
     private final String NEW_LINE = "\n";
     private final String EMPTY = "";
     private final int DEFAULT_TTL = 1800;
 
     //~ Methods **************************************************************************************************************************************
-
     /**
      * Performs a metric query using the given expression.
      *
@@ -83,10 +82,31 @@ public class MetricResources extends AbstractResource {
     public List<MetricDto> getMetricsJSON(@Context HttpServletRequest req,
         @QueryParam("expression") List<String> expressions) {
         List<Metric> metrics = _getMetrics(req, expressions);
-
         return MetricDto.transformToDto(metrics);
     }
-
+    
+    
+    
+    /**
+     * Performs a metric query using the given expression with regex
+     * @param req
+     * @param expression
+     * @return
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON + ";qs=2")
+    @Path("/all")
+    @Description("Performs a metric query using the given expression with redex")
+    public List<MetricDto> getMetricsJSONByRegex(
+    	@Context HttpServletRequest req,
+    	@QueryParam("expression") final String expression) {
+    	List<String> records = system.getServiceFactory().getDiscoveryService().getMatchingExpressions(expression);
+        List<Metric> metrics = _getMetrics(req, records);
+        return MetricDto.transformToDto(metrics);
+    }
+    
+    
+    
     /**
      * Download the metric data for one or more metric expressions.
      *
@@ -112,6 +132,7 @@ public class MetricResources extends AbstractResource {
         response.header("Content-Disposition", "attachment; filename=metrics.csv");
         return response.build();
     }
+    
 
     /**
      * Start an async batch metric query

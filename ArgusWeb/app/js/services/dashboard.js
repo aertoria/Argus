@@ -13,7 +13,7 @@ angular.module('argus.services.dashboard', [])
                     growl.info('Routing to Heimdall Argus Core and  Running as fast as we can...');
                     var expressionList = getMetricExpressionList(metricList);
                     $('#' + divId).show();
-                    updateAva({}, expressionList[0], divId, attributes, scope.controls);
+                    updateAva({}, expressionList, divId, attributes, scope.controls);
                     return;//STOP RIGHT HERE
                 }
                 if (metricList && metricList.length > 0) {
@@ -491,7 +491,7 @@ angular.module('argus.services.dashboard', [])
         function updateAva(config, metricList, divId, attributes, para){
             $('#'+divId).html('<img src="img/spin.gif" />');
             //url(../img/spin.gif)
-            var expression=parseExpression(metricList);
+            var expression=parseExpression(metricList[0]);
             var type = attributes["type"];
 
             //obsolete
@@ -544,8 +544,7 @@ angular.module('argus.services.dashboard', [])
                 drawDGLagSLA();
             }else if(type == 'argus+SFDC'){
                 drawArgusPlusRollUpTreemap();
-            }
-            else{
+            }else{
                 growl.error("This heimdall component type is not defined");
             }
 
@@ -553,79 +552,130 @@ angular.module('argus.services.dashboard', [])
 
             //Used by rollup map
             function drawArgusPlusRollUpTreemap(){
+                /**
+                 * conver from 1477094400:1477180800:REDUCEDTEST.core.CHI.*:IMPACTPOD:avg
+                 * to JOIN(1477094400:1477180800:REDUCEDTEST.core.CHI.A:IMPACTPOD:avg,1477094400:1477180800:REDUCEDTEST.core.CHI.B:IMPACTPOD:avg)
+                 * @param template
+                 */
+                var localExpressionMapper = function(template){
+                    var expressions=[]
+                    var listOfDC=['CHI','WAS','PHX','DFW','FRF','LON','PAR','TYO'];
+                    for(var idx in listOfDC){
+                        dc = listOfDC[idx];
+                        expressions.push(template.replace('*',dc+'.*'));
+                    }
+                    var joinExpression='JOIN('+expressions.join(',')+')';
+                    return joinExpression;
+                };
+
+                /**
+                 *
+                 * @param inputmap
+                 * @returns {*}
+                 */
                 var getOnlyValueFromHashMap=function(inputmap){
                     var firstValue;
                     for (var key in inputmap){firstValue=inputmap[key];}
                     return firstValue;
                 };
 
-                Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
-
-
-                var URLDSC=CONFIG.wsUrl + "discover/expressions?expression="+expression;
-                console.log(URLDSC);
-
-
-
-                var stackedRawData=[];
-                var promisesCollections=[];
-
-                $.getJSON(URLDSC).done(function(rawdata){
-                    console.log(rawdata);
-                    for(var idx in rawdata){
-                        var expression=rawdata[idx];
-                        //console.log(expression);
-                        var URL=CONFIG.wsUrl+"metrics?expression="+expression;
-                        promisesCollections.push($.getJSON(URL));
-                        //
-                        //$.getJSON(URL).done(function(rawdata){
-                        //    for(var idx in rawdata) {
-                        //        podMetric = rawdata[idx];
-                        //        stackedRawData.push(podMetric);
-                        //    }
-                        //});
+                /**
+                 * helper for align up two list of metrics
+                 * @param input1
+                 * @param input2
+                 * @returns {Object}
+                 */
+                var alignUpByScope=function(input1, input2, input3){
+                    var resultMap=new Object();//Map of list of three numbers: impacted Min, traffic, ava
+                    for(var idx in input1){
+                        key = input1[idx]['scope'];
+                        impactMin = getOnlyValueFromHashMap(input1[idx]['datapoints']);
+                        resultMap[key]=[impactMin];
                     }
 
-                    Promise.all(promisesCollections)
-                           .then(function(data){
-                               console.log("prinit out data");
-                               console.log(data);
-                           });
+                    for(var idx in input3){
+                        key = input3[idx]['scope'];
+                        traffic = getOnlyValueFromHashMap(input3[idx]['datapoints']);
+                        if(key in resultMap){
+                            resultMap[key].push(traffic);
+                        }
+                    }
+                    for(var idx in input2){
+                        key = input2[idx]['scope'];
+                        collectedMin = getOnlyValueFromHashMap(input2[idx]['datapoints']);
+                        if (collectedMin&&collectedMin>0){
+                            ava=1 - (parseFloat(resultMap[key][0]) / parseFloat(collectedMin));
+                            resultMap[key].push(ava);
+                        }
+                    }
+
+                    return resultMap;//FORMAT   K:V   CHI.SP2.cs15:  [impactmin, ava]
+                };
 
 
-                }).then(function(e){
-                    console.log("now should all finished");
-                    console.log(stackedRawData);
-                    console.log("now should all finished");
+                var expression=parseExpression(metricList[0]);
+                //assert that input two metricList for this transform
+                var expression2=parseExpression(metricList[1]);
+                var expression3=parseExpression(metricList[2]);
+
+                var URL1=CONFIG.wsUrl+"metrics?expression="+localExpressionMapper(expression);
+                var URL2=CONFIG.wsUrl+"metrics?expression="+localExpressionMapper(expression2);
+                var URL3=CONFIG.wsUrl+"metrics?expression="+localExpressionMapper(expression3);
+                $.when($.getJSON(URL1), $.getJSON(URL2), $.getJSON(URL3))
+                    .done(function(raw1,raw2, raw3){
+                        avaMap=alignUpByScope(raw1[0],raw2[0],raw3[0]);
+                        renderChart(avaMap);
+                    });
 
 
 
+
+                Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
+                /**
+                 * Render a roll up tree map from rawdata
+                 * @param rawdata
+                 */
+                var renderChart=function(map){
                     datainput=[];
-                    rawdata=stackedRawData
-                    for(var idx in rawdata){
-                        podMetric=rawdata[idx];
-                        var scope=podMetric['scope'];
-                        var dataValue=getOnlyValueFromHashMap(podMetric['datapoints']);
-                        console.log(scope+":"+dataValue);
+                    for(var key in map){
+                        var scope=key;
+                        if(map[key].length<3){continue;}
 
+                        var impactValue=parseFloat(map[key][0]);
+                        var trafficValue=parseFloat(map[key][1]);
+                        var ava=parseFloat(map[key][2]);
+
+                        var avaText=(ava*100).toFixed(2)+"%";
+                        var impactMinText=impactValue+'mins'
+
+                        var avaValue=ava*100;
+                        var podname=scope.split('.')[2]+'.'+scope.split('.')[3]+'.'+scope.split('.')[4];
                         var currentPod={
-                            name: scope+'<br> IMPACT TIME:'+dataValue,
-                            value: parseInt(dataValue),
-                            colorValue: parseInt(dataValue)
+                            name: '<h2>'+podname+'<br>'+avaText + '</h2>',
+                            value: trafficValue,//for size
+                            colorValue: avaValue,//for color
+                            podAddress: podname,
+                            impactedValue: impactValue,
+                            trafficValue: trafficValue,
                         };
                         datainput.push(currentPod);
                     }
-                    console.log("datainput");
+                    //goal:
+                    //every item{
+                    //colorValue:157
+                    //name:"CHI.SP3cs25<br> IMPACT TIME:157.0"
+                    //value:157}
+
                     console.log(datainput);
                     $('#'+divId).highcharts({
                         chart: {
-                            height: 900
+                            height: 1100
                         },
                         xAxis: {
                             events: {
                                 setExtremes: function (e) {
                                     if(e.max == 100 && e.min == 0){
-                                        this.series[0].levelMap[2].dataLabels.format = "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>";
+                                        this.series[0].levelMap[2].dataLabels.format = "{point.name}<br/><span style='font-size: 10px'><span style='font-size: 17px'>{point.colorValue}s</span></span>";
                                     }
                                 },
                             }
@@ -633,52 +683,52 @@ angular.module('argus.services.dashboard', [])
                         colorAxis: {
                             dataClassColor: 'category',
                             dataClasses: [{
-                                to: 99999,
-                                from: 440,
+                                to: 89,
+                                from: 0,
                                 color:'#B90009'
                             },{
-                                to: 440,
-                                from: 278,
+                                to: 90,
+                                from: 89,
                                 color:'#C5221A'
                             },{
-                                to:278,
-                                from: 171,
+                                to:91,
+                                from: 90,
                                 color:'#D23B2B'
                             },{
-                                to: 171,
-                                from: 107,
+                                to: 92,
+                                from: 91,
                                 color:'#D23B2B'
                             },{
-                                to:107,
-                                from:64,
+                                to:93,
+                                from:92,
                                 color:'#F98375'
                             },{
-                                to:64,
-                                from:43,
+                                to:94,
+                                from:93,
                                 color:'#F3B3A2'
                             },{
-                                to:43,
-                                from:21,
+                                to:95,
+                                from:94,
                                 color:'#9FD2A1'
                             },{
-                                to:21,
-                                from:12,
+                                to:96,
+                                from:95,
                                 color:'#9DD56F'
                             },{
-                                to:12,
-                                from:8,
+                                to:97,
+                                from:96,
                                 color:'#85C462'
                             },{
-                                to:8,
-                                from:5,
+                                to:98,
+                                from:97,
                                 color:'#74B35A'
                             },{
-                                to:5,
-                                from:3,
+                                to:99,
+                                from:98,
                                 color:'#62A247'
                             },{
-                                to:3,
-                                from:0,
+                                to:100,
+                                from:99,
                                 color:'#4E8E1C'
                             },{
                                 to:-1,
@@ -689,7 +739,9 @@ angular.module('argus.services.dashboard', [])
                         tooltip: {
                             backgroundColor: 'yellow',
                             formatter: function () {
-                                return "<b>"+ this.point.name+"</b>";
+                                return '<br><h2>'+this.point.podAddress+'<br>Total DB Availablity:'+avaText + '</h2>' +
+                                    '<br>Impacted Min: ' + this.point.impactedValue + 'mins<br>' +
+                                    '<br>Traffic'+this.point.trafficValue+'<br> .';
                             }
                         },
                         series: [{
@@ -739,7 +791,7 @@ angular.module('argus.services.dashboard', [])
                                     padding:  5,
                                     useHTML: true,
                                     enabled: true,
-                                    format: "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>",
+                                    format: "{point.name}<br/><span style='font-size: 10px'><span style='font-size: 17px'>{point.colorValue}s</span></span>",
                                     style: {
                                         fontSize: "14px",
                                         color: 'contrast',
@@ -749,216 +801,249 @@ angular.module('argus.services.dashboard', [])
                             }],
                             inside: true,
                             events:{
-                                //click: regionClick
+                                click: regionClick
                             },
                             allowDrillToNode: true,
                             data: datainput,
                         }],
                         title: {
-                            text: 'DBAvailablity Rollup'
+                            text: 'DB Availablity Rollup'
                         }
-
                     });
-                });
+                };
+                //var URL=CONFIG.wsUrl+"metrics?expression="+localExpressionMapper(expression);
+                ////var URL=CONFIG.wsUrl + "metrics/join?expression="+expression;
+                //console.log(URL);
+                //$.getJSON(URL, function(rawdata){
+                //    renderChart(rawdata);
+                //}).error(function(jqXHR, textStatus, errorThrown) {
+                //    errorHandle(jqXHR, textStatus, errorThrown);
+                //});
 
 
+                //$.getJSON(URLDSC)
+                // .then(function(rawdata) {
+                //     var expressions = "JOIN(";
+                //     for (var idx in rawdata) {
+                //         expressions = expressions + rawdata[idx] + ",";
+                //     }
+                //     //str.lastIndexOf(expressions,",")
+                //     expressions = expressions + "1:2:REDUCEDTEST.core.PHX.SP1.cs3:IMPACTPOD:avg)";
+                //     return expressions;
+                // })
+                // .then(function(expressions){
+                //         var URLJOIN=CONFIG.wsUrl + "metrics?expression="+expressions;
+                //         console.log(URLJOIN);
+                //         return URLJOIN;
+                // })
+                // .then(function(URLJOIN){
+                //         $.getJSON(URLJOIN)
+                //             .done(function(rawdata){
+                //                 console.log('getting');
+                //                 console.log(rawdata);
+                //
+                //                 renderChart(rawdata);
+                //             });
+                // });
 
 
+            }//end dg-lag treemap
 
+            //test
+            var regionClick = function(event){
+                $('#'+divId).html('<img src="img/spin.gif" />');
+                expression='HEIMDALL(-4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, -4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,%23RACHOUR%23)';
 
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
-                //http://ewang-ltm.internal.salesforce.com:8080/argusws/metrics?expression=DOWNSAMPLE(1477094400:1477180800:REDUCEDTEST.core.CHI.*:IMPACTPOD:avg,%23100h-sum%23
-
                 console.log(URL);
-                $.getJSON(URL, function(rawdata){
-                    //console.log("rawdata is");
-                    //console.log(rawdata);
-
-                    datainput=[];
-                    for(var idx in rawdata){
-                        podMetric=rawdata[idx];
-                        var scope=podMetric['scope'];
-                        var dataValue=getOnlyValueFromHashMap(podMetric['datapoints']);
-                        //console.log(scope+":"+dataValue);
-
-                        var currentPod={
-                            name: scope+'<br> IMPACT TIME:'+dataValue,
-                            value: parseInt(dataValue),
-                            colorValue: parseInt(dataValue)
-                        };
-                        datainput.push(currentPod);
+                $.getJSON(URL, function(rawdata) {
+                    readydata=adaptArgusPlusRenderRACLevelHour(rawdata);
+                    X_cat=extractCategory("ts",readydata);
+                    Y_cat=extractCategory("Racnode",readydata);
+                    returnJSON=[];
+                    for (var index in readydata){
+                        returnItem={};
+                        returnItem.value=parseInt(readydata[index]["value"]);
+                        returnItem.x=X_cat.indexOf(readydata[index]["ts"]);
+                        returnItem.y=Y_cat.indexOf(readydata[index]["Racnode"]);
+                        returnItem.APT=parseInt(readydata[index]["APT"]);
+                        returnItem.ImpactedMin=parseInt(readydata[index]["ImpactedMin"]);
+                        returnItem.CollectedMin=parseInt(readydata[index]["CollectedMin"]);
+                        returnItem.ACT=parseInt(readydata[index]["ACT"]);
+                        returnItem.CPU=parseInt(readydata[index]["CPU"]);
+                        returnItem.Traffic=parseInt(readydata[index]["Traffic"]);
+                        returnItem.valueLabel=returnItem.value+"%";
+                        returnJSON.push(returnItem);
                     }
 
-                    //datainput=[
-                    //    {
-                    //    colorValue:"32.0",
-                    //    name:"REDUCEDTEST.core.CHI.SP3.cs28",
-                    //    value:"32.0"
-                    //    },
-                    //    {
-                    //    colorValue:"30.0",
-                    //    name:"REDUCEDTEST.core.CHI.SP3.cs28",
-                    //    value:"32.0"
-                    //    }
-                    //];
-
-                    //console.log("datainput2");
-                    //console.log(datainput);
-                    $('#'+divId).highcharts({
+                    $('#' + divId).highcharts({
                         chart: {
-                            height: 900
+                            type: 'heatmap',
+                            marginTop: 40,
+                            marginBottom: 80,
+                            plotBorderWidth: 1
                         },
-                        xAxis: {
-                            events: {
-                                setExtremes: function (e) {
-                                    if(e.max == 100 && e.min == 0){
-                                        this.series[0].levelMap[2].dataLabels.format = "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>";
-                                    }
-                                },
+
+                        labels:{
+                            style: {
+                                fontFamily: 'monospace',
+                                color: "#f00"
                             }
                         },
-                        colorAxis: {
-                            dataClassColor: 'category',
-                            dataClasses: [{
-                                to: 99999,
-                                from: 440,
-                                color:'#B90009'
-                            },{
-                                to: 440,
-                                from: 278,
-                                color:'#C5221A'
-                            },{
-                                to:278,
-                                from: 171,
-                                color:'#D23B2B'
-                            },{
-                                to: 171,
-                                from: 107,
-                                color:'#D23B2B'
-                            },{
-                                to:107,
-                                from:64,
-                                color:'#F98375'
-                            },{
-                                to:64,
-                                from:43,
-                                color:'#F3B3A2'
-                            },{
-                                to:43,
-                                from:21,
-                                color:'#9FD2A1'
-                            },{
-                                to:21,
-                                from:12,
-                                color:'#9DD56F'
-                            },{
-                                to:12,
-                                from:8,
-                                color:'#85C462'
-                            },{
-                                to:8,
-                                from:5,
-                                color:'#74B35A'
-                            },{
-                                to:5,
-                                from:3,
-                                color:'#62A247'
-                            },{
-                                to:3,
-                                from:0,
-                                color:'#4E8E1C'
-                            },{
-                                to:-1,
-                                from:-10,
-                                color:'#6E6E6E'
-                            }]
-                        },
-                        tooltip: {
-                            backgroundColor: 'yellow',
-                            formatter: function () {
-                                return "<b>"+ this.point.name+"</b>";
-                            }
-                        },
-                        series: [{
-                            type: "treemap",
-                            drillUpButton:{
-                                relativeTo: 'spacingBox',
-                                position: {
-                                    y: 0,
-                                    x: 0
+
+                        plotOptions: {
+                            series: {
+                                borderWidth: 1,
+                                borderColor: 'white',
+                                turboThreshold: 1000000,
+                                animation: {
+                                    duration: 200
                                 },
-                                theme: {
-                                    color: 'white',
-                                    fill: 'rgb(66, 180, 240)',
-                                    'stroke-width': 1,
-                                    stroke: 'black',
-                                    r: 3,
-                                    states: {
-                                        hover: {
-                                            fill: 'rgb(66, 139, 202)'
-                                        },
-                                        select: {
-                                            stroke: '#039',
-                                            fill: 'rgb(66, 139, 220)'
+                                point: {
+                                    events: {
+                                        click: function(e){//console.log(e);
                                         }
                                     }
                                 }
-
                             },
-                            levels: [{
-                                level: 1,
-                                layoutAlgorithm: 'squarified',
-                                borderRadius: 100,
-                                borderColor: 'black',
-                                borderWidth: 3,
+                        },
 
-                            }, {
-                                level: 2,
-                                layoutAlgorithm: 'squarified',
-                                borderRadius: 100,
-                                borderColor: '#e0e0e0',
-                                borderWidth: 2,
-
-                                dataLabels: {
-                                    align: 'left',
-                                    verticalAlign: 'top',
-                                    rotation: 0,
-                                    padding:  5,
-                                    useHTML: true,
-                                    enabled: true,
-                                    format: "{point.name}<br/><span style='font-size: 10px'>lag:<span style='font-size: 17px'>{point.colorValue}s</span></span>",
-                                    style: {
-                                        fontSize: "14px",
-                                        color: 'contrast',
-                                        textShadow: 'underline',
-                                    }
-                                }
-                            }],
-                            inside: true,
-                            events:{
-                                //click: regionClick
-                            },
-                            allowDrillToNode: true,
-                            data: datainput,
-                        }],
                         title: {
-                            text: 'DBAvailablity Rollup'
-                        }
+                            text: '',
+                        },
+
+                        subtitle: {
+                            text: '<span id="helpBlock" class="help-block">Heimdall DB Availblity: Percentage of availblity for each node over hourly resolution' +
+                            ' (available is caculated based on weighted apt and act Green=highly available)</span>',
+                            useHTML: true
+                        },
+
+                        xAxis: {
+                            categories: doFormatDateFromUNIX(X_cat),
+                            max: Math.min(20,X_cat.length-1)
+                        },
+
+                        scrollbar: {
+                            enabled: true
+                        },
+
+                        yAxis: {
+                            categories: Y_cat,
+                            title: null,
+                            reversed: true
+                        },
+
+                        colorAxis: {
+                            dataClassColor: 'category',
+                            dataClasses: [{
+                                from: 0,
+                                to: 10,
+                                color:'#B90009'
+                            },{
+                                from: 10,
+                                to: 20,
+                                color:'#C5221A'
+                            },{
+                                from: 20,
+                                to: 30,
+                                color:'#D23B2B'
+                            },{
+                                from: 30,
+                                to: 40,
+                                color:'#D23B2B'
+                            },{
+                                from:40,
+                                to:50,
+                                color:'#F98375'
+                            },{
+                                from:50,
+                                to:60,
+                                color:'#F3B3A2'
+                            },{
+                                from:60,
+                                to:65,
+                                color:'#9FD2A1'
+                            },{
+                                from:65,
+                                to:75,
+                                color:'#9DD56F'
+                            },{
+                                from:75,
+                                to:85,
+                                color:'#85C462'
+                            },{
+                                from:85,
+                                to:90,
+                                color:'#74B35A'
+                            },{
+                                from:90,
+                                to:95,
+                                color:'#62A247'
+                            },{
+                                from:95,
+                                color:'#4E8E1C'
+                            },{
+                                to:-0.01,
+                                from:-999999,
+                                color:'#6E6E6E'
+                            }]
+                        },
+
+                        legend: {
+                            enabled: false,
+                            align: 'right',
+                            layout: 'vertical',
+                            margin: 0,
+                            verticalAlign: 'top',
+                            y: 24,
+                            //symbolHeight: 280
+                        },
+
+                        tooltip: {
+                            formatter: function () {
+                                return 'Time: ' + this.series.xAxis.categories[this.point.x] +
+                                    '<br>RacNode: ' + this.series.yAxis.categories[this.point.y] +
+                                    '<br><br>DB Availablity:  <b>' + this.point.value + '%' +
+                                    '<br>ImpactedMin:  <b>' + this.point.ImpactedMin + ' min' +
+                                    '<br>(out-of)MonitoredMin:  <b>' + this.point.CollectedMin + ' min' +
+                                    '<br>weighted APT:  <b>' + this.point.APT + 'ms' +
+                                    '<br>weighted ACT:  <b>' + this.point.ACT + '' +
+                                    '<br>weighted CPU:  <b>' + this.point.CPU + '' +
+                                    '<br>Total Traffic: <b>' + this.point.Traffic + '' +
+                                    '';
+                            }
+                        },
+
+                        series: [{
+                            //threshold: 1,
+                            //borderWidth: 1,
+                            dataLabels: {
+                                enabled: true,
+                                color: '#ffffff',
+                                format: '{point.valueLabel}',
+                                shadow: false,
+                                style: {
+                                    fontWeight: 'bold',
+                                    fontSize: "10px",
+                                    "textShadow": "0 0 0px contrast, 0 0 0px contrast"
+                                }
+                            },
+                            data: returnJSON,
+                        }],
 
                     });
                 }).error(function(jqXHR, textStatus, errorThrown) {
                     errorHandle(jqXHR, textStatus, errorThrown);
                 });
-            }//end dg-lag treemap
-
-            var regionClick = function(x){
-                this.levelMap[2].dataLabels.format = "<span style='font-size: 18px'>{point.nameChars}{point.nameNumbers}<br/>" +
-                    "<span style='font-size: 12px'><i>local apply dg</i>lag:</span>" +
-                    "<span style='font-size: 40px'>{point.colorValue}</span>" +
-                    "<span style='font-size: 10px'><i>s</i></span></span>";
-                //pass the datacenter
+                //this.levelMap[2].dataLabels.format = "<span style='font-size: 18px'>{point.nameChars}{point.nameNumbers}<br/>" +
+                //    "<span style='font-size: 12px'><i>local apply dg</i>lag:</span>" +
+                //    "<span style='font-size: 40px'>{point.colorValue}</span>" +
+                //    "<span style='font-size: 10px'><i>s</i></span></span>";
                 //drawDgLagTimeseries(x.point.name);
-            }
+            };
+
+
+
 
             //Used by adaptArgusPlusRenderPOD
             var getMetricFromMetrics=function(rawdata,metricName){
@@ -1475,7 +1560,6 @@ angular.module('argus.services.dashboard', [])
                         returnJSON.push(returnItem);
                     }
 
-
                     $('#' + divId).highcharts({
                         chart: {
                             type: 'heatmap',
@@ -1661,24 +1745,16 @@ angular.module('argus.services.dashboard', [])
                 });
             }
 
-
+            /**
+             * Error handle
+             * @param jqXHR
+             * @param textStatus
+             * @param errorThrown
+             */
             var errorHandle=function(jqXHR, textStatus, errorThrown) {
                 var errormessage=textStatus+errorThrown+" Detail: " + jqXHR.responseText;
                 growl.info('We can not render this chart');
-                $('#'+divId).html('<img src="img/error.png" />'+errormessage
-                    //+
-                    //`
-                    //<a class="btn btn-primary" role="button" data-toggle="collapse" href="#demo" aria-expanded="false" aria-controls="collapseExample">
-                    //  Detail
-                    //</a>
-                    //<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#demo" aria-expanded="false" aria-controls="collapseExample">
-                    //  Log Detail
-                    //</button>
-                    //<div class="collapse" id="demo">
-                    //    sdadas.
-                    //</div>
-                    //`
-                );
+                $('#'+divId).html('<img src="img/error.png" />'+errormessage);
             };
 
 
