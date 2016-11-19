@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,15 @@ public class TransferService implements Serializable{
 		return p;
 	}
 	
+	/**
+	 * 
+	 * @param src_expression
+	 * @param tgt_scope
+	 * @return
+	 * @throws IOException
+	 */
 	public PutResult transfer(String src_expression, String tgt_scope) throws IOException {
+		System.out.println("executing..."+src_expression);
 		final List<Metric> metrics=readFromSource(Arrays.asList(src_expression));
 		assert(metrics.size()>0):"result is not valid";
 		List<Metric> metricsToLoad= metrics.stream()
@@ -88,7 +97,7 @@ public class TransferService implements Serializable{
 		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
 		return p;
 	}
-	
+
 	public List<Metric> readFromSource(List<String> expressions) throws IOException{
 		assert(expressions!=null && expressions.size()>0):"input not valid";
 		final List<String> cleanExpressions=TransferService.expressionCleanUp(expressions);

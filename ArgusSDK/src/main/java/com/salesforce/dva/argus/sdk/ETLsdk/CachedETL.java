@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.salesforce.dva.argus.sdk.ArgusService;
@@ -30,10 +31,14 @@ import com.salesforce.dva.argus.sdk.transfer.TransferService;
  *
  */
 public class CachedETL implements Serializable{
-	private static final String PODSADDR="src/test/resources/pods.txt";
+	private static String PODSADDR="src/test/resources/pods.txt";
+	private static String ETLADDR="src/test/resources/etl.properties";
+	private static int CONCURRENCY = 10;
+	private static int START =-0;
+	private static int END =-25;
+	
+	
 	private final TransferService _transferService;
-	
-	
 	/**
 	 * 
 	 * @param transferService
@@ -50,36 +55,62 @@ public class CachedETL implements Serializable{
 		CachedETL self=new CachedETL(transferService);
 		return self;
 	}
-	
 
 	/**
 	 * 
 	 * @param so
 	 * @throws IOException
 	 */
-	public static void main(String[] so) throws IOException{
-		ArgusService sourceSVC = ArgusService.getInstance("http://ewang-ltm.internal.salesforce.com:8080/argusws", 20);
-		ArgusService targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 20);
+	public static void main(String[] args) throws IOException{
+		if (args.length>0){
+			ETLADDR=args[0];
+			PODSADDR=args[1];
+		}
+		System.out.println("System loading ETL property from +"+ETLADDR);
+		System.out.println("System loading pod property from "+PODSADDR);
+		
+
 		@SuppressWarnings("unchecked")
-		Map<String,String> property=Property.of("src/test/resources/etl.properties").get();
+		Map<String,String> property=Property.of(ETLADDR).get();
+		
+		
+		CONCURRENCY=Integer.valueOf(property.get("CONCURRENCY"));
+		START=Integer.valueOf(property.get("START"));
+		END=Integer.valueOf(property.get("END"));
+		
+		ArgusService sourceSVC = ArgusService.getInstance(property.get("SourceSVCendpoint"), CONCURRENCY);
+		ArgusService targetSVC = ArgusService.getInstance(property.get("TargetSVCendpoint"), CONCURRENCY);
 		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
 		
 		
-		ExecutorService es = Executors.newFixedThreadPool(20);
+		ExecutorService es = Executors.newFixedThreadPool(CONCURRENCY);
 		List<String> podAddressList=getPods();
-				
+		
+		List<Long> timeRange=getTimeRange(START,END);
+		
 		for (int i = 0; i < podAddressList.size(); i++){
 			int localCount=i;
 			int totalCount=podAddressList.size();
 			String podAddress=podAddressList.get(i);
-			Runnable r=CompletableCacheJob.schedule(ts, podAddress, 1479163981L, 1479250392L,localCount,totalCount);
+			Runnable r=CompletableCacheJob.schedule(ts, podAddress, timeRange.get(0), timeRange.get(1),localCount,totalCount);
 			es.execute(r);
 		}
-		
 		es.shutdown();
 		System.out.println("ALL TASK FINISHED");
+	}
+	
+	/**
+	 * given retro hours, return start and end time range
+	 * @param retroHour
+	 * @return
+	 */
+	private static List<Long> getTimeRange(final int start,final int end){
+		Long currentTimeStamp=(System.currentTimeMillis());
+		Long startTimeStamp=currentTimeStamp+start*(24*3600*1000);
+		Long endTimeStamp=currentTimeStamp+end*(24*3600*1000);
+		return Arrays.asList(Long.valueOf(endTimeStamp),Long.valueOf(startTimeStamp));
 	}
 	
 	/**
@@ -98,8 +129,6 @@ public class CachedETL implements Serializable{
 		return pods;
 	}	
 }
-
-
 
 
 
@@ -180,7 +209,7 @@ class CompletableCacheJob implements Runnable{
 	 */
 	public static void makeATransfer(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp){
 		final String sourceExp=getExpressionFromAddress(podAddress,startTimestamp,endTimestamp);
-		final String targetScope=getTargetScopeName(podAddress);
+		final String targetScope=getTargetScopeNameSplitProductionSandbox(podAddress);
 		
 		try {
 			transferService.transfer(sourceExp,targetScope);
@@ -198,14 +227,15 @@ class CompletableCacheJob implements Runnable{
 	 */
 	private static String getExpressionFromAddress(final String podAddress, final Long startTime, final Long endTime) {
 		final String expression="HEIMDALL("
-				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, "
+				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,"
 				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,"
+				+ startTime + ":" + endTime + ":db.oracle."+podAddress+":*.active__sessions{device=*}:avg,"
 				+ "#POD#)";
 		return expression;
 	}
 	
 	/**
-	 * Retrun a scoe name
+	 * Retrun a scope name
 	 * @param podAddress
 	 * @return
 	 */
@@ -213,12 +243,16 @@ class CompletableCacheJob implements Runnable{
 		final String scopeName="REDUCEDTEST2.core."+podAddress;
 		return scopeName;
 	}
+	
+	/**
+	 * 
+	 * OVERLOADS
+	 */
+	private static String getTargetScopeNameSplitProductionSandbox(final String podAddress) {
+		final boolean isMatch = Pattern.matches(".*.cs.*", podAddress);
+		if(isMatch){
+			return "REDUCED.db.SANDBOX"+"."+podAddress;
+		}
+		return "REDUCED.db.PROD"+"."+podAddress;
+	}
 }
-
-
-
-
-
-
-
-

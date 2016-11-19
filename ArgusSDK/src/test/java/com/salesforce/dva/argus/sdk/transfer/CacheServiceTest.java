@@ -53,6 +53,8 @@ public class CacheServiceTest {
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));	
 		
 		System.out.println("System initalized, login finished");
+
+		
 	}
 	
 	@AfterClass
@@ -65,13 +67,14 @@ public class CacheServiceTest {
 	@Test 
 	public void testProperty() throws IOException{	
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-		CachedETL c=CachedETL.of(ts);
+		
+		int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
+		System.out.println(currentTimeStamp);
+		int startTimeStamp=currentTimeStamp-11*(24*3600);
+		System.out.println(startTimeStamp);
 	}
-}	
 	
-	
-	
-	
+}
 //	
 //	
 //	

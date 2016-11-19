@@ -549,8 +549,10 @@ angular.module('argus.services.dashboard', [])
             }
 
 
-
-            //Used by rollup map
+            /**
+             *  //Used by rollup map
+             *
+             */
             function drawArgusPlusRollUpTreemap(){
                 /**
                  * conver from 1477094400:1477180800:REDUCEDTEST.core.CHI.*:IMPACTPOD:avg
@@ -586,7 +588,7 @@ angular.module('argus.services.dashboard', [])
                  * @returns {Object}
                  */
                 var alignUpByScope=function(input1, input2, input3){
-                    var resultMap=new Object();//Map of list of three numbers: impacted Min, traffic, ava
+                    var resultMap=new Object();//Map of list of three numbers: impacted Min, traffic, collectedMin, ava
                     for(var idx in input1){
                         key = input1[idx]['scope'];
                         impactMin = getOnlyValueFromHashMap(input1[idx]['datapoints']);
@@ -603,13 +605,13 @@ angular.module('argus.services.dashboard', [])
                     for(var idx in input2){
                         key = input2[idx]['scope'];
                         collectedMin = getOnlyValueFromHashMap(input2[idx]['datapoints']);
+                        resultMap[key].push(collectedMin);
                         if (collectedMin&&collectedMin>0){
                             ava=1 - (parseFloat(resultMap[key][0]) / parseFloat(collectedMin));
                             resultMap[key].push(ava);
                         }
                     }
-
-                    return resultMap;//FORMAT   K:V   CHI.SP2.cs15:  [impactmin, ava]
+                    return resultMap;//FORMAT   K:V   CHI.SP2.cs15:  [impactmin, traffic, collectedMin, ava]
                 };
 
 
@@ -629,7 +631,6 @@ angular.module('argus.services.dashboard', [])
 
 
 
-
                 Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
                 /**
                  * Render a roll up tree map from rawdata
@@ -643,13 +644,15 @@ angular.module('argus.services.dashboard', [])
 
                         var impactValue=parseFloat(map[key][0]);
                         var trafficValue=parseFloat(map[key][1]);
-                        var ava=parseFloat(map[key][2]);
+                        var collectedValue=parseFloat(map[key][2]);
+                        var ava=parseFloat(map[key][3]);
 
                         var avaText=(ava*100).toFixed(2)+"%";
-                        var impactMinText=impactValue+'mins'
+                        var impactMinText=impactValue+'mins';
 
                         var avaValue=ava*100;
-                        var podname=scope.split('.')[2]+'.'+scope.split('.')[3]+'.'+scope.split('.')[4];
+                        //scope example:  REDUCED.db.SANDBOX.WAS.SP2.na12
+                        var podname=scope.split('.')[3]+'.'+scope.split('.')[4]+'.'+scope.split('.')[5];
                         var currentPod={
                             name: '<h2>'+podname+'<br>'+avaText + '</h2>',
                             value: trafficValue,//for size
@@ -657,6 +660,7 @@ angular.module('argus.services.dashboard', [])
                             podAddress: podname,
                             impactedValue: impactValue,
                             trafficValue: trafficValue,
+                            collectedValue: collectedValue,
                         };
                         datainput.push(currentPod);
                     }
@@ -666,7 +670,20 @@ angular.module('argus.services.dashboard', [])
                     //name:"CHI.SP3cs25<br> IMPACT TIME:157.0"
                     //value:157}
 
-                    console.log(datainput);
+
+                    //Caculate overall:
+                    impactedMin=0;
+                    collectedMin=0;
+                    traffic=0;
+                    for(var idx in datainput){
+                        var currentPod = datainput[idx];
+                        impactedMin+=currentPod['impactedValue'];
+                        collectedMin+=currentPod['collectedValue'];
+                    }
+                    var totalAva=100*(1-impactedMin/collectedMin);
+                    var totalImpacted=impactedMin;
+                    var totalCollected=collectedMin;
+
                     $('#'+divId).highcharts({
                         chart: {
                             height: 1100
@@ -739,9 +756,10 @@ angular.module('argus.services.dashboard', [])
                         tooltip: {
                             backgroundColor: 'yellow',
                             formatter: function () {
-                                return '<br><h2>'+this.point.podAddress+'<br>Total DB Availablity:'+avaText + '</h2>' +
+                                return '<h2>'+this.point.podAddress+'<br>Total DB Availablity:'+avaText + '</h2>' +
                                     '<br>Impacted Min: ' + this.point.impactedValue + 'mins<br>' +
-                                    '<br>Traffic'+this.point.trafficValue+'<br> .';
+                                    '<br>(Out of)Collected Min: ' + this.point.collectedValue + 'mins<br>' +
+                                    '<br>Traffic: '+(this.point.trafficValue).toFixed(0)+'<br> click to see detail';
                             }
                         },
                         series: [{
@@ -807,44 +825,13 @@ angular.module('argus.services.dashboard', [])
                             data: datainput,
                         }],
                         title: {
-                            text: 'DB Availablity Rollup'
+                            text: '<br><h1><span id="helpBlock" class="help-block">Heimdall Rollup Dashboard Beta ' +
+                            '<b>DBCloud availblity: '+(totalAva).toFixed(4)+'% </b>' +
+                            '   Total impacted: '+ (totalImpacted).toFixed(0)+' mins, out of '+ (totalCollected).toFixed(0)+' mins<br>' +
+                            '<br>For each pod: Color represents availablity. Size represents load.',
                         }
                     });
                 };
-                //var URL=CONFIG.wsUrl+"metrics?expression="+localExpressionMapper(expression);
-                ////var URL=CONFIG.wsUrl + "metrics/join?expression="+expression;
-                //console.log(URL);
-                //$.getJSON(URL, function(rawdata){
-                //    renderChart(rawdata);
-                //}).error(function(jqXHR, textStatus, errorThrown) {
-                //    errorHandle(jqXHR, textStatus, errorThrown);
-                //});
-
-
-                //$.getJSON(URLDSC)
-                // .then(function(rawdata) {
-                //     var expressions = "JOIN(";
-                //     for (var idx in rawdata) {
-                //         expressions = expressions + rawdata[idx] + ",";
-                //     }
-                //     //str.lastIndexOf(expressions,",")
-                //     expressions = expressions + "1:2:REDUCEDTEST.core.PHX.SP1.cs3:IMPACTPOD:avg)";
-                //     return expressions;
-                // })
-                // .then(function(expressions){
-                //         var URLJOIN=CONFIG.wsUrl + "metrics?expression="+expressions;
-                //         console.log(URLJOIN);
-                //         return URLJOIN;
-                // })
-                // .then(function(URLJOIN){
-                //         $.getJSON(URLJOIN)
-                //             .done(function(rawdata){
-                //                 console.log('getting');
-                //                 console.log(rawdata);
-                //
-                //                 renderChart(rawdata);
-                //             });
-                // });
 
 
             }//end dg-lag treemap
@@ -855,6 +842,9 @@ angular.module('argus.services.dashboard', [])
                 expression='HEIMDALL(-4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, -4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,%23RACHOUR%23)';
 
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+
+                console.log('start'+start);
+                console.log('end'+end);
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
                     readydata=adaptArgusPlusRenderRACLevelHour(rawdata);
