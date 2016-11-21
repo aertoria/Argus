@@ -78,18 +78,14 @@ public class CachedETL implements Serializable{
 		START=Integer.valueOf(property.get("START"));
 		END=Integer.valueOf(property.get("END"));
 		
+		ExecutorService es = Executors.newFixedThreadPool(CONCURRENCY);
 		ArgusService sourceSVC = ArgusService.getInstance(property.get("SourceSVCendpoint"), CONCURRENCY);
-		ArgusService targetSVC = ArgusService.getInstance(property.get("TargetSVCendpoint"), CONCURRENCY);
+		ArgusService targetSVC = ArgusService.getInstance(property.get("TargetSVCendpoint"), CONCURRENCY);	
+		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
 		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));
-		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-		
-		
-		ExecutorService es = Executors.newFixedThreadPool(CONCURRENCY);
 		List<String> podAddressList=getPods();
-		
 		List<Long> timeRange=getTimeRange(START,END);
-		
 		for (int i = 0; i < podAddressList.size(); i++){
 			int localCount=i;
 			int totalCount=podAddressList.size();
@@ -97,7 +93,9 @@ public class CachedETL implements Serializable{
 			Runnable r=CompletableCacheJob.schedule(ts, podAddress, timeRange.get(0), timeRange.get(1),localCount,totalCount);
 			es.execute(r);
 		}
+		
 		es.shutdown();
+		
 		System.out.println("ALL TASK FINISHED");
 	}
 	
@@ -108,8 +106,8 @@ public class CachedETL implements Serializable{
 	 */
 	private static List<Long> getTimeRange(final int start,final int end){
 		Long currentTimeStamp=(System.currentTimeMillis());
-		Long startTimeStamp=currentTimeStamp+start*(24*3600*1000);
-		Long endTimeStamp=currentTimeStamp+end*(24*3600*1000);
+		Long startTimeStamp=currentTimeStamp+start*(3600*1000);
+		Long endTimeStamp=currentTimeStamp+end*(3600*1000);
 		return Arrays.asList(Long.valueOf(endTimeStamp),Long.valueOf(startTimeStamp));
 	}
 	

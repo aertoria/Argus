@@ -21,7 +21,7 @@ import junit.framework.Assert;
  * @author  aertoria (ethan.wang@salesforce.com)
  */
 @SuppressWarnings("serial")
-public class TransferService implements Serializable{
+public class TransferService implements AutoCloseable, Serializable{
 	private transient ArgusService _sourceSVC;
 	private transient ArgusService _targetSVC;
 	
@@ -117,6 +117,12 @@ public class TransferService implements Serializable{
 				.map(e -> URLEncoder.encode(e))
 				.collect(Collectors.toList());
 		return r;
+	}
+	
+	@Override
+	public void close() throws IOException{
+		_sourceSVC.close();
+		_targetSVC.close();
 	}
 	
 }

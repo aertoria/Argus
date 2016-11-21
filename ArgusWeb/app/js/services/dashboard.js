@@ -672,11 +672,13 @@ angular.module('argus.services.dashboard', [])
 
 
                     //Caculate overall:
-                    impactedMin=0;
-                    collectedMin=0;
-                    traffic=0;
+                    var impactedMin=0;
+                    var collectedMin=0;
                     for(var idx in datainput){
                         var currentPod = datainput[idx];
+                        if(isNaN(currentPod['impactedValue'])||isNaN(currentPod['collectedValue'])){
+                            continue;
+                        }
                         impactedMin+=currentPod['impactedValue'];
                         collectedMin+=currentPod['collectedValue'];
                     }
@@ -828,7 +830,7 @@ angular.module('argus.services.dashboard', [])
                             text: '<br><h1><span id="helpBlock" class="help-block">Heimdall Rollup Dashboard Beta ' +
                             '<b>DBCloud availblity: '+(totalAva).toFixed(4)+'% </b>' +
                             '   Total impacted: '+ (totalImpacted).toFixed(0)+' mins, out of '+ (totalCollected).toFixed(0)+' mins<br>' +
-                            '<br>For each pod: Color represents availablity. Size represents load.',
+                            '<br>For each pod: Color represents availablity. Size represents pod traffic.',
                         }
                     });
                 };
@@ -838,13 +840,19 @@ angular.module('argus.services.dashboard', [])
 
             //test
             var regionClick = function(event){
+
+                start=processGMTTime(start);
+                end=processGMTTime(end);
+
                 $('#'+divId).html('<img src="img/spin.gif" />');
-                expression='HEIMDALL(-4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, -4d:core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,%23RACHOUR%23)';
+                expression='HEIMDALL('+start+':'+end+':core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,'
+                                      +start+':'+end+':core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,'
+                                      +start+':'+end+':db.oracle.'+event.point.podAddress+':*.active__sessions{device=*}:avg,'
+                                      +start+':'+end+':system.'+event.point.podAddress+':CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg,'
+                                      +start+':'+end+':system.'+event.point.podAddress+':CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg,'
+                                      +'%23RACHOUR%23)';
 
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
-
-                console.log('start'+start);
-                console.log('end'+end);
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
                     readydata=adaptArgusPlusRenderRACLevelHour(rawdata);
