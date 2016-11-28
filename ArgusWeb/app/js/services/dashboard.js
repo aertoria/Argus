@@ -840,204 +840,13 @@ angular.module('argus.services.dashboard', [])
 
             //test
             var regionClick = function(event){
-
+                console.log(CONFIG.wsUrl);
                 start=processGMTTime(start);
                 end=processGMTTime(end);
 
-                $('#'+divId).html('<img src="img/spin.gif" />');
-                expression='HEIMDALL('+start+':'+end+':core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,'
-                                      +start+':'+end+':core.'+event.point.podAddress+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,'
-                                      +start+':'+end+':db.oracle.'+event.point.podAddress+':*.active__sessions{device=*}:avg,'
-                                      +start+':'+end+':system.'+event.point.podAddress+':CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg,'
-                                      +start+':'+end+':system.'+event.point.podAddress+':CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg,'
-                                      +'%23RACHOUR%23)';
-
-                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
-                console.log(URL);
-                $.getJSON(URL, function(rawdata) {
-                    readydata=adaptArgusPlusRenderRACLevelHour(rawdata);
-                    X_cat=extractCategory("ts",readydata);
-                    Y_cat=extractCategory("Racnode",readydata);
-                    returnJSON=[];
-                    for (var index in readydata){
-                        returnItem={};
-                        returnItem.value=parseInt(readydata[index]["value"]);
-                        returnItem.x=X_cat.indexOf(readydata[index]["ts"]);
-                        returnItem.y=Y_cat.indexOf(readydata[index]["Racnode"]);
-                        returnItem.APT=parseInt(readydata[index]["APT"]);
-                        returnItem.ImpactedMin=parseInt(readydata[index]["ImpactedMin"]);
-                        returnItem.CollectedMin=parseInt(readydata[index]["CollectedMin"]);
-                        returnItem.ACT=parseInt(readydata[index]["ACT"]);
-                        returnItem.CPU=parseInt(readydata[index]["CPU"]);
-                        returnItem.Traffic=parseInt(readydata[index]["Traffic"]);
-                        returnItem.valueLabel=returnItem.value+"%";
-                        returnJSON.push(returnItem);
-                    }
-
-                    $('#' + divId).highcharts({
-                        chart: {
-                            type: 'heatmap',
-                            marginTop: 40,
-                            marginBottom: 80,
-                            plotBorderWidth: 1
-                        },
-
-                        labels:{
-                            style: {
-                                fontFamily: 'monospace',
-                                color: "#f00"
-                            }
-                        },
-
-                        plotOptions: {
-                            series: {
-                                borderWidth: 1,
-                                borderColor: 'white',
-                                turboThreshold: 1000000,
-                                animation: {
-                                    duration: 200
-                                },
-                                point: {
-                                    events: {
-                                        click: function(e){//console.log(e);
-                                        }
-                                    }
-                                }
-                            },
-                        },
-
-                        title: {
-                            text: '',
-                        },
-
-                        subtitle: {
-                            text: '<span id="helpBlock" class="help-block">Heimdall DB Availblity: Percentage of availblity for each node over hourly resolution' +
-                            ' (available is caculated based on weighted apt and act Green=highly available)</span>',
-                            useHTML: true
-                        },
-
-                        xAxis: {
-                            categories: doFormatDateFromUNIX(X_cat),
-                            max: Math.min(20,X_cat.length-1)
-                        },
-
-                        scrollbar: {
-                            enabled: true
-                        },
-
-                        yAxis: {
-                            categories: Y_cat,
-                            title: null,
-                            reversed: true
-                        },
-
-                        colorAxis: {
-                            dataClassColor: 'category',
-                            dataClasses: [{
-                                from: 0,
-                                to: 10,
-                                color:'#B90009'
-                            },{
-                                from: 10,
-                                to: 20,
-                                color:'#C5221A'
-                            },{
-                                from: 20,
-                                to: 30,
-                                color:'#D23B2B'
-                            },{
-                                from: 30,
-                                to: 40,
-                                color:'#D23B2B'
-                            },{
-                                from:40,
-                                to:50,
-                                color:'#F98375'
-                            },{
-                                from:50,
-                                to:60,
-                                color:'#F3B3A2'
-                            },{
-                                from:60,
-                                to:65,
-                                color:'#9FD2A1'
-                            },{
-                                from:65,
-                                to:75,
-                                color:'#9DD56F'
-                            },{
-                                from:75,
-                                to:85,
-                                color:'#85C462'
-                            },{
-                                from:85,
-                                to:90,
-                                color:'#74B35A'
-                            },{
-                                from:90,
-                                to:95,
-                                color:'#62A247'
-                            },{
-                                from:95,
-                                color:'#4E8E1C'
-                            },{
-                                to:-0.01,
-                                from:-999999,
-                                color:'#6E6E6E'
-                            }]
-                        },
-
-                        legend: {
-                            enabled: false,
-                            align: 'right',
-                            layout: 'vertical',
-                            margin: 0,
-                            verticalAlign: 'top',
-                            y: 24,
-                            //symbolHeight: 280
-                        },
-
-                        tooltip: {
-                            formatter: function () {
-                                return 'Time: ' + this.series.xAxis.categories[this.point.x] +
-                                    '<br>RacNode: ' + this.series.yAxis.categories[this.point.y] +
-                                    '<br><br>DB Availablity:  <b>' + this.point.value + '%' +
-                                    '<br>ImpactedMin:  <b>' + this.point.ImpactedMin + ' min' +
-                                    '<br>(out-of)MonitoredMin:  <b>' + this.point.CollectedMin + ' min' +
-                                    '<br>weighted APT:  <b>' + this.point.APT + 'ms' +
-                                    '<br>weighted ACT:  <b>' + this.point.ACT + '' +
-                                    '<br>weighted CPU:  <b>' + this.point.CPU + '' +
-                                    '<br>Total Traffic: <b>' + this.point.Traffic + '' +
-                                    '';
-                            }
-                        },
-
-                        series: [{
-                            //threshold: 1,
-                            //borderWidth: 1,
-                            dataLabels: {
-                                enabled: true,
-                                color: '#ffffff',
-                                format: '{point.valueLabel}',
-                                shadow: false,
-                                style: {
-                                    fontWeight: 'bold',
-                                    fontSize: "10px",
-                                    "textShadow": "0 0 0px contrast, 0 0 0px contrast"
-                                }
-                            },
-                            data: returnJSON,
-                        }],
-
-                    });
-                }).error(function(jqXHR, textStatus, errorThrown) {
-                    errorHandle(jqXHR, textStatus, errorThrown);
-                });
-                //this.levelMap[2].dataLabels.format = "<span style='font-size: 18px'>{point.nameChars}{point.nameNumbers}<br/>" +
-                //    "<span style='font-size: 12px'><i>local apply dg</i>lag:</span>" +
-                //    "<span style='font-size: 40px'>{point.colorValue}</span>" +
-                //    "<span style='font-size: 10px'><i>s</i></span></span>";
-                //drawDgLagTimeseries(x.point.name);
+                var url=CONFIG.dashboardUrl+'#/dashboards/309451?start='+start+'&end='+end+'&pod='+event.point.podAddress;
+                console.log(url);
+                window.open(url);
             };
 
 
@@ -3185,7 +2994,6 @@ angular.module('argus.services.dashboard', [])
 
 
                     //var conf = "remote_dg_transport_lag";
-
                     var dgTRObj = {};
                     var dgApplyObj = {};
 
@@ -3227,13 +3035,7 @@ angular.module('argus.services.dashboard', [])
                         '</thead>' +
                         '</table>' +
                         '</div>');
-
-
-
                 });
-
-
-
 
             }
         }//////END OF AVA DATA MAP

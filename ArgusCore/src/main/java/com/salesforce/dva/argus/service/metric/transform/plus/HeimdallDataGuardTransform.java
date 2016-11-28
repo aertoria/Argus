@@ -212,7 +212,6 @@ public class HeimdallDataGuardTransform implements Transform {
 	 * @author Amey Ruikar(aruikar@salesforce.com)
 	 */
 	private Metric generateMetric(String scope, String metric, Map<Long, String> targetDataPoints){
-		
 		Metric newMetric = new Metric(scope, metric);
 		newMetric.setDisplayName("DataGuardLag SLA compliance");
         newMetric.setUnits(null);

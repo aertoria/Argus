@@ -67,7 +67,7 @@ public class CachedETL implements Serializable{
 			PODSADDR=args[1];
 		}
 		System.out.println("System loading ETL property from +"+ETLADDR);
-		System.out.println("System loading pod property from "+PODSADDR);
+		System.out.println("System loading pod property from +"+PODSADDR);
 		
 
 		@SuppressWarnings("unchecked")

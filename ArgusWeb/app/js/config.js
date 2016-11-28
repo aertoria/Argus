@@ -21,8 +21,12 @@ angular.module("argus.urlConfig", [])
 .constant('CONFIG', {
     version: '4.0-SNAPSHOT',
     //wsUrl: 'http://localhost:8080/argusws/',
-    //wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
-    wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
+
+    //wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
+    //http://ewang-ltm.internal.salesforce.com:8080/app/,
+    wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
+    dashboardUrl: 'http://ewang-ltm.internal.salesforce.com:8080/app/',
+
     emailUrl: 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=argus-dev@mycompany.com',
     feedUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-user',
     wikiUrl: 'https://sites.google.com/a/mycompany.com/argus',
