@@ -3,6 +3,7 @@
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -79,6 +80,10 @@ public class HeimdallMetricReducer implements Transform{
 			return render(()->pod.renderCPU());
 		case "IMPACT":
 			return render(()->pod.renderIMPACT());
+		case "IMPACTBYAPT":
+			return render(()->pod.renderIMPACTBYAPT());
+		case "IMPACTBYACT":
+			return render(()->pod.renderIMPACTBYACT());
 		case "IMPACTPOD":
 			return render(()->pod.renderIMPACTPOD());
 		case "IMPACTTOTAL":
@@ -131,6 +136,8 @@ public class HeimdallMetricReducer implements Transform{
 /**Aspect Defined as Renderable by Transform**/
 interface Renderable{
 	List<Metric> renderIMPACT();
+	List<Metric> renderIMPACTBYAPT();
+	List<Metric> renderIMPACTBYACT();
 	List<Metric> renderIMPACTPOD();
 	List<Metric> renderIMPACTTOTAL();
 	List<Metric> renderAPT();
@@ -153,6 +160,7 @@ interface Reportable{
 	List<Metric> reportPOD();	//REPORT PODLEVL APT. IMPACT. AVA. TTM
 	List<Metric> reportTOTAL();	//REPORT AVATOTAL, AvailbleMin, ImpactedMin, TTM
 }
+
 /**Aspect Defined as SFDCPod**/
 interface SFDCPod{
 	String getPodAddress();
@@ -307,6 +315,23 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 													  .collect(Collectors.toList());
 		return Collections.unmodifiableList(constructedResult);
 	}
+
+	@Override
+	public List<Metric> renderIMPACTBYAPT() {
+		List<Metric> constructedResult=this.racServers.stream()
+													  .map(r -> r.getImpactedMinHourlyByAPT().get(0))
+													  .collect(Collectors.toList());
+		return Collections.unmodifiableList(constructedResult);
+	}
+	
+	@Override
+	public List<Metric> renderIMPACTBYACT() {
+		List<Metric> constructedResult=this.racServers.stream()
+													  .filter(r -> r.hasACT())
+													  .map(r -> r.getImpactedMinHourlyByACT().get(0))
+													  .collect(Collectors.toList());
+		return Collections.unmodifiableList(constructedResult);
+	}
 	
 	@Override
 	public List<Metric> renderIMPACTPOD() {
@@ -435,7 +460,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 				.collect(Collectors.counting());
 		return result;
 	}
-	
 	
 	/**Reportable**/
 	@Override
@@ -608,7 +632,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	}
 
 }
-
 
 
 /**
@@ -831,10 +854,25 @@ final class RacServer implements Serializable{
 			impactedMin=_computationUtil.get().unionOR(impactedMin,impactedMinACT);
 		}
 		
-		impactedMin.get(0).setMetric(this.racServerAddress);		
-		List<Metric> downsampledImpactedMin=_computationUtil.get().downsample("1h-count", impactedMin);
-		List<Metric> filledImpactedMin=_computationUtil.get().mergeZero(reportRange,60,downsampledImpactedMin);
-		return filledImpactedMin;
+		List<Metric> postMetric = _computationUtil.get().downsampleAndFill(reportRange, 60, "1h-count",  impactedMin);
+		return Collections.unmodifiableList(postMetric);
+	}
+	
+	public List<Metric> getImpactedMinHourlyByAPT(){
+		//APT
+		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
+		
+		List<Metric> postMetric = _computationUtil.get().downsampleAndFill(reportRange, 60, "1h-count",  impactedMin);
+		return Collections.unmodifiableList(postMetric);
+	}
+	
+	public List<Metric> getImpactedMinHourlyByACT(){
+		if(!hasACT()){
+			throw new RuntimeException("No Act provided, you are not supposed to call this function");
+		}
+		List<Metric> impactedMinACT = getImapctedMinHourlyACT();
+		List<Metric> postMetric = _computationUtil.get().downsampleAndFill(reportRange, 60, "1h-count",  impactedMinACT);
+		return Collections.unmodifiableList(postMetric);
 	}
 	
 	/**given RacServerLevel metric, return impactedMinmetric**/
@@ -1243,7 +1281,7 @@ final class ComputationUtil{
 		return _transformFactory.get().getTransform("DOWNSAMPLE").transform(mutable, constants);
 	}
 	
-	protected List<Metric> downsample(String distance, List<Metric> metrics,Long timeStamp){
+	protected List<Metric> downsample(String distance, List<Metric> metrics, Long timeStamp){
 		assert (metrics!=null && metrics.size()==1):"only take single metric to downsample";
 		List<Metric> downsampledResult=downsample(distance,metrics);
 		assert(downsampledResult!=null&&downsampledResult.size()==1&&downsampledResult.get(0).getDatapoints().size()==1):"downsampled result should be single data points";
@@ -1254,6 +1292,11 @@ final class ComputationUtil{
 		return Collections.unmodifiableList(Arrays.asList(m));
 	}
 
+	protected List<Metric> downsampleAndFill(ReportRange range, int resolutionInMin, String distance, List<Metric> metrics){
+		List<Metric> downsampledImpactedMin=downsample(distance, metrics);
+		List<Metric> filledImpactedMin=mergeZero(range,resolutionInMin,downsampledImpactedMin);
+		return Collections.unmodifiableList(filledImpactedMin);
+	}
 	protected List<Metric> zeroFill(List<Metric> m) {
 		assert (m != null && m.size() > 1) : "list of metric has to be valid";
 		Metric output = new Metric(m.get(0));
