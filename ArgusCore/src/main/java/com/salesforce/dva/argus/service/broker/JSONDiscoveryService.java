@@ -109,92 +109,6 @@ public class JSONDiscoveryService extends DefaultService implements DiscoverySer
 		List<MetricQuery> queryList = new ArrayList<MetricQuery>();
 		queryList.add(query);
 		return queryList;
-		
-//		System.out.println("ArgusCore+ JSONDiscoveryService acknowledged");
-//        requireNotDisposed();
-//        SystemAssert.requireArgument(query != null, "Metric query cannot be null.");
-//
-//        Map<String, MetricQuery> queries = new HashMap<String, MetricQuery>(HARD_LIMIT);
-//        long start = System.nanoTime();
-//        
-//        if (isWildcardQuery(query)) {
-//            _logger.debug(MessageFormat.format("MetricQuery'{'{0}'}' contains wildcards. Will match against schema records.", query));
-//            if (query.getTags() == null || query.getTags().isEmpty()) {
-//                MetricSchemaRecordQuery schemaQuery = new MetricSchemaRecordQuery(query.getNamespace(), query.getScope(), query.getMetric(), "*",
-//                    "*");
-//                
-//                int page = 1;
-//                System.out.println("schemaQuery input...+"+schemaQuery.toString());
-//                System.out.println("\n\n\n\n*******\nGetting this query:"+query.toString());
-//            	System.out.println("Getting this schemaQuery: "+schemaQuery.toString());
-//                List<MetricSchemaRecord> records = _schemaService.get(schemaQuery, 200, page++);                    
-//
-//                
-//                for (MetricSchemaRecord record : records) {
-//                	String identifier = new StringBuilder(record.getScope()).append(record.getMetric()).append(record.getNamespace()).toString();
-//                    if (!queries.containsKey(identifier)) {
-//                    	
-//                        if (queries.size() >= HARD_LIMIT) {
-//                            break;
-//                        }
-//                        MetricQuery mq = new MetricQuery(record.getScope(), record.getMetric(), null, 0L, 1L);
-//                        mq.setNamespace(record.getNamespace());
-//                        _copyRemainingProperties(mq, query);                                                      
-//                        queries.put(identifier, mq);
-//                    }
-//                }
-//                System.out.println(queries.size());
-//            } 
-//            else {
-//                for (Entry<String, String> tag : query.getTags().entrySet()) {
-//                    MetricSchemaRecordQuery schemaQuery = new MetricSchemaRecordQuery(query.getNamespace(), query.getScope(), query.getMetric(),
-//                        tag.getKey(), tag.getValue());
-//                    int page = 1;
-//
-//
-//                    List<MetricSchemaRecord> records = _schemaService.get(schemaQuery, 200, page++);
-//
-//                    for (MetricSchemaRecord record : records) {
-//                        String identifier = new StringBuilder(record.getScope()).append(record.getMetric()).append(record.getNamespace())
-//                            .toString();
-//
-//                        if (queries.containsKey(identifier)) {
-//                            MetricQuery mq = queries.get(identifier);
-//
-//                            if (mq.getTags().containsKey(record.getTagKey())) {
-//                                String oldValue = mq.getTag(record.getTagKey());
-//                                String newValue = oldValue + "|" + record.getTagValue();
-//
-//                                mq.setTag(record.getTagKey(), newValue);
-//                            } else {
-//                                mq.setTag(record.getTagKey(), record.getTagValue());
-//                            }
-//                        } else {
-//                            if (queries.size() >= HARD_LIMIT) {
-//                                break;
-//                            }
-//
-//                            Map<String, String> tags = new HashMap<String, String>();
-//                            tags.put(record.getTagKey(), record.getTagValue());
-//                            MetricQuery mq = new MetricQuery(record.getScope(), record.getMetric(), tags, 0L, 1L);
-//                            mq.setNamespace(record.getNamespace());
-//                            _copyRemainingProperties(mq, query);
-//                            queries.put(identifier, mq);
-//                        }
-//                    }
-//                }
-//            } // end if-else
-//        } else {
-//            _logger.debug(MessageFormat.format("MetricQuery'{'{0}'}' does not have any wildcards", query));
-//            queries.put(null, query);
-//        } // end if-else
-//        
-//        _logger.debug("Time to get matching queries in ms: " + (System.nanoTime() - start) / 1000000);
-//        List<MetricQuery> queryList = new ArrayList<MetricQuery>(queries.values());
-//        _printMatchedQueries(queryList);
-//        
-//        System.out.println("returning...queryList"+queryList.size());
-//        return queryList;
     }
 
     @Override
@@ -275,7 +189,7 @@ public class JSONDiscoveryService extends DefaultService implements DiscoverySer
     	final String metricRexWithTag=splitedExpression[3];
     	final String aggregator=splitedExpression[4];
     	
-    	List<MetricSchemaRecord> discoveredRecords=filterRecords(null,scopeRex,metricRexWithTag,null,null,500,1);
+    	List<MetricSchemaRecord> discoveredRecords=filterRecords(null,scopeRex,metricRexWithTag,null,null,10000,1);
     	
     	List<String> records=discoveredRecords.stream()
 							    	.map(r -> {

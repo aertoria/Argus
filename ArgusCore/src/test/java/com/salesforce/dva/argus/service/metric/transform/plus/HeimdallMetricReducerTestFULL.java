@@ -187,9 +187,6 @@ public class HeimdallMetricReducerTestFULL {
         System.out.println(result2);
     
 	}
-	
-	
-	
-	
+
 
 }

@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.salesforce.dva.argus.sdk.ArgusService;
+import com.salesforce.dva.argus.sdk.ArgusService.PutResult;
 import com.salesforce.dva.argus.sdk.entity.Metric;
 import com.salesforce.dva.argus.sdk.propertysdk.Property;
 import com.salesforce.dva.argus.sdk.transfer.TransferService;
@@ -37,8 +38,44 @@ public class CachedETL implements Serializable{
 	private static int START =-0;
 	private static int END =-25;
 	
-	
 	private final TransferService _transferService;
+	
+	/**
+	 * Get the DR relationship of each datacenter
+	 * @author ethan.wang
+	 *
+	 */
+	private static enum DRDataCenters{
+		DFW("PHX"),
+		PHX("DFW"),
+		WAS("CHI"),
+		CHI("WAS"),
+		FRF("LON"),
+		LON("FRF"),
+		TYO("TYO"),
+		SJL("SJL"),
+		PAR("LON"),
+		WAX("WAX");
+		private final String drDataCenter;
+		private DRDataCenters(String drDataCenter){
+			this.drDataCenter=drDataCenter;
+		}
+		private String getDrDataCenter(){
+			return drDataCenter;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param podAddress
+	 * @return
+	 */
+	private static String getDR(String podAddress){
+		assert(podAddress!=null && podAddress.split("\\.").length==3):"input not valid";
+		String dc=podAddress.split("\\.")[0];
+		String drdc=DRDataCenters.valueOf(dc).getDrDataCenter();
+		return drdc+"."+podAddress.split("\\.")[1]+"."+podAddress.split("\\.")[2];
+	}
 	/**
 	 * 
 	 * @param transferService
@@ -66,13 +103,13 @@ public class CachedETL implements Serializable{
 			ETLADDR=args[0];
 			PODSADDR=args[1];
 		}
+		System.out.println("ArgusETL Service v12.5");
 		System.out.println("System loading ETL property from +"+ETLADDR);
 		System.out.println("System loading pod property from +"+PODSADDR);
 		
 
 		@SuppressWarnings("unchecked")
 		Map<String,String> property=Property.of(ETLADDR).get();
-		
 		
 		CONCURRENCY=Integer.valueOf(property.get("CONCURRENCY"));
 		START=Integer.valueOf(property.get("START"));
@@ -90,12 +127,12 @@ public class CachedETL implements Serializable{
 			int localCount=i;
 			int totalCount=podAddressList.size();
 			String podAddress=podAddressList.get(i);
-			Runnable r=CompletableCacheJob.schedule(ts, podAddress, timeRange.get(0), timeRange.get(1),localCount,totalCount);
+			String drPodAddress = getDR(podAddress);
+			Runnable r=CompletableCacheJob.schedule(ts, podAddress, drPodAddress, timeRange.get(0), timeRange.get(1),localCount,totalCount);
 			es.execute(r);
 		}
 		
 		es.shutdown();
-		
 		System.out.println("ALL TASK FINISHED");
 	}
 	
@@ -139,7 +176,7 @@ public class CachedETL implements Serializable{
  */
 class CompletableCacheJob implements Runnable{
 	final private TransferService _transferService;
-	final private String _podAddress;
+	final private String _podAddress,_drPodAddress;
 	final private Long _startTimestamp,_endTimestamp;
 	private int localCount;
 	private int totalCount;
@@ -151,9 +188,10 @@ class CompletableCacheJob implements Runnable{
 	 * @param startTimestamp
 	 * @param endTimestamp
 	 */
-	public CompletableCacheJob(final TransferService transferService,final String podAddress,final Long startTimestamp, final Long endTimestamp){
+	public CompletableCacheJob(final TransferService transferService,final String podAddress,final String drPodAddress,final Long startTimestamp, final Long endTimestamp){
 		this._transferService=transferService;
 		this._podAddress=podAddress;
+		this._drPodAddress=drPodAddress;
 		this._startTimestamp=startTimestamp;
 		this._endTimestamp=endTimestamp;
 	}
@@ -166,13 +204,13 @@ class CompletableCacheJob implements Runnable{
 	 * @param endTimestamp
 	 * @return
 	 */
-	public static CompletableCacheJob schedule(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp){
-		CompletableCacheJob self=new CompletableCacheJob(transferService,podAddress,startTimestamp,endTimestamp);
+	public static CompletableCacheJob schedule(final TransferService transferService, final String podAddress, final String drPodAddress, final Long startTimestamp, final Long endTimestamp){
+		CompletableCacheJob self=new CompletableCacheJob(transferService,podAddress,drPodAddress,startTimestamp,endTimestamp);
 		return self;
 	}
 	
 	/**
-	 * 
+	 * override
 	 * @param transferService
 	 * @param podAddress
 	 * @param startTimestamp
@@ -181,8 +219,8 @@ class CompletableCacheJob implements Runnable{
 	 * @param totalCount
 	 * @return
 	 */
-	public static CompletableCacheJob schedule(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp, final int localCount, final int totalCount){
-		CompletableCacheJob self=new CompletableCacheJob(transferService,podAddress,startTimestamp,endTimestamp);
+	public static CompletableCacheJob schedule(final TransferService transferService, final String podAddress, final String drPodAddress, final Long startTimestamp, final Long endTimestamp, final int localCount, final int totalCount){
+		CompletableCacheJob self=new CompletableCacheJob(transferService,podAddress,drPodAddress,startTimestamp,endTimestamp);
 		self.localCount=localCount;
 		self.totalCount=totalCount;
 		return self;
@@ -192,28 +230,47 @@ class CompletableCacheJob implements Runnable{
 	 * Executed by executor
 	 */
 	@Override
-	public void run() {
+	public void run(){
 		// TODO Auto-generated method stub
 		System.out.println("\tJob acknowledged.... Reducing: " + _podAddress + " on thread " + Thread.currentThread().getName());
 		System.out.print("  "+this.localCount+" / "+this.totalCount);
-		makeATransfer(_transferService, _podAddress, _startTimestamp, _endTimestamp);
+		
+		try{
+			makeATransfer(_transferService, _podAddress, _startTimestamp, _endTimestamp);
+		} catch (Exception e) {
+			System.out.println(">>>>Not successful. Now trying DR site");
+			run_drdc();
+		}
 		System.out.println("Job " + _podAddress + " ending...");	
 	}
+	
+	
+	/**
+	 * recursively called for each DC, if not successful, try DRDC
+	 * @param podAddress
+	 */
+	private void run_drdc(){
+		System.out.println("\tDR Job acknowledged.... Reducing: " + _drPodAddress + " on thread " + Thread.currentThread().getName());
+		System.out.print("  "+this.localCount+" / "+this.totalCount);
+		try{
+			makeATransfer(_transferService, _drPodAddress, _startTimestamp, _endTimestamp);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("Job " + _drPodAddress + " ending...");	
+	}
+	
 		
 	/**
 	 * given pod address, fetch the 5 result about this pod each hour, load it to predified scope metric
 	 * @param transferService
 	 * @param podAddress
+	 * @throws IOException 
 	 */
-	public static void makeATransfer(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp){
+	public PutResult makeATransfer(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp) throws IOException{
 		final String sourceExp=getExpressionFromAddress(podAddress,startTimestamp,endTimestamp);
 		final String targetScope=getTargetScopeNameSplitProductionSandbox(podAddress);
-		
-		try {
-			transferService.transfer(sourceExp,targetScope);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		return transferService.transfer(sourceExp,targetScope);
 	}
 	
 	/**

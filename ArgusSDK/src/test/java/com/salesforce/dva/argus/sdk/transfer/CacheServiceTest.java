@@ -67,7 +67,6 @@ public class CacheServiceTest {
 	@Test 
 	public void testProperty() throws IOException{	
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-		
 		int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
 		System.out.println(currentTimeStamp);
 		int startTimeStamp=currentTimeStamp-11*(24*3600);

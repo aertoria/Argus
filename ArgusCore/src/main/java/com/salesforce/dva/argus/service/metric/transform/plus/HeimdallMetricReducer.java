@@ -346,10 +346,56 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		throw new RuntimeException("Not a single result");
 	}
 	
+	/**
+	 * reduce impact by apt across different rac
+	 * @return
+	 */
+	private List<Metric> renderIMPACTBYAPTPOD(){
+		Optional<Metric> constructedResult=this.racServers.stream()
+				  						.map(r -> r.getImpactedMinHourlyByAPT().get(0))
+				  						.reduce((m1,m2) -> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
+		if(constructedResult.isPresent()){
+			Metric m=constructedResult.get();
+			m.setMetric(podAddress);
+			return Collections.unmodifiableList(Arrays.asList(m));
+		}
+		throw new RuntimeException("Not a single result");
+	}
+	
+	/**
+	 * reduce impact by apt across different rac
+	 * @return
+	 */
+	private List<Metric> renderIMPACTBYACTPOD(){
+		Optional<Metric> constructedResult=this.racServers.stream()
+										.filter(r -> r.hasACT())
+				  						.map(r -> r.getImpactedMinHourlyByACT().get(0))
+				  						.reduce((m1,m2) -> _computationUtil.get().sumWithUnion(Arrays.asList(m1,m2)).get(0));
+		if(constructedResult.isPresent()){
+			Metric m=constructedResult.get();
+			m.setMetric(podAddress);
+			return Collections.unmodifiableList(Arrays.asList(m));
+		}
+		throw new RuntimeException("Not a single result");
+	}
+	
+	
 	@Override
 	public List<Metric> renderIMPACTTOTAL() {
 		List<Metric> IMPACTPOD=renderIMPACTPOD();
 		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTPOD,RacServer.getReportRange().getStart());
+		return IMPACTTOTAL;
+	}
+	
+	public List<Metric> renderIMPACTBYAPTTOTAL() {
+		List<Metric> IMPACTAPT=renderIMPACTBYAPTPOD();
+		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTAPT,RacServer.getReportRange().getStart());
+		return IMPACTTOTAL;
+	}
+	
+	public List<Metric> renderIMPACTBYACTTOTAL() {
+		List<Metric> IMPACTACT=renderIMPACTBYACTPOD();
+		List<Metric> IMPACTTOTAL = _computationUtil.get().downsample("100d-sum", IMPACTACT,RacServer.getReportRange().getStart());
 		return IMPACTTOTAL;
 	}
 	
@@ -519,8 +565,9 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficSumHourly().get(0), r -> true, "Traffic"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getAvaRateHourly().get(0), r -> true, "AVA"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourly().get(0), r -> true, "ImpactedMin"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourlyByAPT().get(0), r -> true, "ImpactedMinByAPT"));
+		reportRACHOUR.addAll(containRACHOUR(r -> r.getImpactedMinHourlyByACT().get(0), r -> r.hasACT(), "ImpactedMinByACT"));
 		reportRACHOUR.addAll(containRACHOUR(r -> r.getWeightedTrafficCountHourly().get(0), r -> true, "CollectedMin"));
-
 		return Collections.unmodifiableList(reportRACHOUR);
 	}
 	
@@ -537,20 +584,35 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	
 	@Override
 	public List<Metric> reportTOTAL() {
-		List<Metric> renderIMPACTTOTAL=renderIMPACTTOTAL();
-		renderIMPACTTOTAL.get(0).setMetric("ImpactedMin");
-		List<Metric> renderAVATOTAL=renderAVATOTAL();
-		renderAVATOTAL.get(0).setMetric("Availability");
-		List<Metric> renderAvailableTOTAL=renderAvailableTOTAL();
-		renderAvailableTOTAL.get(0).setMetric("AvailableMin");
-		List<Metric> renderTTMTOTAL=renderTTMTOTAL();
-		renderTTMTOTAL.get(0).setMetric("TTM");
 		List<Metric> reportTotal=new ArrayList<Metric>();
 		
+		List<Metric> renderIMPACTTOTAL=renderIMPACTTOTAL();
+		renderIMPACTTOTAL.get(0).setMetric("ImpactedMin");
 		reportTotal.addAll(renderIMPACTTOTAL);
+		
+		List<Metric> renderIMPACTTOTALBYAPT=renderIMPACTBYAPTTOTAL();
+		renderIMPACTTOTALBYAPT.get(0).setMetric("ImpactedMinByAPT");
+		reportTotal.addAll(renderIMPACTTOTALBYAPT);
+		
+		if(this.hasACT()){
+			List<Metric> renderIMPACTTOTALBYACT=renderIMPACTBYACTTOTAL();
+			renderIMPACTTOTALBYACT.get(0).setMetric("ImpactedMinByACT");
+			reportTotal.addAll(renderIMPACTTOTALBYACT);
+		}
+		
+		List<Metric> renderAVATOTAL=renderAVATOTAL();
+		renderAVATOTAL.get(0).setMetric("Availability");
 		reportTotal.addAll(renderAVATOTAL);
+		
+		List<Metric> renderAvailableTOTAL=renderAvailableTOTAL();
+		renderAvailableTOTAL.get(0).setMetric("AvailableMin");
 		reportTotal.addAll(renderAvailableTOTAL);
+		
+		List<Metric> renderTTMTOTAL=renderTTMTOTAL();
+		renderTTMTOTAL.get(0).setMetric("TTM");
 		reportTotal.addAll(renderTTMTOTAL);
+		
+
 		
 		return Collections.unmodifiableList(reportTotal);
 	}

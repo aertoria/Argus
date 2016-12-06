@@ -3246,6 +3246,18 @@ public class HeimdallMetricReducerTest{
         expected_Datapoints2.put(0L, "16.0");
         expected_metric2.setDatapoints(expected_Datapoints2);
         expected.add(expected_metric2);
+        
+        Metric expected_metric6 = new Metric("SUM", "ImpactedMinByAPT");
+        Map<Long, String> expected_Datapoints6=new HashMap<Long, String>();
+        expected_Datapoints6.put(0L, "15.0");
+        expected_metric6.setDatapoints(expected_Datapoints6);
+        expected.add(expected_metric6);
+        
+        Metric expected_metric7 = new Metric("CHI.SP2.cs15.Rac1", "ImpactedMinByACT");
+        Map<Long, String> expected_Datapoints7=new HashMap<Long, String>();
+        expected_Datapoints7.put(0L, "3.0");
+        expected_metric7.setDatapoints(expected_Datapoints7);
+        expected.add(expected_metric7);
 
         Metric expected_metric3 = new Metric("DIVIDE", "Availability");
         Map<Long, String> expected_Datapoints3=new HashMap<Long, String>();
@@ -3258,12 +3270,14 @@ public class HeimdallMetricReducerTest{
         expected_Datapoints5.put(0L, "18");
         expected_metric5.setDatapoints(expected_Datapoints5);
         expected.add(expected_metric5);
-        
+
         Metric expected_metric4 = new Metric("SUM", "TTM");
         Map<Long, String> expected_Datapoints4=new HashMap<Long, String>();
         expected_Datapoints4.put(0L, "11.0");
         expected_metric4.setDatapoints(expected_Datapoints4);
         expected.add(expected_metric4);
+        
+
 
         System.out.println(result);
         assertEquals(expected,result); 
