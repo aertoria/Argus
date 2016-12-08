@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +45,8 @@ public class CacheServiceTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		sourceSVC = ArgusService.getInstance("http://ewang-ltm.internal.salesforce.com:8080/argusws", 10);
+		//sourceSVC = ArgusService.getInstance("http://ewang-ltm.internal.salesforce.com:8080/argusws", 10);
+		sourceSVC = ArgusService.getInstance("http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws", 10);
 		//sourceSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
 		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
 
@@ -53,8 +56,6 @@ public class CacheServiceTest {
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));	
 		
 		System.out.println("System initalized, login finished");
-
-		
 	}
 	
 	@AfterClass
@@ -64,7 +65,7 @@ public class CacheServiceTest {
 	}
 
 	
-	@Test 
+	//@Test 
 	public void testProperty() throws IOException{	
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
 		int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
@@ -73,7 +74,61 @@ public class CacheServiceTest {
 		System.out.println(startTimeStamp);
 	}
 	
+	@Test 
+	public void countRacPod() throws IOException{	
+		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
+//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+//		List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
+//		System.out.println(ms.size());
+		
+
+//		String template="-2d:-0d:REDUCED.db.PROD.WAS.*:Traffic:avg";
+		
+		final List<String> dcs=Arrays.asList("CHI","WAS","PHX","DFW","FRF","LON","PAR","TYO","WAX");
+		
+		List<String> collected=new ArrayList<String>();
+		for (String ex:dcs){
+			final String processed = "-100d:-0d:REDUCED.db.SANDBOX."+ex+".*:Traffic:avg";
+			List<Metric> localmetrics=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(processed)));
+			collected.addAll(localmetrics.stream().map(m -> m.getScope()).collect(Collectors.toList()));
+		}
+		System.out.println(collected);
+		
+//		List<String> collected=Arrays.asList("REDUCED.db.PROD.CHI.SP3.na20","REDUCED.db.PROD.TYO.NONE.ap0");
+		int totalcount=0;
+		for(String podname:collected){
+			String supperPod=podname.split("\\.")[4];
+			if (supperPod.equals("NONE")){
+				supperPod="AGG";
+			}
+			String pod=podname.split("\\.")[3]+"."+supperPod+"."+podname.split("\\.")[5];
+			
+			String localexp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle."+pod+":*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";
+			List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
+			
+			System.out.println("processing for "+pod+":  "+resultms.size());
+			totalcount+=resultms.size();
+		}
+		System.out.println("final count: "+totalcount);
+	
+		
+	}
+	
+	
+	private static List<String> expressionCleanUp(List<String> expressions){
+		assert(expressions!=null && expressions.size()>0):"input not valid";
+		List<String> r= expressions
+				.stream().sequential()
+				.map(e -> URLEncoder.encode(e))
+				.collect(Collectors.toList());
+		return r;
+	}
 }
+
+
+
+
+
 
 
 //	

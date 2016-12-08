@@ -561,7 +561,7 @@ angular.module('argus.services.dashboard', [])
                  */
                 var localExpressionMapper = function(template){
                     var expressions=[]
-                    var listOfDC=['CHI','WAS','PHX','DFW','FRF','LON','PAR','TYO'];
+                    var listOfDC=['CHI','WAS','PHX','DFW','FRF','LON','PAR','TYO','WAX'];
                     for(var idx in listOfDC){
                         dc = listOfDC[idx];
                         expressions.push(template.replace('*',dc+'.*'));
@@ -1564,7 +1564,6 @@ angular.module('argus.services.dashboard', [])
                 $('#'+divId).html('<img src="img/error.png" />'+errormessage);
             };
 
-
             /*
              _   _  _____  _____ ___  _________   ___   _      _          ______ __   __ _____  _   _  _____  _   _       _____  _____ ______  _____
              | | | ||  ___||_   _||  \/  ||  _  \ / _ \ | |    | |         | ___ \\ \ / /|_   _|| | | ||  _  || \ | |     /  __ \|  _  || ___ \|  ___|
@@ -1573,7 +1572,6 @@ angular.module('argus.services.dashboard', [])
              | | | || |___  _| |_ | |  | || |/ / | | | || |____| |____     | |      | |    | |  | | | |\ \_/ /| |\  |     | \__/\\ \_/ /| |\ \ | |___
              \_| |_/\____/  \___/ \_|  |_/|___/  \_| |_/\_____/\_____/     \_|      \_/    \_/  \_| |_/ \___/ \_| \_/      \____/ \___/ \_| \_/\____/
              */
-
             //Report
             function drawReport(){
                 URL=CONFIG.grahiteUrl+'getRate/?StartTime='+StartTime+'&EndTime='+EndTime+'&Pod='+Pod+'&Cfg='+Cfg;

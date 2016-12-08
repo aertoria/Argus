@@ -612,8 +612,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		renderTTMTOTAL.get(0).setMetric("TTM");
 		reportTotal.addAll(renderTTMTOTAL);
 		
-
-		
 		return Collections.unmodifiableList(reportTotal);
 	}
 	
