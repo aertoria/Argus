@@ -964,6 +964,8 @@ angular.module('argus.services.dashboard', [])
                     AVA=getDatapointsFromScope(listMetricCurrentRac,"AVA");
                     APT=getDatapointsFromScope(listMetricCurrentRac,"APT");
                     ImpactedMin=getDatapointsFromScope(listMetricCurrentRac,"ImpactedMin");
+                    ImpactedMinByAPT=getDatapointsFromScope(listMetricCurrentRac,"ImpactedMinByAPT");
+                    ImpactedMinByACT=getDatapointsFromScope(listMetricCurrentRac,"ImpactedMinByACT");
                     CollectedMin=getDatapointsFromScope(listMetricCurrentRac,"CollectedMin");
                     ACT=getDatapointsFromScope(listMetricCurrentRac,"ACT");
                     CPU=getDatapointsFromScope(listMetricCurrentRac,"CPU");
@@ -977,6 +979,8 @@ angular.module('argus.services.dashboard', [])
                         currentTS["AVA"]=AVA[ts];
                         currentTS["APT"]=APT[ts];
                         currentTS["ImpactedMin"]=ImpactedMin[ts];
+                        currentTS["ImpactedMinByAPT"]=ImpactedMinByAPT[ts];
+                        currentTS["ImpactedMinByACT"]=ImpactedMinByACT[ts];
                         currentTS["CollectedMin"]=CollectedMin[ts];
                         currentTS["Traffic"]=Traffic[ts];
                         if ((ACT != null) && (typeof ACT!= "undefined") && (ts in ACT)){currentTS["ACT"]=ACT[ts];}
@@ -1359,6 +1363,8 @@ angular.module('argus.services.dashboard', [])
                         returnItem.y=Y_cat.indexOf(readydata[index]["Racnode"]);
                         returnItem.APT=parseInt(readydata[index]["APT"]);
                         returnItem.ImpactedMin=parseInt(readydata[index]["ImpactedMin"]);
+                        returnItem.ImpactedMinByAPT=parseInt(readydata[index]["ImpactedMinByAPT"]);
+                        returnItem.ImpactedMinByACT=parseInt(readydata[index]["ImpactedMinByACT"]);
                         returnItem.CollectedMin=parseInt(readydata[index]["CollectedMin"]);
                         returnItem.ACT=parseInt(readydata[index]["ACT"]);
                         returnItem.CPU=parseInt(readydata[index]["CPU"]);
@@ -1495,7 +1501,9 @@ angular.module('argus.services.dashboard', [])
                                 return 'Time: ' + this.series.xAxis.categories[this.point.x] +
                                     '<br>RacNode: ' + this.series.yAxis.categories[this.point.y] +
                                     '<br><br>DB Availablity:  <b>' + this.point.value + '%' +
-                                    '<br>ImpactedMin:  <b>' + this.point.ImpactedMin + ' min' +
+                                    '<br>ImpactedMin (Total):  <b>' + this.point.ImpactedMin + ' min' +
+                                    '<br>ImpactedMin (APT):  <b>' + this.point.ImpactedMinByAPT + ' min' +
+                                    '<br>ImpactedMin (ACT):  <b>' + this.point.ImpactedMinByACT + ' min' +
                                     '<br>(out-of)MonitoredMin:  <b>' + this.point.CollectedMin + ' min' +
                                     '<br>weighted APT:  <b>' + this.point.APT + 'ms' +
                                     '<br>weighted ACT:  <b>' + this.point.ACT + '' +
@@ -1538,12 +1546,17 @@ angular.module('argus.services.dashboard', [])
                 $.getJSON(URL, function(rawdata){
                     //console.log(rawdata);
                     var ImpactedMin=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMin')["datapoints"]);
+                    var ImpactedMinByAPT=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMinByAPT')["datapoints"]);
+                    var ImpactedMinByACT=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMinByACT')["datapoints"]);
                     var Availability=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'Availability')["datapoints"]);
                     var AvailableMin=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'AvailableMin')["datapoints"]);
                     var TTM=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'TTM')["datapoints"]);
                     $('#' + divId).html('<br><h3><span id="helpBlock" class="help-block">Availability <b>'+parseFloat(Availability).toFixed(2)+'%</b>, ' +
-                        'TotalAvailable ' +AvailableMin+' min, '+
-                        'Impacted '+ImpactedMin+' min, TTM: '+TTM+' min.&nbsp;&nbsp;&nbsp;&nbsp;' +
+                        'Total Available: ' + AvailableMin + ' min, ' +
+                        'Impacted (Total): ' + ImpactedMin + ' min, ' +
+                        'Impacted (APT): ' + ImpactedMinByAPT + ' min, ' +
+                        'Impacted (ACT): ' + ImpactedMinByACT + ' min, ' +
+                        'TTM: '+TTM+' min.&nbsp;&nbsp;&nbsp;&nbsp;' +
                         //'POD: '+Pod+',&nbsp;(UTC) Start: '+ StartTime+',&nbsp;End: '+EndTime+
                         '</span></h3>'
                     );
