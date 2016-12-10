@@ -13,7 +13,6 @@ import com.salesforce.dva.argus.sdk.ArgusService;
 import com.salesforce.dva.argus.sdk.ArgusService.PutResult;
 import com.salesforce.dva.argus.sdk.entity.Metric;
 
-import junit.framework.Assert;
 
 /**
  * Provides methods to transfer metrics.

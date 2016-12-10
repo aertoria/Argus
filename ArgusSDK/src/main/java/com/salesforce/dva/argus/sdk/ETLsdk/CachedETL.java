@@ -123,6 +123,8 @@ public class CachedETL implements Serializable{
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));
 		List<String> podAddressList=getPods();
 		List<Long> timeRange=getTimeRange(START,END);
+		
+		
 		for (int i = 0; i < podAddressList.size(); i++){
 			int localCount=i;
 			int totalCount=podAddressList.size();

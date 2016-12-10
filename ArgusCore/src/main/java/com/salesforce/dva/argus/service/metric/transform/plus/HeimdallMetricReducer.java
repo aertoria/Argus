@@ -379,7 +379,6 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 		throw new RuntimeException("Not a single result");
 	}
 	
-	
 	@Override
 	public List<Metric> renderIMPACTTOTAL() {
 		List<Metric> IMPACTPOD=renderIMPACTPOD();

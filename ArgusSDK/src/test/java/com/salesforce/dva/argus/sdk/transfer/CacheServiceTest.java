@@ -11,8 +11,10 @@ import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,27 +67,123 @@ public class CacheServiceTest {
 	}
 
 	
-	//@Test 
-	public void testProperty() throws IOException{	
+
+	@Test
+	public void countPercetileRACLevel() throws IOException{
+			TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
+			
+//			String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+//			List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
+//			System.out.println(ms.size());
+			final String PRODSANDBOX="PROD";	
+			final String start="1480291200000";
+			final String end="1480895940000";
+			int count=0;
+			int total=0;
+			
+			
+			List<String> pods=getListOfPod(start,end,sourceSVC, PRODSANDBOX);
+			for(String pod:pods){			
+				//DIVIDE(DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:ImpactedMin:avg,#100d-sum#),DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:CollectedMin:avg,#100d-sum#))
+				//String localexp="DIVIDE(DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":ImpactedMin:avg,#100d-sum#),DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":CollectedMin:avg,#100d-sum#))";
+				String localexp="DOWNSAMPLE(HEIMDALL("
+						+ start+":"+end+":core."+pod+":SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, "
+						+ start+":"+end+":core."+pod+":SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, "
+						+ start+":"+end+":db.oracle."+pod+":*.active__sessions{device=*}:avg, "
+						+ start+":"+end+":system."+pod+":CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg,"
+						+ start+":"+end+":system."+pod+":CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg, "
+						+ "#RACHOUR#),#100d-sum#)";
+				List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
+				
+				Map<String,Double> ImpactedMap=new HashMap<String, Double>();
+				Map<String,Double> CollectedMap=new HashMap<String, Double>();
+				for(Metric m:resultms){
+					final String scope=m.getScope();
+					final String metricname=m.getMetric();
+					if(scope.equals("ImpactedMin")){
+						ImpactedMap.put(m.getMetric(),getFirstValueAndCast(m.getDatapoints()));
+					}
+					if(scope.equals("CollectedMin")){
+						CollectedMap.put(m.getMetric(),getFirstValueAndCast(m.getDatapoints()));
+					}
+				}
+				
+				//resultms.forEach(m -> System.out.println(m.getScope()+m.getMetric()+m.getDatapoints()));
+				
+				//NOW CACULATE
+				assert(ImpactedMap.size()==CollectedMap.size()):"two hashmap should align up";
+				for(Entry<String, Double> e:ImpactedMap.entrySet()){
+					final Double impactedMin=e.getValue();
+					final Double collectedMin=CollectedMap.get(e.getKey());
+					final Double avaRate=1.0-(impactedMin/collectedMin);
+					total++;
+					if(avaRate>=0.999){
+						count++;
+					}
+					System.out.println(count+"/"+total+" "+e.getKey()+": "+avaRate);
+				}
+			}
+			System.out.println(count+"/"+total);
+			
+			
+			
+			
+		}
+	
+	private static Double getFirstValueAndCast(Map<Long,String> datapoints){
+		assert(datapoints.size()>0):"empty datapoints";
+		return Double.valueOf((String) datapoints.values().toArray()[0]);
+	}
+		
+	//@Test
+	public void countPercetilePodLevel() throws IOException{
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-		int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
-		System.out.println(currentTimeStamp);
-		int startTimeStamp=currentTimeStamp-11*(24*3600);
-		System.out.println(startTimeStamp);
+//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+//		List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
+//		System.out.println(ms.size());
+		final String PRODSANDBOX="SANDBOX";	
+		final String start="1480291200000";
+		final String end="1480895940000";
+		int count=0;
+		int total=0;
+		
+		List<String> pods=getListOfPod(start,end,sourceSVC, PRODSANDBOX);
+		for(String pod:pods){			
+//			DIVIDE(DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:ImpactedMin:avg,#100d-sum#),DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:CollectedMin:avg,#100d-sum#))
+			String localexp="DIVIDE(DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":ImpactedMin:avg,#100d-sum#),DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":CollectedMin:avg,#100d-sum#))";
+			
+			List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
+			
+			
+			try{
+				final double value=Double.valueOf((String) resultms.get(0).getDatapoints().values().toArray()[0]);
+				final double rate=1-value;
+				System.out.println(pod+":"+rate);
+				
+				if (rate>=0.999){
+					count++;
+				}
+				total++;
+				
+			}catch(Exception e){
+				System.out.println(pod);
+				System.out.println(localexp);
+				System.out.println(resultms+""+resultms.size());
+				System.out.println(e);
+			}
+		}
+		System.out.println(count+"/"+total);
 	}
 	
-	@Test 
+	//@Test 
 	public void countRacPod() throws IOException{	
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
 //		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
 //		List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
 //		System.out.println(ms.size());
-		
-
 //		String template="-2d:-0d:REDUCED.db.PROD.WAS.*:Traffic:avg";
 		
 		final List<String> dcs=Arrays.asList("CHI","WAS","PHX","DFW","FRF","LON","PAR","TYO","WAX");
-		
 		List<String> collected=new ArrayList<String>();
 		for (String ex:dcs){
 			final String processed = "-100d:-0d:REDUCED.db.SANDBOX."+ex+".*:Traffic:avg";
@@ -114,6 +212,42 @@ public class CacheServiceTest {
 		
 	}
 	
+	/**
+	 * UTIL: for get a list of pod name
+	 * @param sourceSVC
+	 * @param prodOrSand
+	 * @return
+	 * @throws IOException
+	 */
+	private static List<String> getListOfPod(final String start, final String end, final ArgusService sourceSVC,final String PROD_SANDBOX) throws IOException{
+		final List<String> dcs=Arrays.asList("CHI","WAS","PHX","DFW","FRF","LON","PAR","TYO","WAX");
+		List<String> collected=new ArrayList<String>();
+		for (String ex:dcs){
+			final String processed = start+":"+end+":REDUCED.db."+PROD_SANDBOX+"."+ex+".*:Traffic:avg";
+			List<Metric> localmetrics=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(processed)));
+			collected.addAll(localmetrics.stream().map(m -> m.getScope()).collect(Collectors.toList()));
+		}
+			
+		return collected.stream().map(s -> {
+			String supperPod=s.split("\\.")[4];
+//			if (supperPod.equals("NONE")){
+//				supperPod="AGG";
+//			}
+			String pod=s.split("\\.")[3]+"."+supperPod+"."+s.split("\\.")[5];
+			return pod;
+		}).collect(Collectors.toList());
+	}
+	
+	/**
+	 * overloads
+	 * @param sourceSVC
+	 * @param PROD_SANDBOX
+	 * @return
+	 * @throws IOException
+	 */
+	private static List<String> getListOfPod(final ArgusService sourceSVC,final String PROD_SANDBOX) throws IOException{
+		return getListOfPod("-100d", "-0d", sourceSVC, PROD_SANDBOX);
+	}
 	
 	private static List<String> expressionCleanUp(List<String> expressions){
 		assert(expressions!=null && expressions.size()>0):"input not valid";
@@ -132,7 +266,15 @@ public class CacheServiceTest {
 
 
 //	
-//	
+////@Test 
+//public void testProperty() throws IOException{	
+//	TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
+//	int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
+//	System.out.println(currentTimeStamp);
+//	int startTimeStamp=currentTimeStamp-11*(24*3600);
+//	System.out.println(startTimeStamp);
+//}
+
 ////	@Test
 //	public void transfer() throws IOException {
 //		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);

@@ -1349,6 +1349,7 @@ angular.module('argus.services.dashboard', [])
                 //StartTime = processGMTTime(StartTime);
                 //EndTime = processGMTTime(EndTime);
                 //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg, $RACHOUR)';
+
                 var URL=CONFIG.wsUrl+"metrics?expression="+expression;
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
@@ -3050,7 +3051,6 @@ angular.module('argus.services.dashboard', [])
 
             }
         }//////END OF AVA DATA MAP
-
 
         function updateTreemap(config, data, divId, optionList, attributes){
             $('#'+divId).html('<img src="img/spin.gif" />');
