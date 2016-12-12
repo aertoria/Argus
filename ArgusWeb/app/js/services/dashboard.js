@@ -838,6 +838,29 @@ angular.module('argus.services.dashboard', [])
 
             }//end dg-lag treemap
 
+
+
+            /**
+             * taking HEIMDALL(-4h:-0h:core.TYO.NONE.ap2:SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,-4h:-0h:core.TYO.NONE.ap2:SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,-4h:-0h:db.oracle.TYO.NONE.ap2:*.active__sessions{device=*}:avg,-4h:-0h:system.TYO.NONE.ap2:CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg,-4h:-0h:system.TYO.NONE.ap2:CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg,#POD#)
+             * find
+             * @param expression
+             */
+            function t_expression_TYO_prase(expression,pod){
+                var expSplit=expression.split(pod);
+                if (expSplit.length!==6){
+                    throw "the metrics being used is not the right format: aptcount,apttraffic,act,cpu1,cpu2";
+                }
+                var expResult=expSplit[0]+pod+expSplit[1]+pod+expSplit[2]+t_converPod(pod)+expSplit[3]+t_converPod(pod)+expSplit[4]+t_converPod(pod)+expSplit[5];
+                return expResult
+            }
+
+            function t_converPod(podName){
+                if(podName.split(".")[1]=="NONE"){
+                    return podName.split(".")[0]+".AGG."+podName.split(".")[2];
+                }
+                return podName;
+            }
+
             //test
             var regionClick = function(event){
                 console.log(CONFIG.wsUrl);
@@ -849,8 +872,15 @@ angular.module('argus.services.dashboard', [])
                 window.open(url);
             };
 
-
-
+            var containesMetricFromMetrics=function(rawdata,metricName){
+                for (var idx in rawdata){
+                    current=rawdata[idx];
+                    if (current['metric']==metricName){
+                        return true;
+                    }
+                }
+                return false;
+            }
 
             //Used by adaptArgusPlusRenderPOD
             var getMetricFromMetrics=function(rawdata,metricName){
@@ -980,7 +1010,9 @@ angular.module('argus.services.dashboard', [])
                         currentTS["APT"]=APT[ts];
                         currentTS["ImpactedMin"]=ImpactedMin[ts];
                         currentTS["ImpactedMinByAPT"]=ImpactedMinByAPT[ts];
-                        currentTS["ImpactedMinByACT"]=ImpactedMinByACT[ts];
+                        if(typeof ImpactedMinByACT !== "undefined") {
+                            currentTS["ImpactedMinByACT"] = ImpactedMinByACT[ts];
+                        }
                         currentTS["CollectedMin"]=CollectedMin[ts];
                         currentTS["Traffic"]=Traffic[ts];
                         if ((ACT != null) && (typeof ACT!= "undefined") && (ts in ACT)){currentTS["ACT"]=ACT[ts];}
@@ -997,7 +1029,7 @@ angular.module('argus.services.dashboard', [])
                 //StartTime = processGMTTime(StartTime);
                 //EndTime = processGMTTime(EndTime);
                 //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, $POD)';
-                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                var URL=CONFIG.wsUrl+"metrics?expression="+t_expression_TYO_prase(expression,pod);
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
                     readydata=adaptArgusPlusRenderPOD(rawdata)
@@ -1182,7 +1214,7 @@ angular.module('argus.services.dashboard', [])
                 //StartTime = processGMTTime(StartTime);
                 //EndTime = processGMTTime(EndTime);
                 //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg, $RAC)';
-                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                var URL=CONFIG.wsUrl+"metrics?expression="+t_expression_TYO_prase(expression,pod);
                 console.log(URL);
                 $.getJSON(URL, function(plusdata) {
                     readydata=adaptArgusPlusRenderDETAIL(plusdata);
@@ -1349,8 +1381,11 @@ angular.module('argus.services.dashboard', [])
                 //StartTime = processGMTTime(StartTime);
                 //EndTime = processGMTTime(EndTime);
                 //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':system.'+Pod+':CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg, $RACHOUR)';
+                var URL=CONFIG.wsUrl+"metrics?expression="+t_expression_TYO_prase(expression,pod);
+                console.log("pod");
+                console.log(pod);
+                console.log(t_converPod(pod));
 
-                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
                     readydata=adaptArgusPlusRenderRACLevelHour(rawdata);
@@ -1543,12 +1578,14 @@ angular.module('argus.services.dashboard', [])
                 //EndTime = processGMTTime(EndTime);
                 //$TOTAL
                 //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, $TOTAL)';
-                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                var URL=CONFIG.wsUrl+"metrics?expression="+t_expression_TYO_prase(expression,pod);
                 $.getJSON(URL, function(rawdata){
                     //console.log(rawdata);
                     var ImpactedMin=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMin')["datapoints"]);
                     var ImpactedMinByAPT=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMinByAPT')["datapoints"]);
-                    var ImpactedMinByACT=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMinByACT')["datapoints"]);
+                    if(containesMetricFromMetrics(rawdata,'ImpactedMinByACT')){
+                        var ImpactedMinByACT=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'ImpactedMinByACT')["datapoints"]);
+                    }
                     var Availability=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'Availability')["datapoints"]);
                     var AvailableMin=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'AvailableMin')["datapoints"]);
                     var TTM=getFirstItemInMetrics(getMetricFromMetrics(rawdata,'TTM')["datapoints"]);

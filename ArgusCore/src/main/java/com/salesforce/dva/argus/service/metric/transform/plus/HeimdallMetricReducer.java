@@ -16,14 +16,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
-
-import org.eclipse.persistence.internal.jpa.parsing.UnaryMinus;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.salesforce.dva.argus.entity.Metric;
-import com.salesforce.dva.argus.service.metric.transform.MetricDistiller;
 import com.salesforce.dva.argus.service.metric.transform.Transform;
 import com.salesforce.dva.argus.service.metric.transform.TransformFactory;
 import com.salesforce.dva.argus.service.metric.transform.TransformFactory.Function;
@@ -132,6 +127,7 @@ public class HeimdallMetricReducer implements Transform{
 		return TransformFactory.Function.HEIMDALL.name();
 	}
 }
+
 
 /**Aspect Defined as Renderable by Transform**/
 interface Renderable{
@@ -1117,7 +1113,9 @@ final class MetricConsumer implements Serializable{
 			assert(racAddressLocalList!=null && racAddressLocalList.size()==2):"local act should be format as NADB11-1";
 			String racAddress=racAddressLocalList.get(1);
 			
-			String podAddress=scopeSource.substring(10);		
+			String podAddress=scopeSource.substring(10);
+			//TEMP
+			podAddress=t_superPodConvert(podAddress);
 			assert(racAddress!=null&&racAddress.length()>0&&podAddress!=null&&podAddress.length()>10):"Invalid pod or rac address+"+scopeSource+"."+metricSource;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
 			self.appServerAddress="RACLEVEL";
@@ -1130,6 +1128,8 @@ final class MetricConsumer implements Serializable{
 			String racAddress=racAddressSplit[2];
 			
 			String podAddress=scopeSource.substring(7);
+			//TEMP
+			podAddress=t_superPodConvert(podAddress);
 			assert(podAddress!=null&&podAddress.length()>9&&podAddress.split("\\.").length==3):"podAddress should have format such as CHI.SP2.cs15, however is"+podAddress;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
 			self.appServerAddress="RACLEVEL";
@@ -1143,6 +1143,8 @@ final class MetricConsumer implements Serializable{
 			String racAddress=racAddressSplit[2];
 			
 			String podAddress=scopeSource.substring(7);
+			//TEMP
+			podAddress=t_superPodConvert(podAddress);
 			assert(podAddress!=null&&podAddress.length()>9&&podAddress.split("\\.").length==3):"podAddress should have format such as CHI.SP2.cs15, however is"+podAddress;
 			self.racServerAddress=podAddress+".Rac"+racAddress;
 			self.appServerAddress="RACLEVEL";
@@ -1154,6 +1156,20 @@ final class MetricConsumer implements Serializable{
 		self.datapoints=m.getDatapoints();
 		self.cleanup();
 		return self;
+	}
+	
+	/**
+	 * temperal pod name.convert from AGG back to NONE so that it can link.
+	 * @param pod
+	 * @return
+	 */
+	private static String t_superPodConvert(final String pod){
+		String[] podSplit=pod.split("\\.");
+		assert(podSplit.length==3):"pod has to be simlar to TYO.AGG.ap2";
+		if(podSplit[1].equals("AGG")){
+			return podSplit[0]+".NONE."+podSplit[2];
+		}
+		return pod;
 	}
 	
 	/**return SCOPE:METRIC{tags}            :avg
@@ -1247,7 +1263,7 @@ final class ReportRange implements Serializable{
 
 
 
-/*
+/**
  * Class ComputationUtil
  */
 final class ComputationUtil{
@@ -1356,6 +1372,7 @@ final class ComputationUtil{
 		List<Metric> filledImpactedMin=mergeZero(range,resolutionInMin,downsampledImpactedMin);
 		return Collections.unmodifiableList(filledImpactedMin);
 	}
+	
 	protected List<Metric> zeroFill(List<Metric> m) {
 		assert (m != null && m.size() > 1) : "list of metric has to be valid";
 		Metric output = new Metric(m.get(0));
