@@ -128,7 +128,6 @@ public class HeimdallMetricReducer implements Transform{
 	}
 }
 
-
 /**Aspect Defined as Renderable by Transform**/
 interface Renderable{
 	List<Metric> renderIMPACT();
