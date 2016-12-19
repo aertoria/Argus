@@ -28,11 +28,11 @@ public class HeimdallTotalAvaTransformTest {
 	private static final String TEST_METRIC = "test-metric";
 	private Injector injector;
 	private SystemConfiguration configuration;
-		
+
 	@Before
 	public void setUp() throws Exception {
 		configuration=new SystemConfiguration(new Properties());
-		configuration.setProperty("service.property.json.endpoint", "https://arguspm.ops.sfdc.net:443/argusws");
+		configuration.setProperty("service.property.json.endpoint", "https://arguspm.ops.sfdc.net:443/argus/api");
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override
 			protected void configure() {
@@ -42,12 +42,12 @@ public class HeimdallTotalAvaTransformTest {
 			}
 		});
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 		injector=null;
 	}
-	
+
 	@Test
 	public void HeimdallTotalAvaTransform_dev(){
 		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
@@ -64,7 +64,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_1.setDatapoints(datapoints_1);
         metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_2 = new HashMap<Long, String>();
         datapoints_2.put(100L*offset, "1400.0");
@@ -76,7 +76,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_2.setDatapoints(datapoints_2);
         metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_3 = new HashMap<Long, String>();
         datapoints_3.put(100L*offset, "2.0");
@@ -88,7 +88,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_3.setDatapoints(datapoints_3);
         metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_4 = new HashMap<Long, String>();
         datapoints_4.put(100L*offset, "1.0");
@@ -100,8 +100,8 @@ public class HeimdallTotalAvaTransformTest {
         metric_4.setDatapoints(datapoints_4);
         metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
+
+
         Metric metric_5 = new Metric("SUM", "result");
         Map<Long, String> datapoints_5 = new HashMap<Long, String>();
         datapoints_5.put(100L*offset, "0");
@@ -113,24 +113,24 @@ public class HeimdallTotalAvaTransformTest {
         metric_5.setDatapoints(datapoints_5);
         metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
         metric_5.setMetric("result");
-        
-        
+
+
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
         metrics.add(metric_2);
         metrics.add(metric_3);
         metrics.add(metric_4);
         metrics.add(metric_5);
-        
+
         List<Metric> result = transform.transform(metrics);
         System.out.println("\n\nINPUT>>>\n"+metrics);
         System.out.println("\n\nOUTPUT>>>\n"+result);
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	//@Test
 	public void HeimdallTotalAvaTransformOnlyOneafterFilter(){
 		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
@@ -147,7 +147,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_1.setDatapoints(datapoints_1);
         metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_2 = new HashMap<Long, String>();
         datapoints_2.put(100L*offset, "0");
@@ -159,7 +159,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_2.setDatapoints(datapoints_2);
         metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_3 = new HashMap<Long, String>();
         datapoints_3.put(100L*offset, "2.0");
@@ -171,7 +171,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_3.setDatapoints(datapoints_3);
         metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_4 = new HashMap<Long, String>();
         datapoints_4.put(100L*offset, "1.0");
@@ -183,20 +183,20 @@ public class HeimdallTotalAvaTransformTest {
         metric_4.setDatapoints(datapoints_4);
         metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
+
+
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
         metrics.add(metric_2);
         metrics.add(metric_3);
         metrics.add(metric_4);
-        
+
         List<Metric> result = transform.transform(metrics);
         System.out.println("\n\nINPUT>>>\n"+metrics);
         System.out.println("\n\nOUTPUT>>>\n"+result);
 	}
-	
-	
+
+
 	//@Test
 	public void HeimdallTotalAvaTransformAllZeros(){
 		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
@@ -213,7 +213,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_1.setDatapoints(datapoints_1);
         metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_2 = new HashMap<Long, String>();
         datapoints_2.put(100L*offset, "0");
@@ -225,7 +225,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_2.setDatapoints(datapoints_2);
         metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_3 = new HashMap<Long, String>();
         datapoints_3.put(100L*offset, "0");
@@ -237,7 +237,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_3.setDatapoints(datapoints_3);
         metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_4 = new HashMap<Long, String>();
         datapoints_4.put(100L*offset, "0");
@@ -249,8 +249,8 @@ public class HeimdallTotalAvaTransformTest {
         metric_4.setDatapoints(datapoints_4);
         metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
+
+
         Metric metric_5 = new Metric("SUM", "result");
         Map<Long, String> datapoints_5 = new HashMap<Long, String>();
         datapoints_5.put(100L*offset, "0");
@@ -262,23 +262,23 @@ public class HeimdallTotalAvaTransformTest {
         metric_5.setDatapoints(datapoints_5);
         metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
         metric_5.setMetric("result");
-        
-        
+
+
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
         metrics.add(metric_2);
         metrics.add(metric_3);
         metrics.add(metric_4);
         metrics.add(metric_5);
-        
+
         List<Metric> result = transform.transform(metrics);
         System.out.println("\n\nINPUT>>>\n"+metrics);
-        
+
         System.out.println("\n\nOUTPUT>>>\n");
         result.forEach(m -> System.out.println(m));
 	}
-	
-	
+
+
 	//@Test
 	public void HeimdallTotalAvaTransform_hd(){
 		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
@@ -295,7 +295,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_1.setDatapoints(datapoints_1);
         metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_2 = new HashMap<Long, String>();
         datapoints_2.put(100L*offset, "1400.0");
@@ -307,7 +307,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_2.setDatapoints(datapoints_2);
         metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_3 = new HashMap<Long, String>();
         datapoints_3.put(100L*offset, "2.0");
@@ -319,7 +319,7 @@ public class HeimdallTotalAvaTransformTest {
         metric_3.setDatapoints(datapoints_3);
         metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
         metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
+
         Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
         Map<Long, String> datapoints_4 = new HashMap<Long, String>();
         datapoints_4.put(100L*offset, "1.0");
@@ -331,8 +331,8 @@ public class HeimdallTotalAvaTransformTest {
         metric_4.setDatapoints(datapoints_4);
         metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
         metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
+
+
         Metric metric_5 = new Metric("SUM", "result");
         Map<Long, String> datapoints_5 = new HashMap<Long, String>();
         datapoints_5.put(100L*offset, "0");
@@ -344,8 +344,8 @@ public class HeimdallTotalAvaTransformTest {
         metric_5.setDatapoints(datapoints_5);
         metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
         metric_5.setMetric("result");
-        
-        
+
+
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
         metrics.add(metric_2);
@@ -355,10 +355,10 @@ public class HeimdallTotalAvaTransformTest {
         List<String> constants=new ArrayList<String>();
         constants.add("hd");
         List<Metric> result = transform.transform(metrics,constants);
-        
+
         System.out.println("\n\nINPUT>>>\n"+metrics);
         System.out.println("\n\nOUTPUT>>>\n"+result);
 	}
-	
+
 
 }

@@ -34,7 +34,7 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 	private final String password;
     /**
      * Creates a new object via Guice
-     * 
+     *
      * @param  config  The system configuration.  Cannot be null.
      */
 	@Inject
@@ -44,9 +44,9 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 		username=systemConfiguration.getValue(Property.JSON_USERNAME.getName(), Property.JSON_USERNAME.getDefaultValue());
 		password=systemConfiguration.getValue(Property.JSON_PASSWORD.getName(), Property.JSON_PASSWORD.getDefaultValue());
 		service = new ArgusService(endpoint, 10,10000,10000);
-		
+
 	}
-	
+
 	public enum Property {
 	    JSON_ENDPOINT("service.property.json.endpoint","http://localhost"),
 	    JSON_USERNAME("service.property.json.username","defaultUser"),
@@ -58,11 +58,11 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
             _name = name;
             _defaultValue = defaultValue;
         }
-        
+
         public String getDefaultValue() {
             return _defaultValue;
         }
-        
+
         public String getName() {
             return _name;
         }
@@ -75,9 +75,9 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 	 *Step2: convert this JSON into  List<MetricSchemaRecord and return it.
 	 *
 	 * givien
-	 * 		https://argus-ws.data.sfdc.net/argusws/discover/metrics/schemarecords?
+	 * 		https://argus-ws.data.sfdc.net/argus/api/discover/metrics/schemarecords?
 			limit=104&metric=IMPACTPOD&scope=REDUCEDTEST.core.*
-			
+
 	   return
 	   		[{"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP1.cs14","metric":"IMPACTPOD","tagKey":null,"tagValue":null},
 			 {"namespace":null,"scope":"REDUCEDTEST.core.CHI.SP1.cs7","metric":"IMPACTPOD","tagKey":null,"tagValue":null},
@@ -90,7 +90,7 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 
 		service.login(username, password);
 		return service.getDiscoveredMetricSchemaRecord(query.getNamespace(),query.getScope(),query.getMetric(),query.getTagKey(),query.getTagValue(),200);
-	
+
 	}
 
 	/**
@@ -115,7 +115,7 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 	public void put(List<Metric> metrics) {
 		throw new NotImplementedError("not implmented yet.");
 	}
-	
+
 	private String _getValueForType(MetricSchemaRecord record, RecordType type) {
         switch (type) {
             case NAMESPACE:
@@ -132,5 +132,5 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
                 return null;
         }
     }
-	
+
 }

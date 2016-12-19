@@ -20,13 +20,13 @@
 angular.module("argus.urlConfig", [])
 .constant('CONFIG', {
     version: '4.0-SNAPSHOT',
-    wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/api/',
-    dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
+    wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argus/api/',
+    dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argus/',
     emailUrl: 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=argus-dev@mycompany.com',
     feedUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-user',
     wikiUrl: 'https://sites.google.com/a/mycompany.com/argus',
     issueUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-dev',
-    templatePath: '/argusws/views/argus_custom_directives/templates/',
+    templatePath: '/argus/views/argus_custom_directives/templates/',
     piwikUrl: (('https:' == document.location.protocol) ? 'https' : 'http') + '://localhost/',
     piwikSiteId: '3'
 });

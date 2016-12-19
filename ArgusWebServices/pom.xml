@@ -99,7 +99,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <path>/argusws</path>
+                            <path>/argus</path>
                         </configuration>
                     </execution>
                 </executions>

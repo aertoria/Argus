@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-     
+
 package com.salesforce.dva.argus.service.broker;
 
 import com.google.inject.AbstractModule;
@@ -72,10 +72,10 @@ public class DeferredSchemaServiceTest{
     @BeforeClass
     public static void setUpBeforeClass() throws Exception  {
     	configuration=new SystemConfiguration(new Properties());
-		configuration.setProperty("service.property.json.endpoint", "https://localhost:443/argusws");
+		configuration.setProperty("service.property.json.endpoint", "https://localhost:443/argus/api");
 		configuration.setProperty("service.property.json.username", "sampleUserName");
-		configuration.setProperty("service.property.json.password", "XXXXXXXX");	
-		
+		configuration.setProperty("service.property.json.password", "XXXXXXXX");
+
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override
 			protected void configure() {
@@ -88,20 +88,20 @@ public class DeferredSchemaServiceTest{
 			}
 		});
     }
-    
+
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		injector=null;
 	}
-    
+
     //@Test
     public void testWildcardQueries() {
     	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
-    	
+
     	_schemaService=injector.getInstance(DeferredSchemaService.class);
     	_schemaService.get(msrq, 10, 2);
     }
-    
+
 //    @Test
     public void dd() {
     	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
@@ -109,8 +109,8 @@ public class DeferredSchemaServiceTest{
     	MetricQuery q=new MetricQuery("REDUCEDTEST.core.TYO.*", "IMPACTPOD", null, 1477094400L, 1477180800L);
     	_discoveryService.getMatchingQueries(q).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
     }
-    
-    
+
+
 //    @Test
     public void loop() {
     	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
@@ -119,7 +119,7 @@ public class DeferredSchemaServiceTest{
     	MetricQuery q=new MetricQuery("core.WAS.SP2.cs18", "SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg", tags, 1477094400L, 1477180800L);
     	_discoveryService.getMatchingQueries(q).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
     }
-    
+
 //    @Test
     public void filterRecords() {
     	MetricSchemaRecordQuery msrq=new MetricSchemaRecordQuery(null,"S","M",null,null);
@@ -127,7 +127,7 @@ public class DeferredSchemaServiceTest{
     	MetricQuery q=new MetricQuery("REDUCEDTEST.core.TYO.*", "IMPACTPOD", null, 1477094400L, 1477180800L);
     	_discoveryService.filterRecords(null,"REDUCEDTEST.core.*","IMPACTPOD", null,null,100,1).forEach(i -> System.out.println(i.getScope()+":"+i.getMetric()));
     }
-    
+
     @Test
     public void getUnique() {
     	_discoveryService=injector.getInstance(JSONDiscoveryService.class);
