@@ -1,8 +1,8 @@
 /*! Copyright (c) 2016, Salesforce.com, Inc.
  * All rights reserved.
- *  
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
- *   
+ *
  *      Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
  *
  *      Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
@@ -20,19 +20,13 @@
 angular.module("argus.urlConfig", [])
 .constant('CONFIG', {
     version: '4.0-SNAPSHOT',
-    //wsUrl: 'http://localhost:8080/argusws/',
-
-    wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
-    dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/app/',
-
-    //wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
-    //dashboardUrl: 'http://ewang-ltm.internal.salesforce.com:8080/app/',
-
+    wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argus/api/',
+    dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argus/',
     emailUrl: 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=argus-dev@mycompany.com',
     feedUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-user',
     wikiUrl: 'https://sites.google.com/a/mycompany.com/argus',
     issueUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-dev',
-    templatePath: '/app/views/argus_custom_directives/templates/',
+    templatePath: '/argus/views/argus_custom_directives/templates/',
     piwikUrl: (('https:' == document.location.protocol) ? 'https' : 'http') + '://localhost/',
     piwikSiteId: '3'
 });

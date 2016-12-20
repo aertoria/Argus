@@ -33,57 +33,57 @@ import com.salesforce.dva.argus.sdk.entity.Metric;
 import com.salesforce.dva.argus.sdk.propertysdk.Property;
 import com.salesforce.dva.argus.sdk.ETLsdk.CachedETL;
 /**
- * TODO: 
+ * TODO:
  * 1,mutliThreading
  * 2,ProgressBar
  * 3,Error handling.Error detection for re-run
- * 
+ *
  * @author ethan.wang
  *
  */
 public class CacheServiceTest {
 	static ArgusService sourceSVC;
 	static ArgusService targetSVC;
-	
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		//sourceSVC = ArgusService.getInstance("http://ewang-ltm.internal.salesforce.com:8080/argusws", 10);
-		sourceSVC = ArgusService.getInstance("http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws", 10);
-		//sourceSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
-		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
+		//sourceSVC = ArgusService.getInstance("http://ewang-ltm.internal.salesforce.com:8080/argus/api", 10);
+		sourceSVC = ArgusService.getInstance("http://adhoc-db1-1-crd.eng.sfdc.net:8080/argus/api", 10);
+		//sourceSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argus/api", 10);
+		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argus/api", 10);
 
 		@SuppressWarnings("unchecked")
 		Map<String,String> property=Property.of("src/test/resources/etl.properties").get();
 		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
-		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));	
-		
+		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));
+
 		System.out.println("System initalized, login finished");
 	}
-	
+
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		sourceSVC.close();
 		targetSVC.close();
 	}
 
-	
+
 
 	@Test
 	public void countPercetileRACLevel() throws IOException{
 			TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-			
-//			String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+
+//			String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";
 //			List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
 //			System.out.println(ms.size());
-			final String PRODSANDBOX="PROD";	
+			final String PRODSANDBOX="PROD";
 			final String start="1480291200000";
 			final String end="1480895940000";
 			int count=0;
 			int total=0;
-			
-			
+
+
 			List<String> pods=getListOfPod(start,end,sourceSVC, PRODSANDBOX);
-			for(String pod:pods){			
+			for(String pod:pods){
 				//DIVIDE(DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:ImpactedMin:avg,#100d-sum#),DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:CollectedMin:avg,#100d-sum#))
 				//String localexp="DIVIDE(DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":ImpactedMin:avg,#100d-sum#),DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":CollectedMin:avg,#100d-sum#))";
 				String localexp="DOWNSAMPLE(HEIMDALL("
@@ -94,7 +94,7 @@ public class CacheServiceTest {
 						+ start+":"+end+":system."+pod+":CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg, "
 						+ "#RACHOUR#),#100d-sum#)";
 				List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
-				
+
 				Map<String,Double> ImpactedMap=new HashMap<String, Double>();
 				Map<String,Double> CollectedMap=new HashMap<String, Double>();
 				for(Metric m:resultms){
@@ -107,9 +107,9 @@ public class CacheServiceTest {
 						CollectedMap.put(m.getMetric(),getFirstValueAndCast(m.getDatapoints()));
 					}
 				}
-				
+
 				//resultms.forEach(m -> System.out.println(m.getScope()+m.getMetric()+m.getDatapoints()));
-				
+
 				//NOW CACULATE
 				assert(ImpactedMap.size()==CollectedMap.size()):"two hashmap should align up";
 				for(Entry<String, Double> e:ImpactedMap.entrySet()){
@@ -124,47 +124,47 @@ public class CacheServiceTest {
 				}
 			}
 			System.out.println(count+"/"+total);
-			
-			
-			
-			
+
+
+
+
 		}
-	
+
 	private static Double getFirstValueAndCast(Map<Long,String> datapoints){
 		assert(datapoints.size()>0):"empty datapoints";
 		return Double.valueOf((String) datapoints.values().toArray()[0]);
 	}
-		
+
 	//@Test
 	public void countPercetilePodLevel() throws IOException{
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";
 //		List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
 //		System.out.println(ms.size());
-		final String PRODSANDBOX="SANDBOX";	
+		final String PRODSANDBOX="SANDBOX";
 		final String start="1480291200000";
 		final String end="1480895940000";
 		int count=0;
 		int total=0;
-		
+
 		List<String> pods=getListOfPod(start,end,sourceSVC, PRODSANDBOX);
-		for(String pod:pods){			
+		for(String pod:pods){
 //			DIVIDE(DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:ImpactedMin:avg,#100d-sum#),DOWNSAMPLE(1480291200000:1480895940000:REDUCED.db.PROD.LON.SP9.eu1:CollectedMin:avg,#100d-sum#))
 			String localexp="DIVIDE(DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":ImpactedMin:avg,#100d-sum#),DOWNSAMPLE("+start+":"+end+":REDUCED.db."+PRODSANDBOX+"."+pod+":CollectedMin:avg,#100d-sum#))";
-			
+
 			List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
-			
-			
+
+
 			try{
 				final double value=Double.valueOf((String) resultms.get(0).getDatapoints().values().toArray()[0]);
 				final double rate=1-value;
 				System.out.println(pod+":"+rate);
-				
+
 				if (rate>=0.999){
 					count++;
 				}
 				total++;
-				
+
 			}catch(Exception e){
 				System.out.println(pod);
 				System.out.println(localexp);
@@ -174,15 +174,15 @@ public class CacheServiceTest {
 		}
 		System.out.println(count+"/"+total);
 	}
-	
-	//@Test 
-	public void countRacPod() throws IOException{	
+
+	//@Test
+	public void countRacPod() throws IOException{
 		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";		
+//		String exp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle.CHI.SP3.na5:*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";
 //		List<Metric> ms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(exp)));
 //		System.out.println(ms.size());
 //		String template="-2d:-0d:REDUCED.db.PROD.WAS.*:Traffic:avg";
-		
+
 		final List<String> dcs=Arrays.asList("CHI","WAS","PHX","DFW","FRF","LON","PAR","TYO","WAX");
 		List<String> collected=new ArrayList<String>();
 		for (String ex:dcs){
@@ -191,7 +191,7 @@ public class CacheServiceTest {
 			collected.addAll(localmetrics.stream().map(m -> m.getScope()).collect(Collectors.toList()));
 		}
 		System.out.println(collected);
-		
+
 //		List<String> collected=Arrays.asList("REDUCED.db.PROD.CHI.SP3.na20","REDUCED.db.PROD.TYO.NONE.ap0");
 		int totalcount=0;
 		for(String podname:collected){
@@ -200,18 +200,18 @@ public class CacheServiceTest {
 				supperPod="AGG";
 			}
 			String pod=podname.split("\\.")[3]+"."+supperPod+"."+podname.split("\\.")[5];
-			
+
 			String localexp="DOWNSAMPLE(DOWNSAMPLE(-2d:-0d:db.oracle."+pod+":*.active__sessions{device=*}:avg,#100d-count#),#100d-count#)";
 			List<Metric> resultms=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(localexp)));
-			
+
 			System.out.println("processing for "+pod+":  "+resultms.size());
 			totalcount+=resultms.size();
 		}
 		System.out.println("final count: "+totalcount);
-	
-		
+
+
 	}
-	
+
 	/**
 	 * UTIL: for get a list of pod name
 	 * @param sourceSVC
@@ -227,7 +227,7 @@ public class CacheServiceTest {
 			List<Metric> localmetrics=sourceSVC.getMetricService().getMetrics(expressionCleanUp(Arrays.asList(processed)));
 			collected.addAll(localmetrics.stream().map(m -> m.getScope()).collect(Collectors.toList()));
 		}
-			
+
 		return collected.stream().map(s -> {
 			String supperPod=s.split("\\.")[4];
 //			if (supperPod.equals("NONE")){
@@ -237,7 +237,7 @@ public class CacheServiceTest {
 			return pod;
 		}).collect(Collectors.toList());
 	}
-	
+
 	/**
 	 * overloads
 	 * @param sourceSVC
@@ -248,7 +248,7 @@ public class CacheServiceTest {
 	private static List<String> getListOfPod(final ArgusService sourceSVC,final String PROD_SANDBOX) throws IOException{
 		return getListOfPod("-100d", "-0d", sourceSVC, PROD_SANDBOX);
 	}
-	
+
 	private static List<String> expressionCleanUp(List<String> expressions){
 		assert(expressions!=null && expressions.size()>0):"input not valid";
 		List<String> r= expressions
@@ -265,9 +265,9 @@ public class CacheServiceTest {
 
 
 
-//	
-////@Test 
-//public void testProperty() throws IOException{	
+//
+////@Test
+//public void testProperty() throws IOException{
 //	TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
 //	int currentTimeStamp=Math.round((System.currentTimeMillis())/1000);
 //	System.out.println(currentTimeStamp);
@@ -288,7 +288,7 @@ public class CacheServiceTest {
 //			makeATransfer(ts,exp);
 //		});
 //	}
-//	
+//
 //	private void makeATransfer(TransferService ts, String exp){
 //		String sourceExp=getSource(exp);
 //		String targetScope=getTargetScopeName(exp);
@@ -300,8 +300,8 @@ public class CacheServiceTest {
 //		} catch (Exception e) {
 //			e.printStackTrace();
 //		}
-//	}	
-//	
+//	}
+//
 //	private List<String> getPods() throws IOException{
 //		InputStream is=getClass().getResourceAsStream("/pods.txt");
 //		BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -312,7 +312,7 @@ public class CacheServiceTest {
 //		}
 //		return pods;
 //	}
-//	
+//
 //	private String getSource(String t) {
 //		String expression="HEIMDALL("
 //				+ "1477094400:1477180800:core."+t+":SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, "
@@ -320,13 +320,13 @@ public class CacheServiceTest {
 //				+ "#POD#)";
 //		return expression;
 //	}
-//	
-//	
+//
+//
 //	private String getTargetScopeName(String t) {
 //		String expression="REDUCEDTEST.core."+t;
 //		return expression;
 //	}
-//	
+//
 //}
 //
 //
@@ -335,8 +335,8 @@ public class CacheServiceTest {
 //		// TODO Auto-generated method stub
 //		return null;
 //	}
-//	
-//	
+//
+//
 //	/**
 //	 * given pod address, fetch the 5 result about this pod each hour, load it to predified scope metric
 //	 * @param transferService
@@ -346,7 +346,7 @@ public class CacheServiceTest {
 //		final String sourceExp=getExpressionFromAddress(podAddress,1477094400L,1477180800L);
 //
 //		final String targetScope=getTargetScopeName(podAddress);
-//		
+//
 //		try {
 //			System.out.println("\nexecuting\n"+sourceExp+"\n");
 //			transferService.transfer(sourceExp,targetScope);
@@ -354,7 +354,7 @@ public class CacheServiceTest {
 //			e.printStackTrace();
 //		}
 //	}
-//	
+//
 //	/**
 //	 * Return a executable expression to retrieve result from source
 //	 * @param podAddress
@@ -369,7 +369,7 @@ public class CacheServiceTest {
 //				+ "#POD#)";
 //		return expression;
 //	}
-//	
+//
 //	/**
 //	 * Retrun a scoe name
 //	 * @param podAddress
@@ -425,6 +425,3 @@ public class CacheServiceTest {
 //		System.out.println("Pipeline completed...");
 //	}
 //}
-
-
-

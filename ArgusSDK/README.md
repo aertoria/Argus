@@ -10,7 +10,7 @@ ArgusSDK is the official JavaSDK for Argus.  Use it to integrate client code wit
         String password = getPassword();
         List<String> expressions = getExpressions();
         int connections = 10;
-        try (ArgusService svc = ArgusService.getInstance("https://argus.mycompany.com/argusws", connections)) {
+        try (ArgusService svc = ArgusService.getInstance("https://argus.mycompany.com/argus/api", connections)) {
             svc.getAuthService().login(username, password);
             List<Metric> metrics = svc.getMetricService().getMetrics(expressions);
             // Do some cool stuff with the services.

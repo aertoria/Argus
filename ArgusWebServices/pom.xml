@@ -28,6 +28,9 @@
                                 <include>**/web.xml</include>
                             </includes>
                         </resource>
+                        <resource>
+                            <directory>../ArgusWeb/app</directory>
+                        </resource>
                     </webResources>
                     <warSourceDirectory>src/main/webapp</warSourceDirectory>
                     <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
@@ -96,7 +99,7 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <path>/argusws</path>
+                            <path>/argus</path>
                         </configuration>
                     </execution>
                 </executions>

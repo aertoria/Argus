@@ -19,11 +19,11 @@ import com.salesforce.dva.argus.sdk.entity.MetricSchemaRecord;
 public class TransferServiceTest {
 	static ArgusService sourceSVC;
 	static ArgusService targetSVC;
-	
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argusws", 10);
-		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
+		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argus/api", 10);
+		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argus/api", 10);
 		sourceSVC.getAuthService().login("**removed**", "****");
 		targetSVC.getAuthService().login("**removed**", "****");
 	}
@@ -42,28 +42,28 @@ public class TransferServiceTest {
 			ts.transfer(expression);
 		}catch(Throwable t){}
 	}
-	
+
 	@Test
 	public void devForDiscoveryService() throws IOException{
 
 		DiscoveryService ds=targetSVC.getDiscoveryService();
 		List<MetricSchemaRecord> a=ds.getMatchingRecords(null, "REDUCEDTEST.core.CHI.*", "IMPACTPOD", null, null, 70);
 		a.forEach(m -> System.out.println(m.toString()+m.getScope()+m.getMetric()));
-		
-		
+
+
 //		ArgusHttpClient client = new ArgusHttpClient(endpoint, maxConn, 10000, 10000);
 //		DiscoveryService dss=new DiscoveryService(_client);
 	}
-	
+
 //	@Test
 //	public void test() throws IOException {
 //		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-//			
+//
 //		List<String> workingRepo=Arrays.asList(
 //				/**P90 week resolution GROUP**/
 //				//"-700d:p90:podperc90{podId=*}:avg",
 //				//"-700d:p90_sandbox:podperc90{podId=*}:avg",
-//				
+//
 //				/**P90 10min resolution SPLUNK GROUP**/
 //				//"-700d:-0d:production_splunk:podapt{podId=*}:avg",
 //				//"-700d:-0d:production_splunk:podcount{podId=*}:avg",
@@ -71,21 +71,21 @@ public class TransferServiceTest {
 //				//"-700d:-0d:sandbox_splunk:podapt{podId=*}:avg",
 //				//"-700d:-0d:sandbox_splunk:podcount{podId=*}:avg",
 //				//"-700d:-0d:sandbox_splunk:podperc90{podId=*}:avg",
-//				
+//
 //				/**TopK group**/
 //				//"-700d:production_splunk:apt_TopK{orgId=*,podId=*}:avg",
 //				//"-700d:sandbox_splunk:count_TopK{orgId=*,podId=*}:avg"
 //				);
-//		
+//
 //		String expression="sandbox_splunk:count_TopK{orgId=*,podId=*}:avg";
-//		
+//
 //		schedule(expression,10).forEach(ex -> {
 //			System.out.println("EXECUTING EXPRESSION: "+ex);
 //			try {
 //				ts.transfer(ex);
 //				Thread.sleep(500);
 //			} catch (Exception e) {
-//				
+//
 //				e.printStackTrace();
 //				try {
 //					Thread.sleep(2000);
@@ -95,11 +95,11 @@ public class TransferServiceTest {
 //				}
 //			}
 //		});
-//		
+//
 ////		ts.readFromSource(Arrays.asList("-30d:-20d:sandbox_splunk:podcount{podId=*}:avg"));
 ////		ts.transfer("-30d:-20d:sandbox_splunk:podcount{podId=*}:avg");
 //	}
-//	
+//
 //	private List<String> schedule(String expression,int intevalDays){
 //		List<String> expressions=new ArrayList<String>();
 //		for (int i=0;i<=700;i+=intevalDays){
@@ -107,5 +107,5 @@ public class TransferServiceTest {
 //		}
 //		return expressions;
 //	}
-//	
+//
 }
