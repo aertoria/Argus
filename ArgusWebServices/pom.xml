@@ -28,6 +28,10 @@
                                 <include>**/web.xml</include>
                             </includes>
                         </resource>
+                        <resource>
+                          <directory>../ArgusWeb/app</directory>
+                          <targetPath>ui</targetPath>
+                        </resource>
                     </webResources>
                     <warSourceDirectory>src/main/webapp</warSourceDirectory>
                     <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
