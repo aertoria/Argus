@@ -614,7 +614,6 @@ angular.module('argus.services.dashboard', [])
                     return resultMap;//FORMAT   K:V   CHI.SP2.cs15:  [impactmin, traffic, collectedMin, ava]
                 };
 
-
                 var expression=parseExpression(metricList[0]);
                 //assert that input two metricList for this transform
                 var expression2=parseExpression(metricList[1]);
@@ -628,8 +627,6 @@ angular.module('argus.services.dashboard', [])
                         avaMap=alignUpByScope(raw1[0],raw2[0],raw3[0]);
                         renderChart(avaMap);
                     });
-
-
 
                 Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
                 /**
@@ -3030,7 +3027,6 @@ angular.module('argus.services.dashboard', [])
 
                 var requestURL =  CONFIG.wsUrl + "metrics?expression=" + expression;
                 console.log(requestURL);
-
 
                 $.getJSON(requestURL, function(rawdata){
 

@@ -86,8 +86,6 @@ public class DeferredSchemaService extends DefaultService implements SchemaServi
 	@Override
 	public List<MetricSchemaRecord> get(MetricSchemaRecordQuery query, int limit, int page) {
 		System.out.println("\nArgusPlus+ SchemaService "+query.toString());
-
-
 		service.login(username, password);
 		return service.getDiscoveredMetricSchemaRecord(query.getNamespace(),query.getScope(),query.getMetric(),query.getTagKey(),query.getTagValue(),200);
 	

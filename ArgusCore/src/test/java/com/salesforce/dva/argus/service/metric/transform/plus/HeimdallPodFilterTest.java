@@ -39,8 +39,7 @@ public class HeimdallPodFilterTest {
 	 
 	 @Test
 	 public void podFilterTest(){
-		 
-		 Transform transform = new HeimdallPodFilter();	
+		    Transform transform = new HeimdallPodFilter();	
 		 
 			Map<Long, String> datapoints_1 = new HashMap<Long, String>();
 	        datapoints_1.put(1473389110000L, "1.0");
@@ -81,6 +80,14 @@ public class HeimdallPodFilterTest {
 	        
 	        
 	        Metric metric_4 = new Metric(TEST_SCOPE_4, TEST_METRIC_4);
+	        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
+	        datapoints_4.put(1473389110000L, "3.0");
+	        datapoints_4.put(1473389162000L, "2.0");
+	        datapoints_4.put(1473389221000L, "4.0");
+	        datapoints_4.put(1473389282000L, "1.0");
+	        datapoints_4.put(1473389341000L, "2.0");
+	        metric_4.setDatapoints(datapoints_4);
+	        
 	        Metric metric_5 = new Metric(TEST_SCOPE_5, TEST_METRIC_5);
 	        Metric metric_6 = new Metric(TEST_SCOPE_6, TEST_METRIC_6);
 	        List<Metric> metrics = new ArrayList<Metric>();
@@ -96,9 +103,13 @@ public class HeimdallPodFilterTest {
 	        //Looking for DGoWAN pods
 	        constants.add("1.00");
 	        
+	        
+	        metrics.forEach(m -> System.out.println(m.toString()));
 	        //System.out.println("Threshold: 120sec");
 	        List<Metric> result = transform.transform(metrics,constants);
 	        //System.out.print(result.toString()); 
+	        System.out.println("\n\n");
+	        result.forEach(m -> System.out.println(m.toString()));
 	        
 	        // only na27 related metrics should be seen after using filter(na27 is DGoWAN)
 	        assertEquals(result.size(), 1);

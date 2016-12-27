@@ -24,7 +24,6 @@ import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
-import junit.framework.Assert;
 
 /**
  * 
@@ -33,7 +32,6 @@ import junit.framework.Assert;
  */
 public class JSONDiscoveryService extends DefaultService implements DiscoveryService {
     //~ Static fields/initializers *******************************************************************************************************************
-
 	private static final int HARD_LIMIT = 20;
     private static final char[] WILDCARD_CHARSET = new char[] { '*', '?', '[', ']', '|' };
 

@@ -36,6 +36,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.salesforce.dva.argus.service.TSDBService;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallMetricReducer;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallPodFilter;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardTransform;;
@@ -209,6 +210,8 @@ public class TransformFactory {
             	return new HeimdallDataGuardTransform();
             case HEIMDALL:
             	return _heimdallMetricReducer.get();
+            case HEIMDALLPODFILTER:
+            	return new HeimdallPodFilter();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -286,7 +289,8 @@ public class TransformFactory {
         SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
         HEIMDALLDATAGUARDTRANSFORM("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
-    	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic");
+    	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic"),
+    	HEIMDALLPODFILTER("HEIMDALLPODFILTER","filter based on replication_type for DGoWAN");
         private final String _name;
         private final String _description;
 

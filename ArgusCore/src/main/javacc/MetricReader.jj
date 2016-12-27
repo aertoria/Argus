@@ -145,6 +145,7 @@ TOKEN : { < #ANYTHING : ~["#"] > }
 TOKEN : { < IDENTITY : "IDENTITY" > }
 TOKEN : { < HEIMDALL_TOTALAVA : "HEIMDALL_TOTALAVA" > }
 TOKEN : { < HEIMDALL : "HEIMDALL" > }
+TOKEN : { < HEIMDALLPODFILTER : "HEIMDALLPODFILTER" > }
 TOKEN : { < SCALE_MATCH : "SCALE_MATCH" > }
 TOKEN : { < FILTER : "FILTER" > }
 TOKEN : { < P90 : "P90" > }
@@ -315,6 +316,9 @@ private String functionName() :
 	{ return t.image; }
 	|
 	t = <HEIMDALL>
+	{ return t.image; }
+	|
+	t = <HEIMDALLPODFILTER>
 	{ return t.image; }
 	|
 	t = <SCALE_MATCH>

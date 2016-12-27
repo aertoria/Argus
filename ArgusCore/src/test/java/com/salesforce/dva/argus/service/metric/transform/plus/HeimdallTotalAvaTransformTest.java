@@ -127,238 +127,236 @@ public class HeimdallTotalAvaTransformTest {
         System.out.println("\n\nOUTPUT>>>\n"+result);
 	}
 	
-	
-	
-	
-	
-	//@Test
-	public void HeimdallTotalAvaTransformOnlyOneafterFilter(){
-		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
-		//Transform transform = new HeimdallTotalAvaTransform();
-		int offset=1000*60/100;
-        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
-        datapoints_1.put(100L*offset, "0");
-        datapoints_1.put(200L*offset, "0");
-        datapoints_1.put(300L*offset, "1000.0");
-        datapoints_1.put(400L*offset, "0");
-        datapoints_1.put(500L*offset, "0");
-        datapoints_1.put(600L*offset, "200.0");
-        metric_1.setDatapoints(datapoints_1);
-        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
-        datapoints_2.put(100L*offset, "0");
-        datapoints_2.put(200L*offset, "0");
-        datapoints_2.put(300L*offset, "1350.0");
-        datapoints_2.put(400L*offset, "0");
-        datapoints_2.put(500L*offset, "950.0");
-        datapoints_2.put(600L*offset, "50.0");
-        metric_2.setDatapoints(datapoints_2);
-        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
-        datapoints_3.put(100L*offset, "2.0");
-        datapoints_3.put(200L*offset, "3.0");
-        datapoints_3.put(300L*offset, "3.0");
-        datapoints_3.put(400L*offset, "2.0");
-        datapoints_3.put(500L*offset, "3.0");
-        datapoints_3.put(600L*offset, "2.0");
-        metric_3.setDatapoints(datapoints_3);
-        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
-        datapoints_4.put(100L*offset, "1.0");
-        datapoints_4.put(200L*offset, "9.0");
-        datapoints_4.put(300L*offset, "2.0");
-        datapoints_4.put(400L*offset, "2.0");
-        datapoints_4.put(500L*offset, "1.0");
-        datapoints_4.put(600L*offset, "1.0");
-        metric_4.setDatapoints(datapoints_4);
-        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
-        List<Metric> metrics = new ArrayList<Metric>();
-        metrics.add(metric_1);
-        metrics.add(metric_2);
-        metrics.add(metric_3);
-        metrics.add(metric_4);
-        
-        List<Metric> result = transform.transform(metrics);
-        System.out.println("\n\nINPUT>>>\n"+metrics);
-        System.out.println("\n\nOUTPUT>>>\n"+result);
-	}
-	
-	
-	//@Test
-	public void HeimdallTotalAvaTransformAllZeros(){
-		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
-		//Transform transform = new HeimdallTotalAvaTransform();
-		int offset=1000*60/100;
-        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
-        datapoints_1.put(100L*offset, "0");
-        datapoints_1.put(200L*offset, "0");
-        datapoints_1.put(300L*offset, "0");
-        datapoints_1.put(400L*offset, "0");
-        datapoints_1.put(500L*offset, "0");
-        datapoints_1.put(600L*offset, "0");
-        metric_1.setDatapoints(datapoints_1);
-        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
-        datapoints_2.put(100L*offset, "0");
-        datapoints_2.put(200L*offset, "0");
-        datapoints_2.put(300L*offset, "0");
-        datapoints_2.put(400L*offset, "0");
-        datapoints_2.put(500L*offset, "0");
-        datapoints_2.put(600L*offset, "0");
-        metric_2.setDatapoints(datapoints_2);
-        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
-        datapoints_3.put(100L*offset, "0");
-        datapoints_3.put(200L*offset, "0");
-        datapoints_3.put(300L*offset, "0");
-        datapoints_3.put(400L*offset, "0");
-        datapoints_3.put(500L*offset, "0");
-        datapoints_3.put(600L*offset, "0");
-        metric_3.setDatapoints(datapoints_3);
-        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
-        datapoints_4.put(100L*offset, "0");
-        datapoints_4.put(200L*offset, "0");
-        datapoints_4.put(300L*offset, "0");
-        datapoints_4.put(400L*offset, "0");
-        datapoints_4.put(500L*offset, "0");
-        datapoints_4.put(600L*offset, "0");
-        metric_4.setDatapoints(datapoints_4);
-        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
-        Metric metric_5 = new Metric("SUM", "result");
-        Map<Long, String> datapoints_5 = new HashMap<Long, String>();
-        datapoints_5.put(100L*offset, "0");
-        datapoints_5.put(200L*offset, "0");
-        datapoints_5.put(300L*offset, "0");
-        datapoints_5.put(400L*offset, "50");
-        datapoints_5.put(500L*offset, "32");
-        datapoints_5.put(600L*offset, "0");
-        metric_5.setDatapoints(datapoints_5);
-        metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
-        metric_5.setMetric("result");
-        
-        
-        List<Metric> metrics = new ArrayList<Metric>();
-        metrics.add(metric_1);
-        metrics.add(metric_2);
-        metrics.add(metric_3);
-        metrics.add(metric_4);
-        metrics.add(metric_5);
-        
-        List<Metric> result = transform.transform(metrics);
-        System.out.println("\n\nINPUT>>>\n"+metrics);
-        
-        System.out.println("\n\nOUTPUT>>>\n");
-        result.forEach(m -> System.out.println(m));
-	}
-	
-	
-	//@Test
-	public void HeimdallTotalAvaTransform_hd(){
-		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
-		//Transform transform = new HeimdallTotalAvaTransform();
-		int offset=1000*60/100;
-        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
-        datapoints_1.put(100L*offset, "900.0");
-        datapoints_1.put(200L*offset, "1200.0");
-        datapoints_1.put(300L*offset, "1000.0");
-        datapoints_1.put(400L*offset, "1000.0");
-        datapoints_1.put(500L*offset, "400.0");
-        datapoints_1.put(600L*offset, "200.0");
-        metric_1.setDatapoints(datapoints_1);
-        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
-        datapoints_2.put(100L*offset, "1400.0");
-        datapoints_2.put(200L*offset, "1350.0");
-        datapoints_2.put(300L*offset, "1350.0");
-        datapoints_2.put(400L*offset, "950.0");
-        datapoints_2.put(500L*offset, "950.0");
-        datapoints_2.put(600L*offset, "50.0");
-        metric_2.setDatapoints(datapoints_2);
-        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
-        datapoints_3.put(100L*offset, "2.0");
-        datapoints_3.put(200L*offset, "3.0");
-        datapoints_3.put(300L*offset, "3.0");
-        datapoints_3.put(400L*offset, "2.0");
-        datapoints_3.put(500L*offset, "3.0");
-        datapoints_3.put(600L*offset, "2.0");
-        metric_3.setDatapoints(datapoints_3);
-        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
-        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
-        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
-        datapoints_4.put(100L*offset, "1.0");
-        datapoints_4.put(200L*offset, "9.0");
-        datapoints_4.put(300L*offset, "2.0");
-        datapoints_4.put(400L*offset, "2.0");
-        datapoints_4.put(500L*offset, "1.0");
-        datapoints_4.put(600L*offset, "1.0");
-        metric_4.setDatapoints(datapoints_4);
-        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
-        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
-        
-        
-        Metric metric_5 = new Metric("SUM", "result");
-        Map<Long, String> datapoints_5 = new HashMap<Long, String>();
-        datapoints_5.put(100L*offset, "0");
-        datapoints_5.put(200L*offset, "0");
-        datapoints_5.put(300L*offset, "69");
-        datapoints_5.put(400L*offset, "50");
-        datapoints_5.put(500L*offset, "32");
-        datapoints_5.put(600L*offset, "0");
-        metric_5.setDatapoints(datapoints_5);
-        metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
-        metric_5.setMetric("result");
-        
-        
-        List<Metric> metrics = new ArrayList<Metric>();
-        metrics.add(metric_1);
-        metrics.add(metric_2);
-        metrics.add(metric_3);
-        metrics.add(metric_4);
-        metrics.add(metric_5);
-        List<String> constants=new ArrayList<String>();
-        constants.add("hd");
-        List<Metric> result = transform.transform(metrics,constants);
-        
-        System.out.println("\n\nINPUT>>>\n"+metrics);
-        System.out.println("\n\nOUTPUT>>>\n"+result);
-	}
-	
+//	
+//	
+//	//@Test
+//	public void HeimdallTotalAvaTransformOnlyOneafterFilter(){
+//		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
+//		//Transform transform = new HeimdallTotalAvaTransform();
+//		int offset=1000*60/100;
+//        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+//        datapoints_1.put(100L*offset, "0");
+//        datapoints_1.put(200L*offset, "0");
+//        datapoints_1.put(300L*offset, "1000.0");
+//        datapoints_1.put(400L*offset, "0");
+//        datapoints_1.put(500L*offset, "0");
+//        datapoints_1.put(600L*offset, "200.0");
+//        metric_1.setDatapoints(datapoints_1);
+//        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+//        datapoints_2.put(100L*offset, "0");
+//        datapoints_2.put(200L*offset, "0");
+//        datapoints_2.put(300L*offset, "1350.0");
+//        datapoints_2.put(400L*offset, "0");
+//        datapoints_2.put(500L*offset, "950.0");
+//        datapoints_2.put(600L*offset, "50.0");
+//        metric_2.setDatapoints(datapoints_2);
+//        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
+//        datapoints_3.put(100L*offset, "2.0");
+//        datapoints_3.put(200L*offset, "3.0");
+//        datapoints_3.put(300L*offset, "3.0");
+//        datapoints_3.put(400L*offset, "2.0");
+//        datapoints_3.put(500L*offset, "3.0");
+//        datapoints_3.put(600L*offset, "2.0");
+//        metric_3.setDatapoints(datapoints_3);
+//        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
+//        datapoints_4.put(100L*offset, "1.0");
+//        datapoints_4.put(200L*offset, "9.0");
+//        datapoints_4.put(300L*offset, "2.0");
+//        datapoints_4.put(400L*offset, "2.0");
+//        datapoints_4.put(500L*offset, "1.0");
+//        datapoints_4.put(600L*offset, "1.0");
+//        metric_4.setDatapoints(datapoints_4);
+//        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        
+//        List<Metric> metrics = new ArrayList<Metric>();
+//        metrics.add(metric_1);
+//        metrics.add(metric_2);
+//        metrics.add(metric_3);
+//        metrics.add(metric_4);
+//        
+//        List<Metric> result = transform.transform(metrics);
+//        System.out.println("\n\nINPUT>>>\n"+metrics);
+//        System.out.println("\n\nOUTPUT>>>\n"+result);
+//	}
+//	
+//	
+//	//@Test
+//	public void HeimdallTotalAvaTransformAllZeros(){
+//		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
+//		//Transform transform = new HeimdallTotalAvaTransform();
+//		int offset=1000*60/100;
+//        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+//        datapoints_1.put(100L*offset, "0");
+//        datapoints_1.put(200L*offset, "0");
+//        datapoints_1.put(300L*offset, "0");
+//        datapoints_1.put(400L*offset, "0");
+//        datapoints_1.put(500L*offset, "0");
+//        datapoints_1.put(600L*offset, "0");
+//        metric_1.setDatapoints(datapoints_1);
+//        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+//        datapoints_2.put(100L*offset, "0");
+//        datapoints_2.put(200L*offset, "0");
+//        datapoints_2.put(300L*offset, "0");
+//        datapoints_2.put(400L*offset, "0");
+//        datapoints_2.put(500L*offset, "0");
+//        datapoints_2.put(600L*offset, "0");
+//        metric_2.setDatapoints(datapoints_2);
+//        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
+//        datapoints_3.put(100L*offset, "0");
+//        datapoints_3.put(200L*offset, "0");
+//        datapoints_3.put(300L*offset, "0");
+//        datapoints_3.put(400L*offset, "0");
+//        datapoints_3.put(500L*offset, "0");
+//        datapoints_3.put(600L*offset, "0");
+//        metric_3.setDatapoints(datapoints_3);
+//        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
+//        datapoints_4.put(100L*offset, "0");
+//        datapoints_4.put(200L*offset, "0");
+//        datapoints_4.put(300L*offset, "0");
+//        datapoints_4.put(400L*offset, "0");
+//        datapoints_4.put(500L*offset, "0");
+//        datapoints_4.put(600L*offset, "0");
+//        metric_4.setDatapoints(datapoints_4);
+//        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        
+//        Metric metric_5 = new Metric("SUM", "result");
+//        Map<Long, String> datapoints_5 = new HashMap<Long, String>();
+//        datapoints_5.put(100L*offset, "0");
+//        datapoints_5.put(200L*offset, "0");
+//        datapoints_5.put(300L*offset, "0");
+//        datapoints_5.put(400L*offset, "50");
+//        datapoints_5.put(500L*offset, "32");
+//        datapoints_5.put(600L*offset, "0");
+//        metric_5.setDatapoints(datapoints_5);
+//        metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
+//        metric_5.setMetric("result");
+//        
+//        
+//        List<Metric> metrics = new ArrayList<Metric>();
+//        metrics.add(metric_1);
+//        metrics.add(metric_2);
+//        metrics.add(metric_3);
+//        metrics.add(metric_4);
+//        metrics.add(metric_5);
+//        
+//        List<Metric> result = transform.transform(metrics);
+//        System.out.println("\n\nINPUT>>>\n"+metrics);
+//        
+//        System.out.println("\n\nOUTPUT>>>\n");
+//        result.forEach(m -> System.out.println(m));
+//	}
+//	
+//	
+//	//@Test
+//	public void HeimdallTotalAvaTransform_hd(){
+//		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
+//		//Transform transform = new HeimdallTotalAvaTransform();
+//		int offset=1000*60/100;
+//        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+//        datapoints_1.put(100L*offset, "900.0");
+//        datapoints_1.put(200L*offset, "1200.0");
+//        datapoints_1.put(300L*offset, "1000.0");
+//        datapoints_1.put(400L*offset, "1000.0");
+//        datapoints_1.put(500L*offset, "400.0");
+//        datapoints_1.put(600L*offset, "200.0");
+//        metric_1.setDatapoints(datapoints_1);
+//        metric_1.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_1.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_2 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+//        datapoints_2.put(100L*offset, "1400.0");
+//        datapoints_2.put(200L*offset, "1350.0");
+//        datapoints_2.put(300L*offset, "1350.0");
+//        datapoints_2.put(400L*offset, "950.0");
+//        datapoints_2.put(500L*offset, "950.0");
+//        datapoints_2.put(600L*offset, "50.0");
+//        metric_2.setDatapoints(datapoints_2);
+//        metric_2.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_2.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_3 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
+//        datapoints_3.put(100L*offset, "2.0");
+//        datapoints_3.put(200L*offset, "3.0");
+//        datapoints_3.put(300L*offset, "3.0");
+//        datapoints_3.put(400L*offset, "2.0");
+//        datapoints_3.put(500L*offset, "3.0");
+//        datapoints_3.put(600L*offset, "2.0");
+//        metric_3.setDatapoints(datapoints_3);
+//        metric_3.setTag("device", "na11-app1-1-chi.ops.sfdc.net");
+//        metric_3.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        Metric metric_4 = new Metric(TEST_SCOPE, TEST_METRIC);
+//        Map<Long, String> datapoints_4 = new HashMap<Long, String>();
+//        datapoints_4.put(100L*offset, "1.0");
+//        datapoints_4.put(200L*offset, "9.0");
+//        datapoints_4.put(300L*offset, "2.0");
+//        datapoints_4.put(400L*offset, "2.0");
+//        datapoints_4.put(500L*offset, "1.0");
+//        datapoints_4.put(600L*offset, "1.0");
+//        metric_4.setDatapoints(datapoints_4);
+//        metric_4.setTag("device", "na11-app1-2-chi.ops.sfdc.net");
+//        metric_4.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode2.Last_1_Min_Avg");
+//        
+//        
+//        Metric metric_5 = new Metric("SUM", "result");
+//        Map<Long, String> datapoints_5 = new HashMap<Long, String>();
+//        datapoints_5.put(100L*offset, "0");
+//        datapoints_5.put(200L*offset, "0");
+//        datapoints_5.put(300L*offset, "69");
+//        datapoints_5.put(400L*offset, "50");
+//        datapoints_5.put(500L*offset, "32");
+//        datapoints_5.put(600L*offset, "0");
+//        metric_5.setDatapoints(datapoints_5);
+//        metric_5.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
+//        metric_5.setMetric("result");
+//        
+//        
+//        List<Metric> metrics = new ArrayList<Metric>();
+//        metrics.add(metric_1);
+//        metrics.add(metric_2);
+//        metrics.add(metric_3);
+//        metrics.add(metric_4);
+//        metrics.add(metric_5);
+//        List<String> constants=new ArrayList<String>();
+//        constants.add("hd");
+//        List<Metric> result = transform.transform(metrics,constants);
+//        
+//        System.out.println("\n\nINPUT>>>\n"+metrics);
+//        System.out.println("\n\nOUTPUT>>>\n"+result);
+//	}
+//	
 
 }
