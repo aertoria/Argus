@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -15,6 +16,7 @@ import com.salesforce.dva.argus.sdk.ArgusService;
 import com.salesforce.dva.argus.sdk.DiscoveryService;
 import com.salesforce.dva.argus.sdk.entity.Metric;
 import com.salesforce.dva.argus.sdk.entity.MetricSchemaRecord;
+import com.salesforce.dva.argus.sdk.propertysdk.Property;
 
 public class TransferServiceTest {
 	static ArgusService sourceSVC;
@@ -24,8 +26,11 @@ public class TransferServiceTest {
 	public static void setUpBeforeClass() throws Exception {
 		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argusws", 10);
 		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
-		sourceSVC.getAuthService().login("**removed**", "****");
-		targetSVC.getAuthService().login("**removed**", "****");
+
+		@SuppressWarnings("unchecked")
+		Map<String,String> property=Property.of("src/test/resources/etl.properties").get();
+		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
+		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));	
 	}
 
 	@AfterClass
