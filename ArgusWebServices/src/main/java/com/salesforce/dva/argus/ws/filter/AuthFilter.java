@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-	 
+
 package com.salesforce.dva.argus.ws.filter;
 
 import com.salesforce.dva.argus.ws.dto.PrincipalUserDto;
@@ -104,7 +104,7 @@ public class AuthFilter implements Filter {
         String path = req.getRequestURI();
         String contextPath = req.getContextPath();
 
-        return path.startsWith(contextPath + "/auth") || path.endsWith("/help");
+        return path.startsWith(contextPath + "/ui") || path.startsWith(contextPath + "/auth") || path.endsWith("/help");
     }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */
