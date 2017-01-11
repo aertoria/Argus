@@ -298,5 +298,30 @@ public class ConsecutiveValueMappingTest {
         assertEquals("Result length should match",result.get(0).getDatapoints().size(), expected_1.size());
         assertEquals("Result value should match",expected_1, result.get(0).getDatapoints());
     }
+    
+    @Test
+    public void testconsecutiveValueMappingStressDatapointsCases() {
+    	Transform transform = new MetricMappingTransform(new ConsecutiveValueMapping());
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        datapoints_1.put(1000L, "2.0");
+
+
+        Metric metric_1 = new Metric(TEST_SCOPE, TEST_METRIC);
+        metric_1.setDatapoints(datapoints_1);
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+
+        List<String> constants = new ArrayList<String>();
+        constants.add("1s");
+        constants.add("1s");
+        Map<Long, String> expected_1 = new TreeMap<Long, String>();
+        for(int i=0;i<300000;i++){
+        	expected_1.put(i*1000L, "2.0");
+        }
+
+        List<Metric> result = transform.transform(metrics,constants);
+//        assertEquals("Result length should match",result.get(0).getDatapoints().size(), expected_1.size());
+//        assertEquals("Result value should match",expected_1, result.get(0).getDatapoints());
+    }
 }
 /* Copyright (c) 2016, Salesforce.com, Inc.  All rights reserved. */

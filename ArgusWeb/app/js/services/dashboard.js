@@ -544,9 +544,138 @@ angular.module('argus.services.dashboard', [])
                 drawDGLagSLA();
             }else if(type == 'argus+SFDC'){
                 drawArgusPlusRollUpTreemap();
+            }else if(type == 'argus+MAXLAG'){
+                drawArgusPlusDGEMaxLag();
             }else{
                 growl.error("This heimdall component type is not defined");
             }
+
+
+
+
+
+            /**/
+            function drawArgusPlusDGEMaxLag(){
+                $('#'+divId).html('<img src="img/spin.gif" />');
+                //var URL="http://ewang-ltm.internal.salesforce.com:8080/argusws/metrics?expression=HEIMDALL_TOTALAVA(%20-10d:core.CHI.SP2.cs15:SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode1.Last_1_Min_Avg{device=*}:avg,%20-10d:core.CHI.SP2.cs15:SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode1.Last_1_Min_Avg{device=*}:avg,%20SUM(%20DOWNSAMPLE(-10d:system.CHI.SP2.cs15:CpuPerc.cpu.system{device=cs15-db1-1-chi.ops.sfdc.net}:avg,$1m-avg),%20DOWNSAMPLE(-10d:system.CHI.SP2.cs15:CpuPerc.cpu.user{device=cs15-db1-1-chi.ops.sfdc.net}:avg,$1m-avg)))";
+                //StartTime = processGMTTime(StartTime);
+                //EndTime = processGMTTime(EndTime);
+                //var URL=CONFIG.wsUrl+"metrics?expression="+'HEIMDALL('+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':core.'+Pod+':SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg, '+StartTime+':'+EndTime+':db.oracle.'+Pod+':*.active__sessions{device=*}:avg, $POD)';
+                var URL=CONFIG.wsUrl+"metrics?expression="+expression;
+                console.log(URL);
+                $.getJSON(URL, function(rawdata) {
+                    console.log(rawdata);
+
+
+
+                    var podDictPeak={};
+                    var podDictDuration={};
+
+                    for (var idx in rawdata){
+                        if (rawdata[idx]["metric"]=="maxLagPeakValue"){
+                            podDictPeak[rawdata[idx]["scope"]]=Math.round(parseFloat(getFirstItemInMetrics(rawdata[idx]["datapoints"]))*100/60)/100;
+                        }
+                        if (rawdata[idx]["metric"]=="maxLagDuration"){
+                            podDictDuration[rawdata[idx]["scope"]]=parseFloat(getFirstItemInMetrics(rawdata[idx]["datapoints"]));
+                        }
+                    }
+
+
+                    var podName=[];
+                    var peakData=[];
+                    var durationData=[];
+
+                    for(var key in podDictPeak){
+                        podName.push(key.split(".")[3].toUpperCase());
+                        peakData.push(podDictPeak[key]);
+                        durationData.push(podDictDuration[key]);
+                    }
+
+                    var peakDict={};
+                    peakDict["name"]="Max Min of Lag";
+                    peakDict["data"]=peakData;
+
+                    var durationPeak={};
+                    durationPeak["name"]="Duration";
+                    durationPeak["data"]=durationData;
+
+                    var lag_body=[];
+                    lag_body.push(peakDict);
+                    lag_body.push(durationPeak);
+
+                    ///*PreProcess data and form these values*/
+                    //var answer_counts= [
+                    //    {name: 'Max Min of Lag ', data : [15,12,23]},
+                    //    {name: 'Duration', data: [3,9,20]}
+                    //];
+
+
+                    $('#' + divId).highcharts({
+                        xAxis: {
+                            categories: podName
+                        },
+                        chart: {
+                            type: 'column'
+                        },
+                        title: {
+                            text: 'Max Lag and duration chart for remote transport lag'
+                        },
+                        yAxis: {
+                            allowDecimals: true,
+                            title: {
+                                text: 'Units'
+                            },
+                            stackLabels: {
+                                style: {
+                                    color: 'black'
+                                },
+                                enabled: true
+                            }
+                        },
+                        tooltip: {
+                            formatter: function () {
+                                return '<b>' + this.series.name + '</b><br/>' +
+                                    this.point.y;
+                            }
+                        },
+                        series:lag_body,
+
+                        plotOptions: {
+                            column: {
+                                dataLabels: {
+                                    enabled: true,
+                                    //color: '#e8e8e8',
+                                    format: '{point.y}'
+                                    ////y: 50, // 10 pixels down from the top
+                                    //style: {
+                                    //    fontSize: '10px',
+                                    //    fontFamily: 'Verdana, sans-serif'
+                                    //}
+                                }
+                            }
+                            //
+                            //bar: {
+                            //    dataLabels: {
+                            //        enabled: true,
+                            //        rotation: -90,
+                            //        color: '#FFFFFF',
+                            //        format: this.point,
+                            //        y: 10, // 10 pixels down from the top
+                            //        style: {
+                            //            fontSize: '13px',
+                            //            fontFamily: 'Verdana, sans-serif'
+                            //        }
+                            //    }
+                            //}
+                        }
+                    });
+
+
+                }).error(function(jqXHR, textStatus, errorThrown){
+                    errorHandle(jqXHR, textStatus, errorThrown);
+                });
+            }
+
 
 
             /**
@@ -832,10 +961,7 @@ angular.module('argus.services.dashboard', [])
                     });
                 };
 
-
             }//end dg-lag treemap
-
-
 
             /**
              * taking HEIMDALL(-4h:-0h:core.TYO.NONE.ap2:SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,-4h:-0h:core.TYO.NONE.ap2:SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,-4h:-0h:db.oracle.TYO.NONE.ap2:*.active__sessions{device=*}:avg,-4h:-0h:system.TYO.NONE.ap2:CpuPerc.cpu.system{device=*-db*ops.sfdc.net}:avg,-4h:-0h:system.TYO.NONE.ap2:CpuPerc.cpu.user{device=*-db*ops.sfdc.net}:avg,#POD#)
@@ -3083,6 +3209,8 @@ angular.module('argus.services.dashboard', [])
                 });
 
             }
+
+
         }//////END OF AVA DATA MAP
 
         function updateTreemap(config, data, divId, optionList, attributes){
@@ -3109,7 +3237,7 @@ angular.module('argus.services.dashboard', [])
                 for (var i = 0; i < data.length; i++) {
 
                     if ((attributes.method).toUpperCase() === 'THRESHOLD') {
-                        tempPercentage = getAbovePercentage(data[i], parseFloat(attributes.threshold));
+                        tempPercentage = (data[i], parseFloat(attributes.threshold));
                     }
                     else if ((attributes.method).toUpperCase() === 'PEAKHOURTHRESHOLD' && attributes.filter) {
                         tempPercentage = getAbovePeakHourPercentage(data[i], parseFloat(attributes.threshold));
@@ -3391,7 +3519,7 @@ angular.module('argus.services.dashboard', [])
             return 0;
         }
 
-        function getAbovePercentage(data, threshold) {
+        function getAbovePercentagegetAbovePercentage(data, threshold) {
             var total = 0;
             var above = 0;
             for (var time in data.datapoints) {

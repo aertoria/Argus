@@ -39,6 +39,7 @@ import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallMetricRedu
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallPodFilter;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardMaxLag;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardTransform;;
 
 /**
@@ -56,6 +57,9 @@ public class TransformFactory {
 	
 	@Inject
 	Provider<HeimdallMetricReducer> _heimdallMetricReducer;
+	
+	@Inject
+	Provider<HeimdallDataGuardMaxLag> _heimdallDataGuardMaxLag;
 
     //~ Static fields/initializers *******************************************************************************************************************
 
@@ -212,6 +216,8 @@ public class TransformFactory {
             	return _heimdallMetricReducer.get();
             case HEIMDALLPODFILTER:
             	return new HeimdallPodFilter();
+            case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
+            	return _heimdallDataGuardMaxLag.get();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -290,7 +296,8 @@ public class TransformFactory {
         HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
         HEIMDALLDATAGUARDTRANSFORM("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
     	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic"),
-    	HEIMDALLPODFILTER("HEIMDALLPODFILTER","filter based on replication_type for DGoWAN");
+    	HEIMDALLPODFILTER("HEIMDALLPODFILTER","filter based on replication_type for DGoWAN"),
+    	HEIMDALLDATAGUARDTRANSFORMMAXLAG("HEIMDALLDATAGUARDTRANSFORMMAXLAG","for all overreached period, get the max one, return the duration of this period");
         private final String _name;
         private final String _description;
 
