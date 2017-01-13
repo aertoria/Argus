@@ -131,6 +131,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case HEIMDALL:
     case HEIMDALLPODFILTER:
     case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
+    case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
     case SCALE_MATCH:
     case FILTER:
     case P90:
@@ -219,6 +220,7 @@ public class MetricReader<T> implements MetricReaderConstants {
     case HEIMDALL:
     case HEIMDALLPODFILTER:
     case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
+    case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
     case SCALE_MATCH:
     case FILTER:
     case P90:
@@ -312,6 +314,7 @@ public class MetricReader<T> implements MetricReaderConstants {
       case HEIMDALL:
       case HEIMDALLPODFILTER:
       case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
+      case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
       case SCALE_MATCH:
       case FILTER:
       case P90:
@@ -411,6 +414,10 @@ public class MetricReader<T> implements MetricReaderConstants {
       break;
     case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
       t = jj_consume_token(HEIMDALLDATAGUARDTRANSFORMMAXLAG);
+          {if (true) return t.image;}
+      break;
+    case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
+      t = jj_consume_token(HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA);
           {if (true) return t.image;}
       break;
     case SCALE_MATCH:
@@ -881,14 +888,14 @@ public class MetricReader<T> implements MetricReaderConstants {
     finally { jj_save(0, xla); }
   }
 
-  private boolean jj_3R_2() {
-    if (jj_scan_token(DOWNSAMPLER)) return true;
-    return false;
-  }
-
   private boolean jj_3_1() {
     if (jj_scan_token(COLON)) return true;
     if (jj_3R_2()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_2() {
+    if (jj_scan_token(DOWNSAMPLER)) return true;
     return false;
   }
 
@@ -921,10 +928,10 @@ public class MetricReader<T> implements MetricReaderConstants {
       jj_la1_1 = new int[] {0xffffffff,0xffffffff,0x0,0xffffffff,0xffffffff,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x80ffffff,0x80ffffff,0x2000000,0x80ffffff,0xffffff,0x80000000,0x4000000,0x1000000,0x40000000,};
+      jj_la1_2 = new int[] {0x1ffffff,0x1ffffff,0x4000000,0x1ffffff,0x1ffffff,0x0,0x8000000,0x2000000,0x80000000,};
    }
    private static void jj_la1_init_3() {
-      jj_la1_3 = new int[] {0x0,0x20,0x0,0x20,0x0,0x0,0x0,0x0,0xf,};
+      jj_la1_3 = new int[] {0x1,0x41,0x0,0x41,0x0,0x1,0x0,0x0,0x1e,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[1];
   private boolean jj_rescan = false;
@@ -1110,7 +1117,7 @@ public class MetricReader<T> implements MetricReaderConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[102];
+    boolean[] la1tokens = new boolean[103];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -1133,7 +1140,7 @@ public class MetricReader<T> implements MetricReaderConstants {
         }
       }
     }
-    for (int i = 0; i < 102; i++) {
+    for (int i = 0; i < 103; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
