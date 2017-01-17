@@ -40,6 +40,7 @@ import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallPodFilter;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardMaxLag;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardPercentPodsMeetingSLATransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardTransform;;
 
 /**
@@ -218,6 +219,8 @@ public class TransformFactory {
             	return new HeimdallPodFilter();
             case HEIMDALLDATAGUARDTRANSFORMMAXLAG:
             	return _heimdallDataGuardMaxLag.get();
+            case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
+            	return new HeimdallDataGuardPercentPodsMeetingSLATransform();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -297,7 +300,8 @@ public class TransformFactory {
         HEIMDALLDATAGUARDTRANSFORM("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
     	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic"),
     	HEIMDALLPODFILTER("HEIMDALLPODFILTER","filter based on replication_type for DGoWAN"),
-    	HEIMDALLDATAGUARDTRANSFORMMAXLAG("HEIMDALLDATAGUARDTRANSFORMMAXLAG","for all overreached period, get the max one, return the duration of this period");
+    	HEIMDALLDATAGUARDTRANSFORMMAXLAG("HEIMDALLDATAGUARDTRANSFORMMAXLAG","for all overreached period, get the max one, return the duration of this period"),
+    	HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA("HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA", "Transform for calculating percentage of pods meeting SLA threshold.");
         private final String _name;
         private final String _description;
 
