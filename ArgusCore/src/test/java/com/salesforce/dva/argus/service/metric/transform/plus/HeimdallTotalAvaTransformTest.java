@@ -48,7 +48,7 @@ public class HeimdallTotalAvaTransformTest {
 		injector=null;
 	}
 	
-	@Test
+	//@Test
 	public void HeimdallTotalAvaTransform_dev(){
 		Transform transform=injector.getInstance(HeimdallTotalAvaTransform.class);
 		//Transform transform = new HeimdallTotalAvaTransform();
