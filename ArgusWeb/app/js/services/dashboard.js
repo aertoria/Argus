@@ -3237,7 +3237,7 @@ angular.module('argus.services.dashboard', [])
                 for (var i = 0; i < data.length; i++) {
 
                     if ((attributes.method).toUpperCase() === 'THRESHOLD') {
-                        tempPercentage = (data[i], parseFloat(attributes.threshold));
+                        tempPercentage = getAbovePercentage(data[i], parseFloat(attributes.threshold));
                     }
                     else if ((attributes.method).toUpperCase() === 'PEAKHOURTHRESHOLD' && attributes.filter) {
                         tempPercentage = getAbovePeakHourPercentage(data[i], parseFloat(attributes.threshold));
@@ -3519,7 +3519,7 @@ angular.module('argus.services.dashboard', [])
             return 0;
         }
 
-        function getAbovePercentagegetAbovePercentage(data, threshold) {
+        function getAbovePercentage(data, threshold) {
             var total = 0;
             var above = 0;
             for (var time in data.datapoints) {
