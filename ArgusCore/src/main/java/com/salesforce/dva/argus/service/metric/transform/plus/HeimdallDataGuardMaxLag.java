@@ -78,7 +78,6 @@ public class HeimdallDataGuardMaxLag implements Transform{
 				
 				System.out.println(m.getScope()+":"+localresult);
 			}catch(Exception e){
-				System.out.println("\nException found: "+e.getStackTrace().toString()+"\n");
 				System.out.println("Exception found"+m.getScope()+e.getMessage()+e.getStackTrace().toString());
 				continue;
 			}
