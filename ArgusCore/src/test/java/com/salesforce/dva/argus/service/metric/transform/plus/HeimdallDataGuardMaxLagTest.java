@@ -1,5 +1,7 @@
 package com.salesforce.dva.argus.service.metric.transform.plus;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,7 +49,7 @@ public class HeimdallDataGuardMaxLagTest{
 		injector=null;
 	}
 	
-	@Test
+	//@Test
 	public void podFilterTest(){
 		Transform transform=injector.getInstance(HeimdallDataGuardMaxLag.class);
 		
@@ -94,7 +96,7 @@ public class HeimdallDataGuardMaxLagTest{
         
         List<Metric> metrics = new ArrayList<Metric>();
         metrics.add(metric_1);
-        List<Metric> result = transform.transform(metrics,Arrays.asList("20"));
+        List<Metric> result = transform.transform(metrics,Arrays.asList("20", "120.0"));
         
         
         System.out.println(result);
@@ -146,8 +148,84 @@ public class HeimdallDataGuardMaxLagTest{
         metrics.add(metric_1);
         metrics.add(metric_2);
         
-        List<Metric> result = transform.transform(metrics,Arrays.asList("4"));
+        List<Metric> result = transform.transform(metrics,Arrays.asList("4", "120.0"));
 //        System.out.println(result);
+	}
+	
+	/*
+	 * test case for W-3647544 enhancements
+	 * 
+	 */
+	@Test
+	public void durationFilterTest() {
+		Transform transform=injector.getInstance(HeimdallDataGuardMaxLag.class);
+		
+		//1482105600000:1482710400000:db.FRF.SP1.eu2:*.remote_dg_transport_lag:avg
+		int offset=1000*60;//every minute
+		long start=0L;
+		
+		
+		Metric metric_1 = new Metric("db.FRF.SP1.eu1", "db.FRF.SP1.eu1");
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        datapoints_1.put(start+1L*offset, "0.0");
+        datapoints_1.put(start+2L*offset, "0.0");
+        datapoints_1.put(start+3L*offset, "120.0");
+        datapoints_1.put(start+4L*offset, "125.0");
+        datapoints_1.put(start+5L*offset, "140.0");
+        datapoints_1.put(start+6L*offset, "0.0");
+        datapoints_1.put(start+7L*offset, "400.0");
+        datapoints_1.put(start+8L*offset, "0.0");
+        datapoints_1.put(start+9L*offset, "0.0");
+        datapoints_1.put(start+10L*offset, "0.0");
+        datapoints_1.put(start+11L*offset, "520.0");
+        datapoints_1.put(start+12L*offset, "100.0");
+        datapoints_1.put(start+13L*offset, "0.0");
+        datapoints_1.put(start+14L*offset, "0.0");
+        metric_1.setDatapoints(datapoints_1);
+        metric_1.setTag("device", "dataguard");
+               
+
+        Metric metric_2 = new Metric("db.FRF.SP1.eu2", "db.FRF.SP1.eu2");
+        Map<Long, String> datapoints_2 = new HashMap<Long, String>();
+        datapoints_2.put(1482105600000L, "0.0");
+        datapoints_2.put(1482105660000L, "0.0");
+        datapoints_2.put(1482105720000L, "18.0");
+        datapoints_2.put(1482105780000L, "91.0");
+        datapoints_2.put(1482105840000L, "0");
+        datapoints_2.put(1482105900000L, "0");
+        datapoints_2.put(1482105960000L, "0.0");
+       
+        metric_2.setDatapoints(datapoints_2);
+        metric_2.setTag("device", "dataguard");
+        
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        metrics.add(metric_2);
+        
+        
+        Metric metric_3 = new Metric("db.FRF.SP1.eu3", "db.FRF.SP1.eu3");
+        Map<Long, String> datapoints_3 = new HashMap<Long, String>();
+        datapoints_3.put(1482105600000L, "0.0");
+        datapoints_3.put(1482105660000L, "0.0");
+        datapoints_3.put(1482105720000L, "0.0");
+        datapoints_3.put(1482105780000L, "0.0");
+        datapoints_3.put(1482105840000L, "120");
+        datapoints_3.put(1482105900000L, "0");
+        datapoints_3.put(1482105960000L, "0.0");
+       
+        metric_3.setDatapoints(datapoints_3);
+        metric_3.setTag("device", "dataguard");
+
+        metrics.add(metric_3);
+
+        
+        List<Metric> result = transform.transform(metrics,Arrays.asList("4", "120.0"));
+        //System.out.println("Duration filter test");
+        //System.out.println(result);
+        
+        assertEquals(2*2, result.size());
+        
+        
 	}
 
 }
