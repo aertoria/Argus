@@ -48,6 +48,11 @@ public class HeimdallDataGuardMaxLag implements Transform{
 	@Override
 	public List<Metric> transform(List<Metric> metrics, List<String> constants) {
 		
+		if(constants.size() == 1){
+			return transform(metrics, Arrays.asList(constants.get(0), String.valueOf(-1)));
+		}
+	
+		
 		assert(constants.size()==2):"2 constants need for DataGuardMaxLag transform";
 		
 		List<Metric> result = new ArrayList<Metric>();
@@ -106,7 +111,7 @@ public class HeimdallDataGuardMaxLag implements Transform{
 	}
 	
 	
-	public void setDurationThreshold(List<String> constants){
+	private void setDurationThreshold(List<String> constants){
 		
 		this.durationThreshold = (float)(Float.valueOf(constants.get(1))/60.0);
 		return;
@@ -117,37 +122,37 @@ public class HeimdallDataGuardMaxLag implements Transform{
 	 *  Check duration of each incident and filter 
 	 *  out incidents greater than given threshold
 	 */
-	public boolean checkDurationThreshold(List<Metric> localResults) {
+	private boolean checkDurationThreshold(List<Metric> localResults) {
 		
 		boolean aboveThreshold = false;
 		
-			for(Metric m:localResults){
-				
-				try{
-		
-					if(m.getMetric().equals("maxLagDuration")) {
-						Map.Entry<Long,String> entry = m.getDatapoints().entrySet().iterator().next();
-						int	retval = Float.compare(this.durationThreshold, Float.valueOf(entry.getValue()));
-			    		if(retval <= 0) {
-			    			aboveThreshold = true;
-			    		}
-			    		else {
-			    			aboveThreshold = false;
-			    		}	
-			    		
-			    		break;
-					}
-					else {
-						continue;
-					}
-				
+		for(Metric m:localResults){
+			
+			try{
+	
+				if(m.getMetric().equals("maxLagDuration")) {
+					Map.Entry<Long,String> entry = m.getDatapoints().entrySet().iterator().next();
+					int	retval = Float.compare(this.durationThreshold, Float.valueOf(entry.getValue()));
+		    		if(retval <= 0) {
+		    			aboveThreshold = true;
+		    		}
+		    		else {
+		    			aboveThreshold = false;
+		    		}	
+		    		
+		    		break;
 				}
-				catch(Exception e){
-					System.out.println("CheckDurationThreshold: Float compare excetion");
+				else {
 					continue;
 				}
-		
+			
 			}
+			catch(Exception e){
+				System.out.println("CheckDurationThreshold: Float compare excetion");
+				continue;
+			}
+	
+		}
 
 		
 		return aboveThreshold;
