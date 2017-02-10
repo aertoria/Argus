@@ -52,6 +52,7 @@ public class HeimdallDataGuardMaxLag implements Transform{
 				SingleHeimdallDataGuardMaxLag sdg=new SingleHeimdallDataGuardMaxLag(_transformFactory);
 				List<Metric> localresult=sdg.transform(Arrays.asList(m), constants);
 				if (localresult!=null){
+					
 					result.addAll(localresult);
 				}
 				System.out.println(m.getScope()+":"+localresult);

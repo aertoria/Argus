@@ -53,8 +53,9 @@ public class HeimdallMetricReducerTestFULL {
 		injector=null;
 	}
 
-	@Test
-	public void HeimdallTotalAvaTransform_IMPACTBYACT_WITH_ACT(){
+	@Test(expected = RuntimeException.class)
+	public void HeimdallTotalAvaTransform_MISSINGAPT(){
+	
 		Transform transform=injector.getInstance(HeimdallMetricReducer.class);
 		int offset=1000*60;
 		long start=0L;
@@ -158,14 +159,14 @@ public class HeimdallMetricReducerTestFULL {
         metric_6.setMetric("SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode1.Last_1_Min_Avg");
         
         List<Metric> metrics = new ArrayList<Metric>();
-        metrics.add(metric_1);
-        metrics.add(metric_2);
-        metrics.add(metric_3);
-        metrics.add(metric_4);
-        metrics.add(metric_5);
-        metrics.add(metric_6);    
+//        metrics.add(metric_1);
+//        metrics.add(metric_2);
+//        metrics.add(metric_3);
+//        metrics.add(metric_4);
+//        metrics.add(metric_5);
+//        metrics.add(metric_6);    
         
-        
+        //ACT
         Metric metric_act1 = new Metric(TEST_SCOPE_ACT, TEST_METRIC);
         Map<Long, String> datapoints_act1 = new HashMap<Long, String>();
         datapoints_act1.put(start+1L*offset, "420.0");
@@ -177,16 +178,61 @@ public class HeimdallMetricReducerTestFULL {
         metric_act1.setDatapoints(datapoints_act1);
         metric_act1.setTag("device", "na11-db1-1-chi.ops.sfdc.net");
         metric_act1.setMetric("CNADB11.NADB11-1.active__sessions");
-     
         metrics.add(metric_act1);    
         
-        List<Metric> result = transform.transform(metrics,Arrays.asList("IMPACTBYACT"));
-        System.out.println(result);
+        //CPUSYS
+        Metric metric_cpuSys = new Metric(TEST_SCOPE_CPU, TEST_METRIC);
+        Map<Long, String> datapoints_cpuSys = new HashMap<Long, String>();
+        datapoints_cpuSys.put(start+1L*offset, "1.05");
+        datapoints_cpuSys.put(start+2L*offset, "10.3");
+        datapoints_cpuSys.put(start+3L*offset, "40.9");
+        datapoints_cpuSys.put(start+4L*offset, "66.0");
+        datapoints_cpuSys.put(start+5L*offset, "1.0");
+        datapoints_cpuSys.put(start+6L*offset, "2.0");
+        metric_cpuSys.setDatapoints(datapoints_cpuSys);
+        metric_cpuSys.setTag("device", "na11-db1-1-chi.ops.sfdc.net");
+        metric_cpuSys.setMetric("CpuPerc.cpu.system");
+        metrics.add(metric_cpuSys);    
         
-        List<Metric> result2 = transform.transform(metrics,Arrays.asList("IMPACTBYAPT"));
-        System.out.println(result2);
-    
+        //CPU-empty-doubledigit-no par APT
+        Metric metric_cpuSys2 = new Metric(TEST_SCOPE_CPU, TEST_METRIC);
+        metric_cpuSys2.setTag("device", "na11-db1-2-chi.ops.sfdc.net");
+        Map<Long, String> datapoints_cpuSys2 = new HashMap<Long, String>();
+        datapoints_cpuSys2.put(start+4L*offset, "800.0");
+        metric_cpuSys2.setDatapoints(datapoints_cpuSys2);
+        metric_cpuSys2.setMetric("CpuPerc.cpu.system");
+        metrics.add(metric_cpuSys2);    
+        
+        //CPUUSER
+        Metric metric_cpuUser = new Metric(TEST_SCOPE_CPU, TEST_METRIC);
+        Map<Long, String> datapoints_cpuUser = new HashMap<Long, String>();
+        datapoints_cpuUser.put(start+1L*offset, "1.05");
+        datapoints_cpuUser.put(start+2L*offset, "33.3");
+        datapoints_cpuUser.put(start+3L*offset, "10");
+        datapoints_cpuUser.put(start+4L*offset, "4.0");
+        datapoints_cpuUser.put(start+5L*offset, "1.0");
+        datapoints_cpuUser.put(start+6L*offset, "2.0");
+        metric_cpuUser.setDatapoints(datapoints_cpuUser);
+        metric_cpuUser.setTag("device", "na11-db1-1-chi.ops.sfdc.net");
+        metric_cpuUser.setMetric("CpuPerc.cpu.user");
+        metrics.add(metric_cpuUser);    
+        
+        
+        
+        List<Metric> result = transform.transform(metrics,Arrays.asList("TTMPOD"));
+
+        
+        List<Metric> expected = new ArrayList<Metric>();
+        Metric expected_metric1 = new Metric("SUM", "CHI.SP2.cs15");
+        Map<Long, String> expected_Datapoints1=new HashMap<Long, String>();
+        expected_Datapoints1.put(0L, "6.0");
+        expected_Datapoints1.put(3600000L, "5.0");
+        expected_metric1.setDatapoints(expected_Datapoints1);
+        expected.add(expected_metric1);
+
+
+        System.out.println(result);
+        assertEquals(expected.get(0),result.get(0)); 
+        assertEquals(result.get(0).getDatapoints(),expected.get(0).getDatapoints()); 
 	}
-
-
 }

@@ -191,6 +191,11 @@ final class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 	
 	private Set<RacServer> CreatAndloadRacServer(List<MetricConsumer> consumers,ReportRange reportRange){
 		Set<String> racServerAddresses=new HashSet<String>();
+		
+		if(! consumers.stream().anyMatch(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TIME_APPLEVEL)||c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TRAFFIC_APPLEVEL))){
+			throw new RuntimeException("Input consumers contains no APT or ACT metric type");
+		}
+		
 		consumers.stream()
 				 .filter(c -> c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TIME_APPLEVEL)||c.getConsumerType().equals(MetricConsumer.ConsumerTypes.APT_TRAFFIC_APPLEVEL))
 				 .forEach(c -> racServerAddresses.add(c.getRacServerAddress()));
