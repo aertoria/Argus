@@ -18,21 +18,23 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 angular.module("argus.urlConfig", [])
-.constant('CONFIG', {
-    version: '4.0-SNAPSHOT',
-    //wsUrl: 'http://localhost:8080/argusws/',
+    .constant('CONFIG', {
+        version: '4.0-SNAPSHOT',
 
-    //wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
-    //dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/app/',
+        wsUrl: 'http://127.0.0.1:8080/argusws/',
+        dashboardUrl: 'http://127.0.0.1:8080/app/',
 
-    wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
-    dashboardUrl: 'http://ewang-ltm.internal.salesforce.com:8080/app/',
+        //wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
+        //dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/app/',
 
-    emailUrl: 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=argus-dev@mycompany.com',
-    feedUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-user',
-    wikiUrl: 'https://sites.google.com/a/mycompany.com/argus',
-    issueUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-dev',
-    templatePath: '/app/views/argus_custom_directives/templates/',
-    piwikUrl: (('https:' == document.location.protocol) ? 'https' : 'http') + '://localhost/',
-    piwikSiteId: '3'
-});
+        //wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
+        //dashboardUrl: 'http://ewang-ltm.internal.salesforce.com:8080/app/',
+
+        emailUrl: 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=argus-dev@mycompany.com',
+        feedUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-user',
+        wikiUrl: 'https://sites.google.com/a/mycompany.com/argus',
+        issueUrl: 'https://groups.google.com/a/mycompany.com/forum/?hl=en#!forum/argus-dev',
+        templatePath: '/app/views/argus_custom_directives/templates/',
+        piwikUrl: (('https:' == document.location.protocol) ? 'https' : 'http') + '://localhost/',
+        piwikSiteId: '3'
+    });

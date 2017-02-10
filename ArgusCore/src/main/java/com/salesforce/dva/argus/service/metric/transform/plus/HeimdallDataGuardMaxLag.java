@@ -30,6 +30,11 @@ public class HeimdallDataGuardMaxLag implements Transform{
 	@Inject
 	private Provider<TransformFactory> _transformFactory;
 	
+	/*
+	 * duration threshold in minutes
+	 */
+	private Float durationThreshold;
+	
 	/**
 	 * before use me: propate and downsample
 	 * @param metrics
@@ -42,7 +47,24 @@ public class HeimdallDataGuardMaxLag implements Transform{
 	
 	@Override
 	public List<Metric> transform(List<Metric> metrics, List<String> constants) {
+		
+		if(constants.size() == 1){
+			return transform(metrics, Arrays.asList(constants.get(0), String.valueOf(-1)));
+		}
+	
+		
+		assert(constants.size()==2):"2 constants need for DataGuardMaxLag transform";
+		
 		List<Metric> result = new ArrayList<Metric>();
+		
+		try{
+			setDurationThreshold(constants);
+		}
+		catch(NumberFormatException e){
+			System.out.println("NumberFormatException: cannot parse duration threshold constant");
+			return	result;
+		}
+		
 		for(Metric m:metrics){
 			
 			System.out.println("processing"+m.getScope()+" received"+m.getDatapoints().size());
@@ -53,8 +75,12 @@ public class HeimdallDataGuardMaxLag implements Transform{
 				List<Metric> localresult=sdg.transform(Arrays.asList(m), constants);
 				if (localresult!=null){
 					
-					result.addAll(localresult);
+					if(checkDurationThreshold(localresult)){
+						result.addAll(localresult);
+					}
+					
 				}
+				
 				System.out.println(m.getScope()+":"+localresult);
 			}catch(Exception e){
 				System.out.println("Exception found"+m.getScope()+e.getMessage()+e.getStackTrace().toString());
@@ -83,6 +109,56 @@ public class HeimdallDataGuardMaxLag implements Transform{
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	
+	private void setDurationThreshold(List<String> constants){
+		
+		this.durationThreshold = (float)(Float.valueOf(constants.get(1))/60.0);
+		return;
+	}
+	
+	/*
+	 *	aruikar@salesforce.com
+	 *  Check duration of each incident and filter 
+	 *  out incidents greater than given threshold
+	 */
+	private boolean checkDurationThreshold(List<Metric> localResults) {
+		
+		boolean aboveThreshold = false;
+		
+		for(Metric m:localResults){
+			
+			try{
+	
+				if(m.getMetric().equals("maxLagDuration")) {
+					Map.Entry<Long,String> entry = m.getDatapoints().entrySet().iterator().next();
+					int	retval = Float.compare(this.durationThreshold, Float.valueOf(entry.getValue()));
+		    		if(retval <= 0) {
+		    			aboveThreshold = true;
+		    		}
+		    		else {
+		    			aboveThreshold = false;
+		    		}	
+		    		
+		    		break;
+				}
+				else {
+					continue;
+				}
+			
+			}
+			catch(Exception e){
+				System.out.println("CheckDurationThreshold: Float compare excetion");
+				continue;
+			}
+	
+		}
+
+		
+		return aboveThreshold;
+		
+	}
+
 }
 
 
@@ -104,7 +180,7 @@ final class SingleHeimdallDataGuardMaxLag{
 	}
 	
 	protected List<Metric> transform(List<Metric> metrics, List<String> constants){
-		assert(metrics.size()==1 && constants.size()==1):"has to be single metrics single constants";
+		assert(metrics.size()==1 && constants.size()==2):"has to be single metrics 2 constants";
 		
 		/**
 		 * PRE-PROCESS
@@ -138,6 +214,17 @@ final class SingleHeimdallDataGuardMaxLag{
 		check_crawler();
 
 		System.out.println("sortedDatapoints"+resultMap);
+		
+		if(resultMap.isEmpty()) {
+			
+			returningDatapoints.put(startTimestamp, String.valueOf(0));
+			returningMetric.setDatapoints(returningDatapoints);
+			
+			returningDatapointsPeak.put(startTimestamp, "NA");
+			returningMetricPeak.setDatapoints(returningDatapointsPeak);
+			return Collections.unmodifiableList(Arrays.asList(returningMetric,returningMetricPeak));
+			
+		}
 		
 		final Long maxduration=resultMap.get(Collections.max(resultMap.keySet()));
 		returningDatapoints.put(startTimestamp, String.valueOf(maxduration/60000+1));//return value in min
