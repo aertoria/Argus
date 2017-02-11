@@ -49,7 +49,7 @@ public class HeimdallDataGuardMaxLagTest{
 		injector=null;
 	}
 	
-	//@Test
+	@Test
 	public void podFilterTest(){
 		Transform transform=injector.getInstance(HeimdallDataGuardMaxLag.class);
 		
@@ -102,7 +102,7 @@ public class HeimdallDataGuardMaxLagTest{
         System.out.println(result);
 	}
 		
-	//@Test
+	@Test
 	public void podFilterTestMutliple(){
 		Transform transform=injector.getInstance(HeimdallDataGuardMaxLag.class);
 		

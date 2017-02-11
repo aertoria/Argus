@@ -21,11 +21,11 @@ angular.module("argus.urlConfig", [])
     .constant('CONFIG', {
         version: '4.0-SNAPSHOT',
 
-        wsUrl: 'http://127.0.0.1:8080/argusws/',
-        dashboardUrl: 'http://127.0.0.1:8080/app/',
+        //wsUrl: 'http://127.0.0.1:8080/argusws/',
+        //dashboardUrl: 'http://127.0.0.1:8080/app/',
 
-        //wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
-        //dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/app/',
+        wsUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws/',
+        dashboardUrl: 'http://adhoc-db1-1-crd.eng.sfdc.net:8080/app/',
 
         //wsUrl: 'http://ewang-ltm.internal.salesforce.com:8080/argusws/',
         //dashboardUrl: 'http://ewang-ltm.internal.salesforce.com:8080/app/',
