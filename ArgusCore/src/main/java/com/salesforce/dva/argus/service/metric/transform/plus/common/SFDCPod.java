@@ -1,8 +1,8 @@
 package com.salesforce.dva.argus.service.metric.transform.plus.common;
 
 /**
- * 
- * @author ethan.wang
+ * A SFDC POD
+ * @author aertoria ethan.wang@salesforce.com
  *
  */
 public interface SFDCPod {

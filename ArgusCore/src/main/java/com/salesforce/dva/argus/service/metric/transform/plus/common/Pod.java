@@ -55,7 +55,7 @@ import com.salesforce.dva.argus.entity.Metric;
  * @author aertoria ethan.wang@salesforce.com
  */
 @SuppressWarnings("serial")
-public class Pod implements Renderable, Reportable, SFDCPod, Serializable{
+public class Pod implements RenderableCORE, RenderableSCRT, Reportable, SFDCPod, Serializable{
 	private List<RacServer> racServers;
 	private String podAddress;
 	private List<Metric> podAPT;
@@ -256,7 +256,15 @@ public class Pod implements Renderable, Reportable, SFDCPod, Serializable{
 													  .collect(Collectors.toList());
 		return Collections.unmodifiableList(constructedResult);
 	}
-
+	
+	@Override
+	public List<Metric> renderCOLLECTED(){
+		List<Metric> constructedResult=this.racServers.stream()
+						  .map(r -> r.getCollectedMinBasedOnImpactHourly().get(0))
+						  .collect(Collectors.toList());
+		return Collections.unmodifiableList(constructedResult);
+	}
+	
 	@Override
 	public List<Metric> renderIMPACTBYAPT() {
 		List<Metric> constructedResult=this.racServers.stream()

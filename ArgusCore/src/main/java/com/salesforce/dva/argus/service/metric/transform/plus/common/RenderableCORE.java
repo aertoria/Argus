@@ -7,7 +7,7 @@ import com.salesforce.dva.argus.entity.Metric;
 /**
  * Aspect Defined as Renderable by Transform
  * **/
-public interface Renderable {
+public interface RenderableCORE {
 	List<Metric> renderIMPACT();
 	List<Metric> renderIMPACTBYAPT();
 	List<Metric> renderIMPACTBYACT();
@@ -24,4 +24,5 @@ public interface Renderable {
 	List<Metric> renderAVATOTAL();
 	List<Metric> renderTTMPOD();
 	List<Metric> renderTTMTOTAL();
+	List<Metric> renderCOLLECTED();
 }

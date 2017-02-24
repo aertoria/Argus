@@ -9,7 +9,8 @@ import com.salesforce.dva.argus.service.metric.transform.Transform;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.ComputationUtil;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.MetricConsumer;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.Pod;
-import com.salesforce.dva.argus.service.metric.transform.plus.common.Renderable;
+import com.salesforce.dva.argus.service.metric.transform.plus.common.RenderableCORE;
+import com.salesforce.dva.argus.service.metric.transform.plus.common.RenderableSCRT;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.SFDCPod;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.ReportRange;
 
@@ -27,21 +28,25 @@ public class HeimdallSCRTReducer implements Transform{
 
 	@Override
 	public List<Metric> transform(List<Metric> metrics, List<String> constants) {
-		assert(constants!=null&&constants.size()==1):"constants should has exactly one result";
+		assert(constants!=null&&constants.size()==2):"constants should has exactly one result";
+		
 		//align up
 		//Lineup the metrics into 1m interval
 		List<Metric> metricsLineup=_computationUtil.get().downsample("1m-avg", metrics);
 		List<MetricConsumer> listConsumer=MetricConsumer.consumeMetrics(metricsLineup);
 		final ReportRange reportRange=ReportRange.getReportRange(metricsLineup);
-//		listConsumer.forEach(c -> c.inspect());
+		reportRange.setActThreshold(Integer.valueOf(constants.get(0)));
 		
-		Pod pod=_pod.get().getSCRTPod(listConsumer,reportRange);
+		RenderableSCRT pod=_pod.get().getSCRTPod(listConsumer,reportRange);
 		((SFDCPod) pod).inspect();
-		switch(constants.get(0)){
+		
+		switch(constants.get(1)){
 		case "IMPACT":
 			return pod.renderIMPACT();
 		case "ACT":
 			return pod.renderACT();
+		case "AVA":
+			return pod.renderAVA();
 		}
 		throw new RuntimeException("unsupported");
 	}

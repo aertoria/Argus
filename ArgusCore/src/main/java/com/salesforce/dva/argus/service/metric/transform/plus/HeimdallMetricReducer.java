@@ -54,7 +54,7 @@ import com.salesforce.dva.argus.service.metric.transform.plus.common.MetricConsu
 import com.salesforce.dva.argus.service.metric.transform.plus.common.ReportRange;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.Pod;
 
-import com.salesforce.dva.argus.service.metric.transform.plus.common.Renderable;
+import com.salesforce.dva.argus.service.metric.transform.plus.common.RenderableCORE;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.Reportable;
 import com.salesforce.dva.argus.service.metric.transform.plus.common.SFDCPod;
 
@@ -81,7 +81,7 @@ public class HeimdallMetricReducer implements Transform{
 		List<MetricConsumer> listConsumer=MetricConsumer.consumeMetrics(metricsLineup);
 		//listConsumer.forEach(c->c.inspect());
 		
-		Renderable pod=_pod.get().getPod(listConsumer,reportRange);
+		RenderableCORE pod=_pod.get().getPod(listConsumer,reportRange);
 		((SFDCPod) pod).inspect();
 		
 		switch(constants.get(0)){
@@ -128,6 +128,8 @@ public class HeimdallMetricReducer implements Transform{
 			return render(()->pod.renderTTMPOD());
 		case "TTMTOTAL":
 			return render(()->pod.renderTTMTOTAL());
+		case "COLLECTED":
+			return render(()->pod.renderCOLLECTED());
 		}
 		throw new RuntimeException("unsupported");
 	}

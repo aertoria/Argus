@@ -15,6 +15,8 @@ import com.salesforce.dva.argus.entity.Metric;
 public class ReportRange {
 	private final List<Long> range;
 	
+	private int actThreshold=150;
+	
 	/**
 	 * 
 	 * @param range
@@ -48,5 +50,13 @@ public class ReportRange {
 	
 	public Long getEnd(){
 		return this.range.get(1);
+	}
+
+	public int getActThreshold() {
+		return actThreshold;
+	}
+
+	public void setActThreshold(int actThreshold) {
+		this.actThreshold = actThreshold;
 	}
 }
