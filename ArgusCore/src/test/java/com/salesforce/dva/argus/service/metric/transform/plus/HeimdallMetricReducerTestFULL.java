@@ -235,4 +235,5 @@ public class HeimdallMetricReducerTestFULL {
         assertEquals(expected.get(0),result.get(0)); 
         assertEquals(result.get(0).getDatapoints(),expected.get(0).getDatapoints()); 
 	}
+
 }

@@ -37,6 +37,7 @@ import com.google.inject.Singleton;
 import com.salesforce.dva.argus.service.TSDBService;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallMetricReducer;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallPodFilter;
+import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallSCRTReducer;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallTotalAvaTransform;
 import com.salesforce.dva.argus.service.metric.transform.plus.P90Transform;
 import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardMaxLag;
@@ -47,6 +48,7 @@ import com.salesforce.dva.argus.service.metric.transform.plus.HeimdallDataGuardT
  * Factory for metric transforms.
  *
  * @author  Bhinav Sura (bsura@salesforce.com) Ruofan Zhang(rzhang@salesforce.com) *
+ * @author  aertoria (ethan.wang@salesforce.com)
  */
 @Singleton
 public class TransformFactory {
@@ -58,6 +60,9 @@ public class TransformFactory {
 	
 	@Inject
 	Provider<HeimdallMetricReducer> _heimdallMetricReducer;
+	
+	@Inject
+	Provider<HeimdallSCRTReducer> _heimdallSCRTReducer;
 	
 	@Inject
 	Provider<HeimdallDataGuardMaxLag> _heimdallDataGuardMaxLag;
@@ -221,6 +226,8 @@ public class TransformFactory {
             	return _heimdallDataGuardMaxLag.get();
             case HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA:
             	return new HeimdallDataGuardPercentPodsMeetingSLATransform();
+            case HEIMDALLSCRT:
+            	return _heimdallSCRTReducer.get();
             default:
                 throw new UnsupportedOperationException(functionName);
         } // end switch
@@ -298,11 +305,12 @@ public class TransformFactory {
         SCALE_MATCH("SCALE_MATCH", "Calculate the matching cartesian product of two vectors"),
         HEIMDALL_TOTALAVA("HEIMDALL_TOTALAVA", "Give HEIMDALL_TOTALAVA value of this metrics."),
         HEIMDALLDATAGUARDTRANSFORM("HeimdallDataGuardTransform", "Give DataGuard over WAN SLA report"),
-    	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic"),
+    	HEIMDALL("HEIMDALL","HEIMDALL at DBCloud logic, caculating availability of core databases"),
     	HEIMDALLPODFILTER("HEIMDALLPODFILTER","filter based on replication_type for DGoWAN"),
     	HEIMDALLDATAGUARDTRANSFORMMAXLAG("HEIMDALLDATAGUARDTRANSFORMMAXLAG","for all overreached period, get the max one, return the duration of this period"),
-    	HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA("HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA", "Transform for calculating percentage of pods meeting SLA threshold.");
-        private final String _name;
+    	HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA("HEIMDALL_DATAGUARD_PERCENT_PODS_MEETING_SLA", "Transform for calculating percentage of pods meeting SLA threshold."),
+    	HEIMDALLSCRT("HEIMDALLSCRT","HEIMDALL at DBCloud, caculating availability for SCRT databases");
+    	private final String _name;
         private final String _description;
 
         private Function(String name, String description) {
