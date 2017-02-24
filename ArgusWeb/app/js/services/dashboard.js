@@ -494,11 +494,13 @@ angular.module('argus.services.dashboard', [])
             var expression=parseExpression(metricList[0]);
             var type = attributes["type"];
 
+
             //obsolete
             var paraJSON=doControlParser(para);
             var start=paraJSON["start"];
             var end=paraJSON["end"];
             var pod=paraJSON["pod"];
+            var podSLAThreshold = paraJSON["SLAthreshold"];
 
             var dgLagThreshold=paraJSON["threshold"];
             var IGLstr = paraJSON['IGLlist'];
@@ -565,8 +567,6 @@ angular.module('argus.services.dashboard', [])
                 console.log(URL);
                 $.getJSON(URL, function(rawdata) {
                     console.log(rawdata);
-
-
 
                     var podDictPeak={};
                     var podDictDuration={};
@@ -758,6 +758,8 @@ angular.module('argus.services.dashboard', [])
                     });
 
                 Highcharts.seriesTypes.treemap.prototype.getExtremesFromAll = true;
+
+
                 /**
                  * Render a roll up tree map from rawdata
                  * @param rawdata
@@ -811,6 +813,21 @@ angular.module('argus.services.dashboard', [])
                     var totalAva=100*(1-impactedMin/collectedMin);
                     var totalImpacted=impactedMin;
                     var totalCollected=collectedMin;
+
+                    //Caculate the threshold how many pod's ava is larger than 99%
+                    podSLAThreshold = (typeof podSLAThreshold === 'undefined') ? "99.9" : podSLAThreshold;
+                    //console.log("podSLAThreshold"+podSLAThreshold);
+                    var SATISF_POD=0;
+                    var TOTAL_POD=0
+                    var podSLA=parseFloat(podSLAThreshold)*0.01;//0.999
+                    for(key in map){
+                        TOTAL_POD+=1
+                        var ava=parseFloat(map[key][3]);
+                        if(ava>=podSLA){
+                            SATISF_POD+=1;
+                        }
+                    }
+                    var SLARate=Math.round(10000*100*SATISF_POD/TOTAL_POD)/10000 + "%";
 
                     $('#'+divId).highcharts({
                         chart: {
@@ -956,6 +973,7 @@ angular.module('argus.services.dashboard', [])
                             text: '<br><h1><span id="helpBlock" class="help-block">Heimdall Rollup Dashboard Beta ' +
                             '<b>DBCloud availblity: '+(totalAva).toFixed(4)+'% </b>' +
                             '   Total impacted: '+ (totalImpacted).toFixed(0)+' mins, out of '+ (totalCollected).toFixed(0)+' mins<br>' +
+                            '   Availblity SLA compliance rate: <b>'+SLARate+'</b> ('+SATISF_POD+'/'+TOTAL_POD+')<br>'+
                             '<br>For each pod: Color represents availablity. Size represents pod traffic.',
                         }
                     });
@@ -1739,7 +1757,7 @@ angular.module('argus.services.dashboard', [])
             };
 
             /*
-             _   _  _____  _____ ___  _________   ___   _      _          ______ __   __ _____  _   _  _____  _   _       _____  _____ ______  _____
+              _   _  _____  _____ ___  _________   ___   _      _          ______ __   __ _____  _   _  _____  _   _       _____  _____ ______  _____
              | | | ||  ___||_   _||  \/  ||  _  \ / _ \ | |    | |         | ___ \\ \ / /|_   _|| | | ||  _  || \ | |     /  __ \|  _  || ___ \|  ___|
              | |_| || |__    | |  | .  . || | | |/ /_\ \| |    | |         | |_/ / \ V /   | |  | |_| || | | ||  \| |     | /  \/| | | || |_/ /| |__
              |  _  ||  __|   | |  | |\/| || | | ||  _  || |    | |         |  __/   \ /    | |  |  _  || | | || . ` |     | |    | | | ||    / |  __|
