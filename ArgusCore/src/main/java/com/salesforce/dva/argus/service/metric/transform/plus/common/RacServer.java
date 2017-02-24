@@ -148,7 +148,6 @@ public class RacServer implements Serializable{
 									.collect(Collectors.toList());
 	}
 	
-
 	/**Caculate pod level Traffic**/
 	public void caculatedWeightedTraffic(){
 		this.weightedTraffic=loadWeightedTraffic();
@@ -284,16 +283,16 @@ public class RacServer implements Serializable{
 		return getReportRangePass;
 	} 
 	
-	/**getImpactedMinHourly return a timeseries with count of impact min for each hour
+	/**
+	 * getImpactedMinHourly return a times series with count of impact min for each hour
 	 * called by all ava related renderables and renderings.
 	 * **/
 	@SuppressWarnings("unchecked")
 	public List<Metric> getImpactedMinHourly(){
-		//APT
 		List<Metric> impactedMin = new ArrayList<Metric>();
-		
+		//APT
 		if (hasAPT()){
-			List<Metric> impactedMinAPT=getImpactedMinHourlyAPT(weightedAPT,null);
+			List<Metric> impactedMinAPT=getImpactedMinHourlyAPT(weightedAPT);
 			impactedMin=_computationUtil.get().unionOR(impactedMin,impactedMinAPT);
 		}
 		//ACT
@@ -306,9 +305,30 @@ public class RacServer implements Serializable{
 		return Collections.unmodifiableList(postMetric);
 	}
 	
+	/**
+	 * getImpactedMinHourly return a times series with count of collected min for each hour
+	 * called by all ava related renderables and renderings.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<Metric> getCollectedMinBasedOnImpactHourly(){
+		List<Metric> impactedMin = new ArrayList<Metric>();
+		//APT
+		if (hasAPT()){
+			impactedMin=_computationUtil.get().unionOR(impactedMin,weightedAPT);
+		}
+		//ACT
+		if (hasACT()){
+			impactedMin=_computationUtil.get().unionOR(impactedMin,weightedACT);
+		}
+		
+		List<Metric> postMetric = _computationUtil.get().downsampleAndFill(reportRange, 60, "1h-count",  impactedMin);
+		return Collections.unmodifiableList(postMetric);
+	}
+	
 	public List<Metric> getImpactedMinHourlyByAPT(){
 		//APT
-		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT,null);
+		List<Metric> impactedMin=getImpactedMinHourlyAPT(weightedAPT);
 		
 		List<Metric> postMetric = _computationUtil.get().downsampleAndFill(reportRange, 60, "1h-count",  impactedMin);
 		return Collections.unmodifiableList(postMetric);
@@ -324,7 +344,7 @@ public class RacServer implements Serializable{
 	}
 	
 	/**given RacServerLevel metric, return impactedMinmetric**/
-	private List<Metric> getImpactedMinHourlyAPT(List<Metric> racLevelApt, List<Metric> racLevelCPU) {
+	private List<Metric> getImpactedMinHourlyAPT(List<Metric> racLevelApt) {
 		if (! hasAPT()){
 			throw new RuntimeException("No APT provided, not legal to call this method");
 		}
@@ -338,16 +358,39 @@ public class RacServer implements Serializable{
 		}
 		assert(this.weightedACT!=null&&this.weightedACT.size()==1):"ACT has to be provided";
 		List<Metric> ACT=Collections.unmodifiableList(Arrays.asList(new Metric(this.weightedACT.get(0))));
-		List<Metric> ACTSLA=_computationUtil.get().detectACT(ACT, this.racServerAddress);
+		List<Metric> ACTSLA=_computationUtil.get().detectACT(ACT, this.racServerAddress, this.reportRange.getActThreshold());
 		return ACTSLA;
 	}
-	
-	/**getAvaRateHourly return a timeseries reporting avaRate each hour**/
-	public List<Metric> getAvaRateHourly(){
+		
+	/**
+	 * getAvaRateHourly return a time series reporting avaRate each hour
+	 *
+	 *Without using the Weighted traffic as denomintor
+	 *public List<Metric> getAvaRateHourly(){
 		List<Metric> availability=getWeightedTrafficCountHourly();
 		List<Metric> availability_zeroRemoved=availability.stream().map(m->_computationUtil.get().removeZeroMetric(m)).collect(Collectors.toList());
 		List<Metric> avaRateHourly=getImpactedMinHourly();
 				
+		List<Metric> toBeDivided = new ArrayList<Metric>();
+		avaRateHourly.forEach(m -> toBeDivided.add(m));
+		availability_zeroRemoved.forEach(m -> toBeDivided.add(m));
+		
+		List<Metric> dividedResult=_computationUtil.get().divide(toBeDivided);
+		
+		assert(dividedResult!=null):"dividedResult should be valid"; 
+		List<Metric> filleddividedResult=_computationUtil.get().mergeZero(reportRange,60,dividedResult);
+
+		List<Metric> negatedAvaRate=_computationUtil.get().negate(filleddividedResult);
+		return Collections.unmodifiableList(negatedAvaRate);
+	}
+	 * **/
+	public List<Metric> getAvaRateHourly(){
+		List<Metric> weightedTraffic=getCollectedMinBasedOnImpactHourly();
+		List<Metric> weightedTrafficDownsampled=_computationUtil.get().downsample("1h-sum", weightedTraffic);
+		List<Metric> availability=Collections.unmodifiableList(weightedTrafficDownsampled);
+		List<Metric> availability_zeroRemoved=availability.stream().map(m->_computationUtil.get().removeZeroMetric(m)).collect(Collectors.toList());
+		
+		List<Metric> avaRateHourly=getImpactedMinHourly();
 		List<Metric> toBeDivided = new ArrayList<Metric>();
 		avaRateHourly.forEach(m -> toBeDivided.add(m));
 		availability_zeroRemoved.forEach(m -> toBeDivided.add(m));

@@ -235,7 +235,13 @@ final public class ComputationUtil {
 	/**Givin a time series, return any datapoints that is above 150, could be null**/
 	protected List<Metric> detectACT(List<Metric> input, String objectAddress){
 		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
-		return detectAbove(input,150,objectAddress);
+		return detectACT(input,objectAddress,150);
+	}
+	
+	/**Givin a time series, return any datapoints that is above 150, could be null**/
+	protected List<Metric> detectACT(List<Metric> input, String objectAddress,int threshold){
+		assert(input != null && input.get(0).getDatapoints() != null) : "input not valid";
+		return detectAbove(input,threshold,objectAddress);
 	}
 	
 	/**Givin a time series, return any datapoints that is above 65, could be null**/

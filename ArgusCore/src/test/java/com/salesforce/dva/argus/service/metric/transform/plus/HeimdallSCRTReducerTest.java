@@ -46,8 +46,8 @@ public class HeimdallSCRTReducerTest {
 	public static void tearDownAfterClass() throws Exception {
 		injector=null;
 	}
-	
-	@Test
+
+	//@Test
 	public void HeimdallSCRTTransformDB(){
 		Transform transform=injector.getInstance(HeimdallSCRTReducer.class);
 		//Transform transform = new HeimdallTotalAvaTransform();
@@ -73,7 +73,7 @@ public class HeimdallSCRTReducerTest {
         System.out.println("output>>>"+result);
 	}
 	
-//	@Test
+	//	@Test
 	public void HeimdallSCRTTransformCSDB(){
 		Transform transform=injector.getInstance(HeimdallSCRTReducer.class);
 		//Transform transform = new HeimdallTotalAvaTransform();
@@ -100,4 +100,28 @@ public class HeimdallSCRTReducerTest {
         System.out.println("\n\nOUTPUT2>>>\n"+result);
 	}
 
+
+	@Test
+	public void HeimdallSCRTTransformDBSingleLarge(){
+		Transform transform=injector.getInstance(HeimdallSCRTReducer.class);
+		//Transform transform = new HeimdallTotalAvaTransform();
+		int offset=1000*60/100;
+        Metric metric_1 = new Metric("db.oracle.CHI.AGG.la90", "LADB20.LADB20-1.active__sessions");
+        Map<Long, String> datapoints_1 = new HashMap<Long, String>();
+        datapoints_1.put(1487220960000L+1L*60*1000, "50.0");
+        datapoints_1.put(1487220960000L+2L*60*1000, "170.0");
+        datapoints_1.put(1487220960000L+3L*60*1000, "14.0");
+        datapoints_1.put(1487220960000L+4L*60*1000, "151.0");
+        datapoints_1.put(1487220960000L+5L*60*1000, "12.0");
+        
+        metric_1.setDatapoints(datapoints_1);
+        metric_1.setTag("device", "la20-db1-2-chi.ops.sfdc.net");
+        
+        
+        List<Metric> metrics = new ArrayList<Metric>();
+        metrics.add(metric_1);
+        
+        List<Metric> result = transform.transform(metrics,Arrays.asList("-90000","AVA"));
+        System.out.println("output>>>"+result);
+	}
 }
