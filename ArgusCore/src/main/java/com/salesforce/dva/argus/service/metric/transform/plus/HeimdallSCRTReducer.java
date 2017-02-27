@@ -30,8 +30,6 @@ public class HeimdallSCRTReducer implements Transform{
 	public List<Metric> transform(List<Metric> metrics, List<String> constants) {
 		assert(constants!=null&&constants.size()==2):"constants should has exactly one result";
 		
-		//align up
-		//Lineup the metrics into 1m interval
 		List<Metric> metricsLineup=_computationUtil.get().downsample("1m-avg", metrics);
 		List<MetricConsumer> listConsumer=MetricConsumer.consumeMetrics(metricsLineup);
 		final ReportRange reportRange=ReportRange.getReportRange(metricsLineup);
