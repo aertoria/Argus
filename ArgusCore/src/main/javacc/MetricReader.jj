@@ -143,6 +143,7 @@ TOKEN : { < #TIME_UNIT : "s" | "m" | "h" | "d" > }
 TOKEN : { < #ANYTHING : ~["#"] > }
 
 TOKEN : { < IDENTITY : "IDENTITY" > }
+TOKEN : { < DEDUCT : "DEDUCT" > }
 TOKEN : { < HEIMDALL_TOTALAVA : "HEIMDALL_TOTALAVA" > }
 TOKEN : { < HEIMDALL : "HEIMDALL" > }
 TOKEN : { < HEIMDALLSCRT : "HEIMDALLSCRT" > }
@@ -313,6 +314,9 @@ private String functionName() :
 }
 {
 	t = <IDENTITY>
+	{ return t.image; }			
+	|
+	t = <DEDUCT>
 	{ return t.image; }			
 	|
 	t = <HEIMDALL_TOTALAVA>
