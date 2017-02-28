@@ -105,6 +105,8 @@ public class TransformFactory {
         switch (function) {
             case DIVIDE:
                 return new MetricReducerOrMappingTransform(new DivideValueReducerOrMapping());
+            case DEDUCT:
+            	return new DeductReduceTransform();
             case SUM:
                 return new MetricReducerOrMappingTransform(new SumValueReducerOrMapping());
             case MULTIPLY:
@@ -242,6 +244,7 @@ public class TransformFactory {
      */
     public enum Function {
         IDENTITY("IDENTITY", "Performs an identity transform such that input = output"),
+        DEDUCT("DEDUCT","Perform duction on mulitple Metrics on each timestamp value pair"),
         SUM("SUM", "Performs an addition of the input metrics"),
         DIFF("DIFF", "Difference between timeseries"),
         DIVIDE("DIVIDE", "Divides one timeseries by another"),
