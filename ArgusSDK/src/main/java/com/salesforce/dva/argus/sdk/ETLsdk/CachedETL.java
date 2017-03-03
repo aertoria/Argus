@@ -246,7 +246,6 @@ class CompletableCacheJob implements Runnable{
 		System.out.println("Job " + _podAddress + " ending...");	
 	}
 	
-	
 	/**
 	 * recursively called for each DC, if not successful, try DRDC
 	 * @param podAddress
@@ -261,7 +260,6 @@ class CompletableCacheJob implements Runnable{
 		}
 		System.out.println("Job " + _drPodAddress + " ending...");	
 	}
-	
 		
 	/**
 	 * given pod address, fetch the 5 result about this pod each hour, load it to predified scope metric
@@ -270,9 +268,10 @@ class CompletableCacheJob implements Runnable{
 	 * @throws IOException 
 	 */
 	public PutResult makeATransfer(final TransferService transferService, final String podAddress, final Long startTimestamp, final Long endTimestamp) throws IOException{
-		final String sourceExp=getExpressionFromAddress(podAddress,startTimestamp,endTimestamp);
+//		final String sourceExp=getExpressionFromAddress(podAddress,startTimestamp,endTimestamp);
+		final String sourceExp=getExpressionFromAddressRAC(podAddress,startTimestamp,endTimestamp);
 		final String targetScope=getTargetScopeNameSplitProductionSandbox(podAddress);
-		return transferService.transfer(sourceExp,targetScope);
+		return transferService.transferRac(sourceExp,targetScope);
 	}
 	
 	/**
@@ -288,6 +287,22 @@ class CompletableCacheJob implements Runnable{
 				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,"
 				+ startTime + ":" + endTime + ":db.oracle."+podAddress+":*.active__sessions{device=*}:avg,"
 				+ "#POD#)";
+		return expression;
+	}
+	
+	/**
+	 * Return a executable expression to retrieve result from source
+	 * @param podAddress
+	 * @param startTime
+	 * @param endTime
+	 * @return
+	 */
+	private static String getExpressionFromAddressRAC(final String podAddress, final Long startTime, final Long endTime) {
+		final String expression="HEIMDALL("
+				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestTimeRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,"
+				+ startTime + ":" + endTime + ":core."+podAddress+":SFDC_type-Stats-name1-System-name2-trustAptRequestCountRACNode*.Last_1_Min_Avg{device=*-app*-*.ops.sfdc.net}:avg,"
+				+ startTime + ":" + endTime + ":db.oracle."+podAddress+":*.active__sessions{device=*}:avg,"
+				+ "#RACHOUR#)";
 		return expression;
 	}
 	

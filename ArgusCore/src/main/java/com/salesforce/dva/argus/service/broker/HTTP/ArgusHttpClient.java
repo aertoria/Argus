@@ -42,9 +42,9 @@ import java.net.*;
 import java.util.*;
 
 
-
 /**
  * HTTP based API client for Argus.
+ * @author author aertoria <ethan.wang@salesforce.com>
  */
 @SuppressWarnings("deprecation")
 public class ArgusHttpClient{
@@ -332,7 +332,15 @@ public class ArgusHttpClient{
     		JSONArray objectArray=obj.getJSONArray("object");
 	    	for (int i = 0; i < objectArray.length(); i++){
 	    		JSONObject current=objectArray.getJSONObject(i);
-	    		Metric m=deSerializer(current);
+	    		
+	    		
+	    		/**
+	    		 * SWITCH
+	    		 */
+//	    		Metric m=deSerializer(current);
+	    		Metric m=deSerializer2(current);
+	    		
+	    		
 	    		metrics.add(m);
 	    	}
     	}catch(Exception ex){
@@ -344,7 +352,11 @@ public class ArgusHttpClient{
     	return metrics;
     }
     
-    //provided one signal json object, return a signal metric
+    /**
+     * provided one signal json object, return a signal metric
+     * @param obj
+     * @return
+     */
     private Metric deSerializer(JSONObject obj){
 		String scope=obj.get("scope").toString();
 		String namespace=obj.get("namespace").toString();
@@ -363,8 +375,35 @@ public class ArgusHttpClient{
 		metric.setDatapoints(_datapoints);
 		metric.setTags(_tags);
     	return metric;
-    }   
+    }
     
+    /**
+     * provided one signal json object, return a signal metric
+     * Protecting Double to string
+     * short term solution
+     * @param obj
+     * @return
+     */
+    private Metric deSerializer2(JSONObject obj){
+		String scope=obj.get("scope").toString();
+		String namespace=obj.get("namespace").toString();
+		String metricname=obj.get("metric").toString();
+
+		Map<String,String> _tags=new HashMap<String,String>();
+		JSONObject tags=obj.getJSONObject("tags");
+		tags.keySet().stream().forEach(k -> _tags.put(k, tags.getString(k)));
+		
+		Map<Long, String> _datapoints=new HashMap<Long, String>();	
+		JSONObject datapoints=obj.getJSONObject("datapoints");
+		datapoints.keySet().stream().forEach(k -> _datapoints.put(Long.valueOf(k), String.valueOf(datapoints.getDouble(k))));
+		
+		Metric metric=new Metric(scope,metricname);
+		metric.setNamespace(namespace);
+		metric.setDatapoints(_datapoints);
+		metric.setTags(_tags);
+    	return metric;
+    }
+  
     /**
      * provided one metricQuery, return a Metric template
      * @param query

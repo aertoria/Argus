@@ -134,7 +134,7 @@ public abstract class HeimdallETL {
 	 * @param args
 	 * @throws Exception
 	 */
-	public abstract void init(String args[]) throws Exception;
+	public abstract void init() throws Exception;
 	
 	/**
 	 * Execute ETL. Must override.
