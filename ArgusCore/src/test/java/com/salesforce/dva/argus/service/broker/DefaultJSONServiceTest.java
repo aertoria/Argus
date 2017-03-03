@@ -35,9 +35,9 @@ public class DefaultJSONServiceTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception  {
     	configuration=new SystemConfiguration(new Properties());
-		configuration.setProperty("service.property.json.endpoint", "https://argus-ws.data.sfdc.net:443/argusws");
-		configuration.setProperty("service.property.json.username", "USERNAME");
-		configuration.setProperty("service.property.json.password", "PASSWORD_SAMPLE");	
+		configuration.setProperty("service.property.json.endpoint", "XXX");
+		configuration.setProperty("service.property.json.username", "XXX");
+		configuration.setProperty("service.property.json.password", "XXX");
 		
 		injector = Guice.createInjector(new AbstractModule() {
 			@Override
