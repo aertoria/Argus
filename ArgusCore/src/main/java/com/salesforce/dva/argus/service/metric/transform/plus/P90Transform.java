@@ -44,9 +44,9 @@ public class P90Transform implements Transform{
         
 		MetricDistiller distiller = new MetricDistiller();
         distiller.distill(metrics);
-        newMetricsList.add(generateMetric(distiller,rateTS,"P90Rate"));
-        newMetricsList.add(generateMetric(distiller,goodPodTS,"goodPod"));
-        newMetricsList.add(generateMetric(distiller,totalPodTS,"totalPod"));
+        newMetricsList.add(generateMetric(distiller,rateTS,"complianceRate"));
+        newMetricsList.add(generateMetric(distiller,goodPodTS,"good"));
+        newMetricsList.add(generateMetric(distiller,totalPodTS,"total"));
         return newMetricsList;
 	}
 

@@ -95,7 +95,7 @@ public class ReduceIntervalETL extends HeimdallETL {
 	/**
 	 * Prepare to run the ETL process.
 	 */
-	public void init(String args[]) throws Exception {
+	public void init() throws Exception {
 		// interval
 		String interval = properties.getProperty("interval");
 		if (interval == null)

@@ -48,6 +48,9 @@ import com.salesforce.dva.argus.sdk.ArgusService;
 /**
  * Engine for running ETL processes.
  * 
+ * <Comment> This class is wrap of HeimdallETL.-Ethan 
+ * 
+ * 
  * Command parameters look something like:
  * 
  * -op "reduce-interval"
@@ -60,9 +63,10 @@ import com.salesforce.dva.argus.sdk.ArgusService;
  * -properties dataguard-prod-transport-lag.props
  *
  * @author Charles Kuo <ckuo@salesforce.com>
+ * @revision aertoria <ethan.wang@salesforce.com>  Mar 1
  *
  */
-public class HeimdallETLEngine {
+public class HeimdallETLEngine implements AutoCloseable{
 	/**
 	 * Parsed command parameters.
 	 */
@@ -71,20 +75,45 @@ public class HeimdallETLEngine {
 	/**
 	 * Source Argus service.
 	 */
-	protected ArgusService sourceService;
+	private ArgusService sourceService;
 	
 	/**
 	 * Target Argus serfvice.
 	 */
-	protected ArgusService targetService;
+	private ArgusService targetService;
+	
+	private static HeimdallETLEngine instance = null;
+	
+	/**
+	 * Private constructor
+	 * added by aertoria Mar1
+	 */
+	private HeimdallETLEngine(){}
+	
+	/**
+	 * static factory method
+	 * added by aertoria Mar1
+	 * @return
+	 */
+	public static HeimdallETLEngine instanceOf(){
+		if(HeimdallETLEngine.instance == null){
+			HeimdallETLEngine.instance = new HeimdallETLEngine();
+		}
+		return HeimdallETLEngine.instance;
+	}
 	
 	/**
 	 * Main entry point.
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		HeimdallETLEngine instance = new HeimdallETLEngine();
+		HeimdallETLEngine instance = HeimdallETLEngine.instanceOf();
 		instance.execute(args);
+	}
+	
+	@Override
+	public void close() throws Exception {
+		HeimdallETLEngine.instance = null;
 	}
 	
 	/**
@@ -100,8 +129,9 @@ public class HeimdallETLEngine {
 			HeimdallETL etl;
 			if ("reduce-interval".equalsIgnoreCase(commandParams.op)) {
 				etl = new ReduceIntervalETL();
-			}
-			else {
+			} else if("reduce-normal".equalsIgnoreCase(commandParams.op)){
+				etl = new ReduceNormalETL();
+			}else {
 				throw new Exception("Unrecognized operation: " + commandParams.op);
 			}
 			
@@ -130,7 +160,8 @@ public class HeimdallETLEngine {
 			etl.setProperties(props);
 			
 			// init ETL
-			etl.init(commandParams.args);
+			System.out.println("args"+commandParams.args);
+			etl.init();
 			
 			// connect to services
 			connectServices();

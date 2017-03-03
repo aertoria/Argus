@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -96,6 +98,40 @@ public class TransferService implements AutoCloseable, Serializable{
 		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
 		return p;
 	}
+	
+	
+	/**
+	 * 
+	 * @param src_expression
+	 * @param tgt_scope
+	 * @return
+	 * @throws IOException
+	 */
+	public PutResult transferRac(String src_expression, String tgt_scope) throws IOException {
+		System.out.println("executing..."+src_expression);
+		final List<Metric> metrics=readFromSource(Arrays.asList(src_expression));
+		assert(metrics.size()>0):"result is not valid";
+		List<Metric> metricsToLoad= metrics.stream()
+										.map(m -> {
+														final String racAddress=m.getMetric();
+														Metric metric=new Metric();
+														metric.setScope("REDUCED.SLA.db");//REDUCED.db.PROD.CHI.SP2.na2
+														metric.setMetric(m.getScope());//PHX.SP1.cs3.Rac3
+														metric.setDatapoints(m.getDatapoints());
+														
+														
+														Map<String, String> tags = new HashMap<String, String>();
+														tags.put("podId",m.getMetric());
+														metric.setTags(tags);
+														return metric;
+													})					
+										.collect(Collectors.toList());
+		
+		PutResult p=writeToTarget(metricsToLoad);
+		System.out.println("\n\nRequest return:"+metrics.size()+" Transfer succeed: "+p.getSuccessCount()+" Failed:"+p.getFailCount()+p.getErrorMessages());
+		return p;
+	}
+	
 
 	public List<Metric> readFromSource(List<String> expressions) throws IOException{
 		assert(expressions!=null && expressions.size()>0):"input not valid";

@@ -22,6 +22,11 @@ import com.salesforce.dva.argus.service.tsdb.MetricQuery;
 import com.salesforce.dva.argus.system.SystemAssert;
 import com.salesforce.dva.argus.system.SystemConfiguration;
 
+/**
+ * 
+ * @author aertoria <ethan.wang@salesforce.com>
+ *
+ */
 public class DefaultJSONService extends DefaultService implements TSDBService {
 	private	ArgusService service;
 	private final String endpoint;
