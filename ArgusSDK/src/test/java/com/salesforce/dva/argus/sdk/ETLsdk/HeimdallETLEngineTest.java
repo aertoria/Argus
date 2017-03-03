@@ -30,8 +30,8 @@ public class HeimdallETLEngineTest {
 				"-end","1488388396704",
 				"-source","http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws",
 				"-target","https://argus-ws.data.sfdc.net/argusws",
-				"-user","SVC_DB_WORKLOADS",
-				"-password","dBw0ak1oads!$",
+				"-user","USERNAME",
+				"-password","PASSWORD_SAMPLE",
 				"-properties","src/test/resources/etl2.properties"
 		});
 	}
@@ -45,8 +45,8 @@ public class HeimdallETLEngineTest {
 				"-end","1488388396704",
 				"-source","http://adhoc-db1-1-crd.eng.sfdc.net:8080/argusws",
 				"-target","https://argus-ws.data.sfdc.net/argusws",
-				"-user","SVC_DB_WORKLOADS",
-				"-password","dBw0ak1oads!$",
+				"-user","USERNAME",
+				"-password","PASSWORD_SAMPLE",
 				"-properties","src/test/resources/etl_engine.properties"
 		});
 	}

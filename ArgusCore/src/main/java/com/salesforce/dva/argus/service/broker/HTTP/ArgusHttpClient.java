@@ -338,9 +338,8 @@ public class ArgusHttpClient{
 	    		 * SWITCH
 	    		 */
 //	    		Metric m=deSerializer(current);
-	    		Metric m=deSerializer2(current);
 	    		
-	    		
+	    		Metric m=deSerializer2(current);	    		
 	    		metrics.add(m);
 	    	}
     	}catch(Exception ex){

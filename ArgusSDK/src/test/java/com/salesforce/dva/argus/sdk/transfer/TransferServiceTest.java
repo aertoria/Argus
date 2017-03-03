@@ -24,18 +24,18 @@ public class TransferServiceTest {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argusws", 10);
+//		sourceSVC = ArgusService.getInstance("https://arguspm.ops.sfdc.net/argusws", 10);
 		targetSVC = ArgusService.getInstance("https://argus-ws.data.sfdc.net/argusws", 10);
 
 		@SuppressWarnings("unchecked")
 		Map<String,String> property=Property.of("src/test/resources/etl.properties").get();
-		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
+//		sourceSVC.getAuthService().login(property.get("Username"),property.get("Password"));
 		targetSVC.getAuthService().login(property.get("Username"),property.get("Password"));	
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		sourceSVC.close();
+//		sourceSVC.close();
 		targetSVC.close();
 	}
 
@@ -43,13 +43,22 @@ public class TransferServiceTest {
 	public void transfer() throws IOException {
 		System.out.println("testing....");
 		
-		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
-		String expression="-40d:-39d:production_splunk:apt_TopK{orgId=*,podId=*}:avg";
+//		TransferService ts=TransferService.getTransferService(sourceSVC, targetSVC);
+		
+//		String expression="-40d:-39d:production_splunk:apt_TopK{orgId=*,podId=*}:avg";
+		
+		String expression="1488392129506%3A1488572129506%3Adb.oracle.PHX.SP1.cs3%3A*.active__sessions%7Bdevice%3D*%7D%3Aavg";
 		try{
-			List<Metric>  result =sourceSVC.getMetricService().getMetrics(Arrays.asList("-40d:-39d:production_splunk:apt_TopK{orgId=*,podId=*}:avg"));
-			result.forEach(m -> System.out.println(m));
+			List<Metric> result =targetSVC.getMetricService().getMetrics(Arrays.asList(expression));
+			result.forEach(m -> System.out.println(m.getScope()+m.getMetric()+m.getDatapoints()));
+			
+			System.out.println(result.size());
+			
+			
 			//			ts.transfer(expression);
-		}catch(Throwable t){}
+		}catch(Throwable t){
+			System.out.println(t.getStackTrace());
+		}
 	}
 	
 //	@Test
